@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clientes - WD Máquinas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-layout">
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <div class="sidebar-logo-icon">WD</div>
+                    <div class="sidebar-logo-text">
+                        <h1>WD Máquinas</h1>
+                        <span>Sistema de Orçamentos</span>
+                    </div>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-nav-label">Menu</div>
+                <a href="index.html" class="sidebar-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    Dashboard
+                </a>
+                <a href="orcamentos.html" class="sidebar-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    Orçamentos
+                </a>
+                <a href="clientes.html" class="sidebar-link active">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    Clientes
+                </a>
+                <a href="produtos.html" class="sidebar-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                    Produtos
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main -->
+        <main class="main-content">
+            <header class="main-header">
+                <div class="header-left">
+                    <button class="menu-toggle" id="menuToggle">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                    </button>
+                    <h2>Clientes</h2>
+                </div>
+                <div class="header-right">
+                    <button class="btn btn-primary btn-sm" onclick="abrirModalCliente()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Novo Cliente
+                    </button>
+                </div>
+            </header>
+
+            <div class="page-content">
+                <!-- Barra de ações -->
+                <div class="actions-bar">
+                    <div class="search-box">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        <input type="text" id="buscaCliente" placeholder="Buscar por nome ou empresa..." oninput="buscarClientes()">
+                    </div>
+                </div>
+
+                <!-- Tabela -->
+                <div class="card">
+                    <div class="card-body-no-pad">
+                        <div class="table-wrapper">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>Empresa</th>
+                                        <th>Telefone</th>
+                                        <th>Email</th>
+                                        <th>Cidade/UF</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyClientes">
+                                    <tr><td colspan="6"><div class="spinner"></div></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Cliente -->
+    <div class="modal-overlay" id="modalCliente">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modalClienteTitulo">Novo Cliente</h3>
+                <button class="modal-close" onclick="fecharModalCliente()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="formCliente" onsubmit="salvarCliente(event)">
+                    <input type="hidden" id="clienteId">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Nome <span class="required">*</span></label>
+                            <input type="text" id="clienteNome" required placeholder="Nome do contato">
+                        </div>
+                        <div class="form-group">
+                            <label>Empresa</label>
+                            <input type="text" id="clienteEmpresa" placeholder="Nome da empresa">
+                        </div>
+                        <div class="form-group">
+                            <label>Telefone</label>
+                            <input type="text" id="clienteTelefone" placeholder="(00) 00000-0000">
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="clienteEmail" placeholder="email@exemplo.com">
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Endereço</label>
+                            <input type="text" id="clienteEndereco" placeholder="Rua, número, bairro">
+                        </div>
+                        <div class="form-group">
+                            <label>Cidade</label>
+                            <input type="text" id="clienteCidade" placeholder="Cidade">
+                        </div>
+                        <div class="form-group">
+                            <label>Estado</label>
+                            <select id="clienteEstado">
+                                <option value="">Selecione</option>
+                                <option value="AC">AC</option><option value="AL">AL</option>
+                                <option value="AP">AP</option><option value="AM">AM</option>
+                                <option value="BA">BA</option><option value="CE">CE</option>
+                                <option value="DF">DF</option><option value="ES">ES</option>
+                                <option value="GO">GO</option><option value="MA">MA</option>
+                                <option value="MT">MT</option><option value="MS">MS</option>
+                                <option value="MG">MG</option><option value="PA">PA</option>
+                                <option value="PB">PB</option><option value="PR">PR</option>
+                                <option value="PE">PE</option><option value="PI">PI</option>
+                                <option value="RJ">RJ</option><option value="RN">RN</option>
+                                <option value="RS">RS</option><option value="RO">RO</option>
+                                <option value="RR">RR</option><option value="SC">SC</option>
+                                <option value="SP">SP</option><option value="SE">SE</option>
+                                <option value="TO">TO</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>CEP</label>
+                            <input type="text" id="clienteCep" placeholder="00000-000">
+                        </div>
+                        <div class="form-group">
+                            <label>CNPJ/CPF</label>
+                            <input type="text" id="clienteCnpjCpf" placeholder="00.000.000/0000-00">
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Observações</label>
+                            <textarea id="clienteObservacoes" placeholder="Observações sobre o cliente..."></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="fecharModalCliente()">Cancelar</button>
+                <button class="btn btn-primary" onclick="document.getElementById('formCliente').requestSubmit()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Confirmar Exclusão -->
+    <div class="modal-overlay" id="modalConfirmDelete">
+        <div class="modal" style="max-width:420px">
+            <div class="modal-body">
+                <div class="confirm-dialog">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                    <h4>Excluir Cliente?</h4>
+                    <p>Esta ação não pode ser desfeita.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="fecharConfirmDelete()">Cancelar</button>
+                <button class="btn btn-danger" id="btnConfirmDelete">Excluir</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="js/app.js"></script>
+    <script src="js/clientes.js"></script>
+</body>
+</html>
