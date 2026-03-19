@@ -1,273 +1,383 @@
 /**
- * ============================================================
- * preview.js - Visualização / Preview do Orçamento
- * Renderiza o orçamento no estilo profissional para impressão
- * ============================================================
+ * preview.js — Renderiza o preview do orçamento para impressão/PDF/email
+ * Depende de: app.js
  */
 
-// Dados do orçamento carregado
-let orcamentoAtual = null;
+// ========== ESTADO ==========
+let orcamentoData = null;
 
-// ============================================================
-// Inicialização
-// ============================================================
+// ========== INICIALIZAÇÃO ==========
 document.addEventListener('DOMContentLoaded', () => {
-    initSidebar();
+    if (typeof initTheme === 'function') initTheme();
+    if (typeof initSidebar === 'function') initSidebar();
+    if (typeof updateThemeIcon === 'function') updateThemeIcon();
 
     const params = new URLSearchParams(window.location.search);
-    const orcId = params.get('id');
+    const id = params.get('id');
 
-    if (!orcId) {
-        document.getElementById('previewContent').innerHTML = `
-            <div class="empty-state">
-                <h4>Nenhum orçamento selecionado</h4>
-                <p>Selecione um orçamento para visualizar</p>
-                <a href="orcamentos.html" class="btn btn-primary btn-sm">Ver Orçamentos</a>
-            </div>
-        `;
+    if (!id) {
+        document.getElementById('previewLoading').innerHTML = '<p>ID do orçamento não informado.</p>';
+        showToast('ID do orçamento não encontrado na URL', 'error');
         return;
     }
 
-    carregarOrcamento(orcId);
+    carregarOrcamento(id);
 });
 
-/**
- * Carrega os dados completos do orçamento e renderiza o preview.
- * @param {string} id - ID do orçamento
- */
+// ========== CARREGAR ORÇAMENTO ==========
 async function carregarOrcamento(id) {
     try {
-        const result = await apiGet(`/api/orcamentos/${id}`);
-        if (result.success) {
-            orcamentoAtual = result.data;
-            renderizarPreview(orcamentoAtual);
-        }
+        const data = await apiGet(`/api/orcamentos/${id}`);
+        orcamentoData = data;
+        console.log('[Preview] Orçamento carregado:', data);
+
+        renderizarPreview(data);
+
+        document.getElementById('previewLoading').style.display = 'none';
+        document.getElementById('previewArea').style.display = 'block';
+
     } catch (error) {
-        document.getElementById('previewContent').innerHTML = `
-            <div class="empty-state">
-                <h4>Erro ao carregar orçamento</h4>
-                <p>${escapeHtml(error.message)}</p>
-                <a href="orcamentos.html" class="btn btn-primary btn-sm">Voltar</a>
-            </div>
-        `;
+        console.error('[Preview] Erro ao carregar orçamento:', error);
+        document.getElementById('previewLoading').innerHTML = `<p>Erro ao carregar orçamento: ${escapeHtml(error.message)}</p>`;
+        showToast('Erro ao carregar orçamento', 'error');
     }
 }
 
-/**
- * Renderiza o preview completo do orçamento.
- * @param {Object} orc - Dados do orçamento
- */
+// ========== RENDERIZAR PREVIEW ==========
 function renderizarPreview(orc) {
-    const container = document.getElementById('previewContent');
-    const empresa = orc.empresa || {};
-    const cliente = orc.clientes || {};
+    const config = typeof getConfig === 'function' ? getConfig() : {};
+
+    // === HEADER DA EMPRESA ===
+    const headerEl = document.getElementById('previewHeader');
+    let logoHtml = '';
+    if (config.logo) {
+        logoHtml = `<img src="${config.logo}" alt="Logo" style="max-height:80px; max-width:250px;">`;
+    }
+
+    headerEl.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px;">
+            <div>
+                ${logoHtml}
+                <h2 style="margin:5px 0 0 0;">${escapeHtml(config.nomeEmpresa || 'WD Máquinas')}</h2>
+            </div>
+            <div style="text-align:right; font-size:0.9em; color:var(--text-muted);">
+                ${config.cnpj ? `<p>CNPJ: ${formatCNPJ(config.cnpj)}</p>` : ''}
+                ${config.endereco ? `<p>${escapeHtml(config.endereco)}</p>` : ''}
+                ${config.telefone ? `<p>Tel: ${formatPhone(config.telefone)}</p>` : ''}
+                ${config.email ? `<p>${escapeHtml(config.email)}</p>` : ''}
+                ${config.site ? `<p>${escapeHtml(config.site)}</p>` : ''}
+            </div>
+        </div>`;
+
+    // === INFO DO ORÇAMENTO ===
+    const infoEl = document.getElementById('previewInfo');
+    const numero = orc.numero || orc.id?.substring(0, 8) || '-';
+    const emissao = formatDate(orc.data_emissao || orc.created_at);
+    const validade = orc.data_validade ? formatDate(orc.data_validade) : '-';
+    const status = orc.status || 'pendente';
+
+    const badgeClass = {
+        'pendente': 'badge-warning',
+        'aprovado': 'badge-success',
+        'recusado': 'badge-danger',
+        'expirado': 'badge-secondary'
+    }[status] || 'badge-secondary';
+
+    const statusLabel = {
+        'pendente': 'Pendente',
+        'aprovado': 'Aprovado',
+        'recusado': 'Recusado',
+        'expirado': 'Expirado'
+    }[status] || status;
+
+    infoEl.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding:15px; background:var(--bg-secondary); border-radius:var(--radius-md); margin:15px 0;">
+            <div>
+                <h3 style="margin:0;">Orçamento #${escapeHtml(String(numero))}</h3>
+            </div>
+            <div style="display:flex; gap:20px; flex-wrap:wrap; font-size:0.9em;">
+                <span><strong>Emissão:</strong> ${emissao}</span>
+                <span><strong>Validade:</strong> ${validade}</span>
+                <span class="badge ${badgeClass}">${statusLabel}</span>
+            </div>
+        </div>`;
+
+    // === DADOS DO CLIENTE ===
+    const cliente = orc.cliente || {};
+    const clienteContent = document.getElementById('previewClienteContent');
+    clienteContent.innerHTML = `
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:10px; font-size:0.95em;">
+            <p><strong>Nome:</strong> ${escapeHtml(cliente.nome || orc.cliente_nome || '-')}</p>
+            ${cliente.empresa ? `<p><strong>Empresa:</strong> ${escapeHtml(cliente.empresa)}</p>` : ''}
+            ${cliente.cpf_cnpj ? `<p><strong>CPF/CNPJ:</strong> ${formatCPFCNPJ(cliente.cpf_cnpj)}</p>` : ''}
+            ${cliente.telefone ? `<p><strong>Telefone:</strong> ${formatPhone(cliente.telefone)}</p>` : ''}
+            ${cliente.email ? `<p><strong>E-mail:</strong> ${escapeHtml(cliente.email)}</p>` : ''}
+            ${cliente.endereco ? `<p><strong>Endereço:</strong> ${escapeHtml(cliente.endereco)}</p>` : ''}
+            ${cliente.cidade || cliente.estado ? `<p><strong>Cidade/UF:</strong> ${escapeHtml(cliente.cidade || '')}${cliente.estado ? '/' + escapeHtml(cliente.estado) : ''}</p>` : ''}
+            ${cliente.cep ? `<p><strong>CEP:</strong> ${formatCEP(cliente.cep)}</p>` : ''}
+        </div>`;
+
+    // === ITENS DO ORÇAMENTO ===
     const itens = orc.itens || [];
+    const itensBody = document.getElementById('previewItensBody');
+    const itensFoot = document.getElementById('previewItensFoot');
+    let totalGeral = 0;
 
-    // Montar linhas da tabela de itens
-    let itensHTML = '';
-    itens.forEach((item, index) => {
-        const produto = item.produtos || {};
-        itensHTML += `
-            <tr>
-                <td>${index + 1}</td>
-                <td class="nome-produto">${escapeHtml(produto.nome || 'Produto')}</td>
-                <td>${item.quantidade}</td>
-                <td>${formatCurrency(item.valor_unitario)}</td>
-                <td><strong>${formatCurrency(item.valor_total)}</strong></td>
-            </tr>
-        `;
-    });
+    if (itens.length === 0) {
+        itensBody.innerHTML = `<tr><td colspan="5" style="text-align:center;">Nenhum item</td></tr>`;
+    } else {
+        itensBody.innerHTML = itens.map((item, index) => {
+            const nomeProduto = item.produto_nome || item.produto?.nome || '-';
+            const qtd = item.quantidade || 0;
+            const valorUnit = item.valor_unitario || 0;
+            const subtotal = qtd * valorUnit;
+            totalGeral += subtotal;
 
-    // Montar especificações e dimensões de todos os produtos
-    let specsHTML = '';
-    let dimensoesHTML = '';
-    let imagensHTML = '';
-
-    itens.forEach(item => {
-        const produto = item.produtos || {};
-
-        if (produto.imagem_url) {
-            imagensHTML += `
-                <div class="orc-produto-imagem">
-                    <img src="${escapeHtml(produto.imagem_url)}" alt="${escapeHtml(produto.nome || 'Produto')}">
-                </div>
-            `;
-        }
-
-        if (produto.descricao || produto.especificacoes) {
-            specsHTML += `
-                <div class="orc-specs">
-                    <h4>${escapeHtml(produto.nome || 'Produto')}</h4>
-                    ${produto.descricao ? `<p>${escapeHtml(produto.descricao)}</p>` : ''}
-                    ${produto.especificacoes ? `<p>${escapeHtml(produto.especificacoes)}</p>` : ''}
-                </div>
-            `;
-        }
-
-        if (produto.altura_cm || produto.largura_cm || produto.profundidade_cm || produto.peso_kg) {
-            dimensoesHTML += `
-                <div class="orc-dimensoes">
-                    ${produto.altura_cm ? `
-                    <div class="orc-dim-item">
-                        <div class="dim-label">Altura</div>
-                        <div class="dim-value">${produto.altura_cm}</div>
-                        <div class="dim-unit">CM</div>
-                    </div>
-                    ` : ''}
-                    ${produto.largura_cm ? `
-                    <div class="orc-dim-item">
-                        <div class="dim-label">Largura</div>
-                        <div class="dim-value">${produto.largura_cm}</div>
-                        <div class="dim-unit">CM</div>
-                    </div>
-                    ` : ''}
-                    ${produto.profundidade_cm ? `
-                    <div class="orc-dim-item">
-                        <div class="dim-label">Profundidade</div>
-                        <div class="dim-value">${produto.profundidade_cm}</div>
-                        <div class="dim-unit">CM</div>
-                    </div>
-                    ` : ''}
-                    ${produto.peso_kg ? `
-                    <div class="orc-dim-item">
-                        <div class="dim-label">Peso</div>
-                        <div class="dim-value">${produto.peso_kg}</div>
-                        <div class="dim-unit">KG</div>
-                    </div>
-                    ` : ''}
-                </div>
-            `;
-        }
-    });
-
-    container.innerHTML = `
-        <!-- HEADER -->
-        <div class="orc-header">
-            <div class="orc-empresa">
-                <h2>${escapeHtml(empresa.nome || 'WD MÁQUINAS')}</h2>
-                <p>${escapeHtml(empresa.endereco || '')}</p>
-                <p>${escapeHtml(empresa.bairro_cep || '')}</p>
-                <p>CNPJ: ${escapeHtml(empresa.cnpj || '')}</p>
-                <p>${escapeHtml(empresa.telefone || '')} | ${escapeHtml(empresa.email || '')}</p>
-            </div>
-            <div class="orc-meta">
-                <h3>ORÇAMENTO</h3>
-                <div class="orc-numero">#${orc.numero_orcamento || '-'}</div>
-                <div class="orc-meta-row"><strong>Emissão:</strong> ${formatDate(orc.data_emissao)}</div>
-                <div class="orc-meta-row"><strong>Validade:</strong> ${formatDate(orc.data_validade)}</div>
-                <div style="margin-top:8px">
-                    <span class="badge badge-${orc.status}">${capitalizeFirst(orc.status)}</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- CLIENTE -->
-        <div class="orc-cliente-section">
-            <h4>Cliente</h4>
-            <div class="nome">${escapeHtml(cliente.nome || '-')}${cliente.empresa ? ' - ' + escapeHtml(cliente.empresa) : ''}</div>
-            ${cliente.telefone ? `<div class="info">Tel: ${escapeHtml(cliente.telefone)}</div>` : ''}
-            ${cliente.email ? `<div class="info">Email: ${escapeHtml(cliente.email)}</div>` : ''}
-            ${cliente.endereco ? `<div class="info">Endereço: ${escapeHtml(cliente.endereco)}${cliente.cidade ? ', ' + escapeHtml(cliente.cidade) : ''}${cliente.estado ? '/' + escapeHtml(cliente.estado) : ''}${cliente.cep ? ' - CEP: ' + escapeHtml(cliente.cep) : ''}</div>` : ''}
-            ${cliente.cnpj_cpf ? `<div class="info">CNPJ/CPF: ${escapeHtml(cliente.cnpj_cpf)}</div>` : ''}
-        </div>
-
-        <!-- TABELA DE ITENS -->
-        <table class="orc-tabela">
-            <thead>
+            return `
                 <tr>
-                    <th style="width:50px">#</th>
-                    <th>Produto</th>
-                    <th style="width:80px">Qtd</th>
-                    <th style="width:130px">Valor Un.</th>
-                    <th style="width:130px">Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${itensHTML}
-            </tbody>
-        </table>
+                    <td>${index + 1}</td>
+                    <td><strong>${escapeHtml(nomeProduto)}</strong></td>
+                    <td style="text-align:center;">${qtd}</td>
+                    <td style="text-align:right;">${formatCurrency(valorUnit)}</td>
+                    <td style="text-align:right;"><strong>${formatCurrency(subtotal)}</strong></td>
+                </tr>`;
+        }).join('');
+    }
 
-        <!-- TOTAL -->
-        <div class="orc-total-row">
-            <div class="orc-total-box">
-                <span>VALOR TOTAL</span>
-                <strong>${formatCurrency(orc.valor_total)}</strong>
-            </div>
-        </div>
+    // Se o backend já tem o total, usar ele
+    const valorTotal = orc.valor_total || totalGeral;
 
-        <!-- INFORMAÇÕES -->
-        <div class="orc-info-grid">
-            <div class="orc-info-box">
-                <h5>Prazo de Pagamento</h5>
-                <p>${escapeHtml(orc.prazo_pagamento || '-')}</p>
-            </div>
-            <div class="orc-info-box">
-                <h5>Prazo para Despacho</h5>
-                <p>${escapeHtml(orc.prazo_despacho || '-')}</p>
-            </div>
-            <div class="orc-info-box">
-                <h5>Observações</h5>
-                <p>${escapeHtml(orc.observacoes || 'Nenhuma observação')}</p>
-            </div>
-        </div>
+    itensFoot.innerHTML = `
+        <tr style="font-size:1.1em;">
+            <td colspan="4" style="text-align:right;"><strong>VALOR TOTAL:</strong></td>
+            <td style="text-align:right;"><strong style="color:var(--primary-color);">${formatCurrency(valorTotal)}</strong></td>
+        </tr>`;
 
-        <!-- IMAGENS DOS PRODUTOS -->
-        ${imagensHTML}
+    // === DETALHES DOS PRODUTOS (imagens, specs, dimensões) ===
+    const detalhesContainer = document.getElementById('previewProdutosDetalheContent');
+    if (itens.length > 0) {
+        detalhesContainer.innerHTML = itens.map(item => {
+            const produto = item.produto || {};
+            const nome = produto.nome || item.produto_nome || '-';
 
-        <!-- ESPECIFICAÇÕES -->
-        ${specsHTML}
+            // Imagem
+            let imgHtml = '';
+            if (produto.imagem_base64) {
+                imgHtml = `<img src="${produto.imagem_base64}" alt="${escapeHtml(nome)}" style="max-width:300px; max-height:250px; border-radius:8px; object-fit:contain;">`;
+            } else if (produto.imagem_url) {
+                imgHtml = `<img src="${escapeHtml(produto.imagem_url)}" alt="${escapeHtml(nome)}" style="max-width:300px; max-height:250px; border-radius:8px; object-fit:contain;" onerror="this.style.display='none'">`;
+            }
 
-        <!-- DIMENSÕES -->
-        ${dimensoesHTML}
+            // Dimensões
+            const dims = [];
+            if (produto.altura) dims.push(`Altura: ${produto.altura} cm`);
+            if (produto.largura) dims.push(`Largura: ${produto.largura} cm`);
+            if (produto.profundidade) dims.push(`Profundidade: ${produto.profundidade} cm`);
+            const pesoStr = produto.peso ? `Peso: ${produto.peso} kg` : '';
 
-        <!-- FOOTER -->
-        <div class="orc-footer">
-            <p>${escapeHtml(empresa.nome || 'WD MÁQUINAS')} - ${escapeHtml(empresa.telefone || '')} - ${escapeHtml(empresa.email || '')}</p>
-            <p style="margin-top:4px">Orçamento válido até ${formatDate(orc.data_validade)}</p>
-        </div>
-    `;
+            // Descrição e especificações
+            const descricao = produto.descricao || '';
+            const especificacoes = produto.especificacoes || '';
+
+            return `
+                <div style="border:1px solid var(--border-color); border-radius:var(--radius-md); padding:20px; margin-bottom:15px; page-break-inside:avoid;">
+                    <h4 style="margin:0 0 15px 0; color:var(--primary-color);">${escapeHtml(nome)}</h4>
+                    <div style="display:flex; gap:20px; flex-wrap:wrap;">
+                        ${imgHtml ? `<div style="flex-shrink:0;">${imgHtml}</div>` : ''}
+                        <div style="flex:1; min-width:250px;">
+                            ${descricao ? `<p style="margin:0 0 10px 0;"><strong>Descrição:</strong><br>${escapeHtml(descricao)}</p>` : ''}
+                            ${especificacoes ? `<p style="margin:0 0 10px 0;"><strong>Especificações:</strong><br>${escapeHtml(especificacoes)}</p>` : ''}
+                            ${dims.length > 0 ? `
+                                <p style="margin:0 0 5px 0;"><strong>Dimensões:</strong></p>
+                                <p style="margin:0 0 5px 0;">${dims.join(' | ')}</p>
+                            ` : ''}
+                            ${pesoStr ? `<p style="margin:5px 0 0 0;">${pesoStr}</p>` : ''}
+                        </div>
+                    </div>
+                </div>`;
+        }).join('');
+
+        document.getElementById('previewProdutosDetalhe').style.display = 'block';
+    } else {
+        document.getElementById('previewProdutosDetalhe').style.display = 'none';
+    }
+
+    // === CONDIÇÕES COMERCIAIS ===
+    const condicoesContent = document.getElementById('previewCondicoesContent');
+    const formaPagamento = orc.forma_pagamento || config.condicoesPadrao || '';
+    const prazoEntrega = orc.prazo_entrega || config.prazoEntregaPadrao || '';
+
+    condicoesContent.innerHTML = `
+        <div style="font-size:0.95em;">
+            ${formaPagamento ? `<p><strong>Forma de Pagamento:</strong> ${escapeHtml(formaPagamento)}</p>` : ''}
+            ${prazoEntrega ? `<p><strong>Prazo de Entrega/Despacho:</strong> ${escapeHtml(prazoEntrega)}</p>` : ''}
+            ${validade !== '-' ? `<p><strong>Validade do Orçamento:</strong> ${validade}</p>` : ''}
+        </div>`;
+
+    // === OBSERVAÇÕES ===
+    const observacoes = orc.observacoes || '';
+    if (observacoes) {
+        document.getElementById('previewObservacoesContent').innerHTML = `<p>${escapeHtml(observacoes)}</p>`;
+        document.getElementById('previewObservacoes').style.display = 'block';
+    }
+
+    // === RODAPÉ ===
+    const footerEl = document.getElementById('previewFooter');
+    footerEl.innerHTML = `
+        <div style="text-align:center; padding:15px 0; border-top:2px solid var(--border-color); margin-top:20px; font-size:0.85em; color:var(--text-muted);">
+            <p>${escapeHtml(config.nomeEmpresa || 'WD Máquinas')} ${config.telefone ? ' | Tel: ' + formatPhone(config.telefone) : ''} ${config.email ? ' | ' + escapeHtml(config.email) : ''}</p>
+            ${config.site ? `<p>${escapeHtml(config.site)}</p>` : ''}
+            <p style="margin-top:5px;">Documento gerado em ${new Date().toLocaleDateString('pt-BR')}</p>
+        </div>`;
+
+    // Pré-popular modal de e-mail
+    prePopularEmail(orc);
 }
 
-// ============================================================
-// Compartilhar via WhatsApp
-// ============================================================
+// ========== PRÉ-POPULAR MODAL EMAIL ==========
+function prePopularEmail(orc) {
+    const cliente = orc.cliente || {};
+    const numero = orc.numero || orc.id?.substring(0, 8) || '';
+    const config = typeof getConfig === 'function' ? getConfig() : {};
 
+    if (cliente.email) {
+        document.getElementById('emailDestinatario').value = cliente.email;
+    }
+
+    document.getElementById('emailAssunto').value = `Orçamento #${numero} - ${config.nomeEmpresa || 'WD Máquinas'}`;
+    document.getElementById('emailMensagem').value = `Prezado(a) ${cliente.nome || 'Cliente'},\n\nSegue em anexo o orçamento #${numero} conforme solicitado.\n\nQualquer dúvida estamos à disposição.\n\nAtenciosamente,\n${config.nomeEmpresa || 'WD Máquinas'}`;
+}
+
+// ========== IMPRIMIR / PDF ==========
+function imprimirOrcamento() {
+    // Gerar título do PDF com nome do produto e data
+    if (orcamentoData) {
+        const itens = orcamentoData.itens || [];
+        const numero = orcamentoData.numero || orcamentoData.id?.substring(0, 8) || '';
+        const dataEmissao = orcamentoData.data_emissao || orcamentoData.created_at || '';
+
+        let titulo = '';
+        if (itens.length === 1) {
+            const nomeProduto = itens[0].produto_nome || itens[0].produto?.nome || '';
+            if (nomeProduto) {
+                titulo = formatFileName(nomeProduto, dataEmissao);
+            }
+        }
+
+        if (!titulo) {
+            titulo = formatFileName(`Orçamento #${numero}`, dataEmissao);
+        }
+
+        document.title = titulo;
+    }
+
+    window.print();
+
+    // Restaurar título original
+    setTimeout(() => {
+        document.title = 'Preview do Orçamento | WD Máquinas';
+    }, 1000);
+}
+
+// ========== COMPARTILHAR WHATSAPP ==========
 function compartilharWhatsApp() {
-    if (!orcamentoAtual) {
-        showToast('Nenhum orçamento carregado', 'warning');
+    if (!orcamentoData) {
+        showToast('Orçamento não carregado', 'error');
         return;
     }
 
-    const orc = orcamentoAtual;
-    const cliente = orc.clientes || {};
-    const empresa = orc.empresa || {};
+    const orc = orcamentoData;
+    const config = typeof getConfig === 'function' ? getConfig() : {};
+    const numero = orc.numero || orc.id?.substring(0, 8) || '';
+    const cliente = orc.cliente || {};
+    const valorTotal = formatCurrency(orc.valor_total || 0);
+    const emissao = formatDate(orc.data_emissao || orc.created_at);
 
-    const itensTexto = (orc.itens || []).map((item, i) => {
-        const prod = item.produtos || {};
-        return `${i + 1}. ${prod.nome || 'Produto'} - Qtd: ${item.quantidade} - ${formatCurrency(item.valor_total)}`;
-    }).join('\n');
+    // Montar mensagem
+    let msg = `*Orçamento #${numero}*\n`;
+    msg += `*${config.nomeEmpresa || 'WD Máquinas'}*\n\n`;
+    msg += `📅 Data: ${emissao}\n`;
+    msg += `👤 Cliente: ${cliente.nome || '-'}\n\n`;
 
-    const texto = `*${empresa.nome || 'WD MÁQUINAS'}*\n` +
-        `*ORÇAMENTO #${orc.numero_orcamento || '-'}*\n\n` +
-        `*Cliente:* ${cliente.nome || '-'}${cliente.empresa ? ' - ' + cliente.empresa : ''}\n` +
-        `*Emissão:* ${formatDate(orc.data_emissao)}\n` +
-        `*Validade:* ${formatDate(orc.data_validade)}\n\n` +
-        `*Itens:*\n${itensTexto}\n\n` +
-        `*TOTAL: ${formatCurrency(orc.valor_total)}*\n\n` +
-        `*Pagamento:* ${orc.prazo_pagamento || '-'}\n` +
-        `*Despacho:* ${orc.prazo_despacho || '-'}\n\n` +
-        `${empresa.telefone || ''} | ${empresa.email || ''}`;
-
-    const encoded = encodeURIComponent(texto);
-
-    let whatsUrl = `https://wa.me/?text=${encoded}`;
-    if (cliente.telefone) {
-        const tel = cliente.telefone.replace(/\D/g, '');
-        if (tel.length >= 10) {
-            const telFull = tel.startsWith('55') ? tel : '55' + tel;
-            whatsUrl = `https://wa.me/${telFull}?text=${encoded}`;
-        }
+    // Itens
+    const itens = orc.itens || [];
+    if (itens.length > 0) {
+        msg += `📦 *Itens:*\n`;
+        itens.forEach((item, i) => {
+            const nome = item.produto_nome || item.produto?.nome || '-';
+            const qtd = item.quantidade || 0;
+            const subtotal = (item.quantidade || 0) * (item.valor_unitario || 0);
+            msg += `  ${i + 1}. ${nome} (x${qtd}) — ${formatCurrency(subtotal)}\n`;
+        });
     }
 
+    msg += `\n💰 *Total: ${valorTotal}*\n`;
+
+    if (orc.forma_pagamento) {
+        msg += `\n💳 Pagamento: ${orc.forma_pagamento}`;
+    }
+    if (orc.prazo_entrega) {
+        msg += `\n🚚 Entrega: ${orc.prazo_entrega}`;
+    }
+
+    // URL do WhatsApp
+    const telefone = cliente.telefone ? cliente.telefone.replace(/\D/g, '') : '';
+    let whatsUrl = 'https://wa.me/';
+    if (telefone) {
+        // Adicionar código do país se necessário
+        const tel = telefone.startsWith('55') ? telefone : `55${telefone}`;
+        whatsUrl += tel;
+    }
+    whatsUrl += `?text=${encodeURIComponent(msg)}`;
+
     window.open(whatsUrl, '_blank');
+}
+
+// ========== MODAL EMAIL ==========
+function abrirModalEmail() {
+    document.getElementById('modalEmail').classList.add('active');
+}
+
+function fecharModalEmail() {
+    document.getElementById('modalEmail').classList.remove('active');
+}
+
+async function enviarEmail(event) {
+    event.preventDefault();
+
+    if (!orcamentoData) {
+        showToast('Orçamento não carregado', 'error');
+        return;
+    }
+
+    const email = document.getElementById('emailDestinatario').value.trim();
+    const assunto = document.getElementById('emailAssunto').value.trim();
+    const mensagem = document.getElementById('emailMensagem').value.trim();
+
+    if (!email) {
+        showToast('Informe o e-mail do destinatário', 'warning');
+        return;
+    }
+
+    const btnEnviar = document.getElementById('btnEnviarEmail');
+    btnEnviar.disabled = true;
+    btnEnviar.textContent = '⏳ Enviando...';
+
+    try {
+        await apiPost(`/api/orcamentos/${orcamentoData.id}/enviar-email`, {
+            email: email,
+            assunto: assunto || `Orçamento - WD Máquinas`,
+            mensagem: mensagem || '',
+        });
+
+        showToast('E-mail enviado com sucesso!', 'success');
+        fecharModalEmail();
+
+    } catch (error) {
+        console.error('[Preview] Erro ao enviar e-mail:', error);
+        showToast(`Erro ao enviar e-mail: ${error.message}`, 'error');
+    } finally {
+        btnEnviar.disabled = false;
+        btnEnviar.textContent = '📧 Enviar';
+    }
 }
