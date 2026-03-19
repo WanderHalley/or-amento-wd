@@ -1,6 +1,16 @@
 /**
  * orcamentos.js — CRUD de Orçamentos com itens dinâmicos
- * Depende de: app.js
+ * IDs sincronizados com orcamentos.html
+ * Parsing da API trata múltiplos formatos de resposta
+ *
+ * IDs esperados no HTML:
+ *   secaoLista, secaoFormulario, btnNovoOrcamento,
+ *   tabelaOrcamentos, buscaOrcamento, filtroStatus,
+ *   formOrcamento, orcCliente, orcDataEmissao, orcDataValidade,
+ *   orcFormaPagamento, orcPrazoEntrega, orcObservacoes,
+ *   tabelaItensOrcamento (tbody), orcTotalDisplay,
+ *   modalStatus, statusOrcamentoId, novoStatus,
+ *   confirmDeleteOrcamento
  */
 
 // ========== ESTADO LOCAL ==========
@@ -9,6 +19,25 @@ let orcProdutos = [];
 let orcClientes = [];
 let deleteOrcamentoId = null;
 let itemCounter = 0;
+
+// ========== HELPER: extrair array da resposta da API ==========
+/**
+ * A API pode retornar em vários formatos:
+ *   { clientes: [...] }    — endpoint de clientes
+ *   { produtos: [...] }    — endpoint de produtos
+ *   { orcamentos: [...] }  — endpoint de orçamentos
+ *   { success: true, data: [...] }  — formato alternativo
+ *   [...]                   — array direto
+ *
+ * Esta função extrai o array independente do formato.
+ */
+function extrairArray(data, chave) {
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    if (data[chave] && Array.isArray(data[chave])) return data[chave];
+    if (data.data && Array.isArray(data.data)) return data.data;
+    return [];
+}
 
 // ========== INICIALIZAÇÃO ==========
 document.addEventListener('DOMContentLoaded', () => {
@@ -27,41 +56,57 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ========== ALTERNAR LISTA / FORMULÁRIO ==========
 function mostrarLista() {
-    document.getElementById('secaoLista').style.display = 'block';
-    document.getElementById('secaoFormulario').style.display = 'none';
-    document.getElementById('btnNovoOrcamento').style.display = '';
+    const secaoLista = document.getElementById('secaoLista');
+    const secaoFormulario = document.getElementById('secaoFormulario');
+    const btnNovo = document.getElementById('btnNovoOrcamento');
+
+    if (secaoLista) secaoLista.style.display = 'block';
+    if (secaoFormulario) secaoFormulario.style.display = 'none';
+    if (btnNovo) btnNovo.style.display = '';
+
     carregarOrcamentos();
 }
 
 async function mostrarFormulario() {
-    document.getElementById('secaoLista').style.display = 'none';
-    document.getElementById('secaoFormulario').style.display = 'block';
-    document.getElementById('btnNovoOrcamento').style.display = 'none';
+    const secaoLista = document.getElementById('secaoLista');
+    const secaoFormulario = document.getElementById('secaoFormulario');
+    const btnNovo = document.getElementById('btnNovoOrcamento');
 
-    // Reset
-    document.getElementById('formOrcamento').reset();
-    document.getElementById('tabelaItensOrcamento').innerHTML = '';
-    document.getElementById('orcTotalDisplay').textContent = 'R$ 0,00';
+    if (secaoLista) secaoLista.style.display = 'none';
+    if (secaoFormulario) secaoFormulario.style.display = 'block';
+    if (btnNovo) btnNovo.style.display = 'none';
+
+    // Reset formulário
+    const form = document.getElementById('formOrcamento');
+    if (form) form.reset();
+
+    const tbodyItens = document.getElementById('tabelaItensOrcamento');
+    if (tbodyItens) tbodyItens.innerHTML = '';
+
+    const totalDisplay = document.getElementById('orcTotalDisplay');
+    if (totalDisplay) totalDisplay.textContent = 'R$ 0,00';
+
     itemCounter = 0;
 
     // Datas padrão
     const config = typeof getConfig === 'function' ? getConfig() : {};
     const validadeDias = config.validadeDias || 15;
-    document.getElementById('orcDataEmissao').value = getToday();
-    document.getElementById('orcDataValidade').value = getDatePlusDays(validadeDias);
+
+    const dataEmissao = document.getElementById('orcDataEmissao');
+    const dataValidade = document.getElementById('orcDataValidade');
+    if (dataEmissao) dataEmissao.value = typeof getToday === 'function' ? getToday() : new Date().toISOString().split('T')[0];
+    if (dataValidade) dataValidade.value = typeof getDatePlusDays === 'function' ? getDatePlusDays(validadeDias) : '';
 
     // Condições padrão
-    if (config.condicoesPadrao) {
-        document.getElementById('orcFormaPagamento').value = config.condicoesPadrao;
-    }
-    if (config.prazoEntregaPadrao) {
-        document.getElementById('orcPrazoEntrega').value = config.prazoEntregaPadrao;
-    }
-    if (config.observacoesPadrao) {
-        document.getElementById('orcObservacoes').value = config.observacoesPadrao;
-    }
+    const formaPag = document.getElementById('orcFormaPagamento');
+    const prazoEnt = document.getElementById('orcPrazoEntrega');
+    const obs = document.getElementById('orcObservacoes');
 
-    // Carregar clientes e produtos para os selects
+    if (formaPag && config.condicoesPadrao) formaPag.value = config.condicoesPadrao;
+    if (prazoEnt && config.prazoEntregaPadrao) prazoEnt.value = config.prazoEntregaPadrao;
+    if (obs && config.observacoesPadrao) obs.value = config.observacoesPadrao;
+
+    // Carregar selects
     await carregarClientesParaSelect();
     await carregarProdutosParaSelect();
 
@@ -72,11 +117,15 @@ async function mostrarFormulario() {
 // ========== CARREGAR CLIENTES PARA SELECT ==========
 async function carregarClientesParaSelect() {
     const select = document.getElementById('orcCliente');
+    if (!select) return;
+
     select.innerHTML = '<option value="">Carregando...</option>';
 
     try {
         const data = await apiGet('/api/clientes?limit=200');
-        orcClientes = data.clientes || data || [];
+        orcClientes = extrairArray(data, 'clientes');
+
+        console.log('[Orçamentos] Clientes carregados para select:', orcClientes.length);
 
         select.innerHTML = '<option value="">Selecione um cliente...</option>';
         orcClientes.forEach(c => {
@@ -94,8 +143,8 @@ async function carregarClientesParaSelect() {
 async function carregarProdutosParaSelect() {
     try {
         const data = await apiGet('/api/produtos?ativo=true&limit=200');
-        orcProdutos = data.produtos || data || [];
-        console.log('[Orçamentos] Produtos para select:', orcProdutos.length);
+        orcProdutos = extrairArray(data, 'produtos');
+        console.log('[Orçamentos] Produtos carregados para select:', orcProdutos.length);
     } catch (error) {
         console.error('[Orçamentos] Erro ao carregar produtos:', error);
         orcProdutos = [];
@@ -106,11 +155,16 @@ async function carregarProdutosParaSelect() {
 function adicionarItem() {
     itemCounter++;
     const tbody = document.getElementById('tabelaItensOrcamento');
+    if (!tbody) {
+        console.error('[Orçamentos] Elemento tabelaItensOrcamento não encontrado');
+        return;
+    }
 
-    // Select de produtos
+    // Montar options dos produtos
     let optionsHtml = '<option value="">Selecione...</option>';
     orcProdutos.forEach(p => {
-        optionsHtml += `<option value="${p.id}" data-valor="${p.valor}">${escapeHtml(p.nome)} — ${formatCurrency(p.valor)}</option>`;
+        const precoFormatado = typeof formatCurrency === 'function' ? formatCurrency(p.valor) : `R$ ${p.valor}`;
+        optionsHtml += `<option value="${p.id}" data-valor="${p.valor}">${escapeHtml(p.nome)} — ${precoFormatado}</option>`;
     });
 
     const tr = document.createElement('tr');
@@ -171,20 +225,25 @@ function recalcularTotal() {
             const valorUnit = parseFloat(valorInput.value) || 0;
             const subtotal = qtd * valorUnit;
 
-            subtotalSpan.textContent = formatCurrency(subtotal);
+            subtotalSpan.textContent = typeof formatCurrency === 'function' ? formatCurrency(subtotal) : `R$ ${subtotal.toFixed(2)}`;
             subtotalSpan.dataset.valor = subtotal;
             total += subtotal;
         }
     });
 
-    document.getElementById('orcTotalDisplay').textContent = formatCurrency(total);
+    const totalDisplay = document.getElementById('orcTotalDisplay');
+    if (totalDisplay) {
+        totalDisplay.textContent = typeof formatCurrency === 'function' ? formatCurrency(total) : `R$ ${total.toFixed(2)}`;
+    }
 }
 
 // ========== SALVAR ORÇAMENTO ==========
 async function salvarOrcamento(event) {
     event.preventDefault();
 
-    const clienteId = document.getElementById('orcCliente').value;
+    const clienteSelect = document.getElementById('orcCliente');
+    const clienteId = clienteSelect ? clienteSelect.value : '';
+
     if (!clienteId) {
         showToast('Selecione um cliente', 'warning');
         return;
@@ -219,13 +278,20 @@ async function salvarOrcamento(event) {
         return;
     }
 
+    // Montar dados
+    const dataEmissao = document.getElementById('orcDataEmissao');
+    const dataValidade = document.getElementById('orcDataValidade');
+    const formaPag = document.getElementById('orcFormaPagamento');
+    const prazoEnt = document.getElementById('orcPrazoEntrega');
+    const obs = document.getElementById('orcObservacoes');
+
     const dados = {
         cliente_id: clienteId,
-        data_emissao: document.getElementById('orcDataEmissao').value || null,
-        data_validade: document.getElementById('orcDataValidade').value || null,
-        forma_pagamento: document.getElementById('orcFormaPagamento').value.trim() || null,
-        prazo_entrega: document.getElementById('orcPrazoEntrega').value.trim() || null,
-        observacoes: document.getElementById('orcObservacoes').value.trim() || null,
+        data_emissao: dataEmissao ? dataEmissao.value : null,
+        data_validade: dataValidade ? dataValidade.value : null,
+        forma_pagamento: formaPag ? formaPag.value.trim() || null : null,
+        prazo_entrega: prazoEnt ? prazoEnt.value.trim() || null : null,
+        observacoes: obs ? obs.value.trim() || null : null,
         itens: itens,
     };
 
@@ -233,11 +299,12 @@ async function salvarOrcamento(event) {
 
     try {
         const result = await apiPost('/api/orcamentos', dados);
-        const orcId = result.id || result.orcamento?.id;
+
+        // Extrair ID: pode vir como result.id, result.data.id, etc.
+        const orcId = result.id || (result.data && result.data.id) || (result.orcamento && result.orcamento.id);
 
         showToast('Orçamento criado com sucesso!', 'success');
 
-        // Redirecionar para preview
         if (orcId) {
             setTimeout(() => {
                 window.location.href = `preview.html?id=${orcId}`;
@@ -268,14 +335,16 @@ async function carregarOrcamentos() {
     try {
         let url = '/api/orcamentos?limit=100';
 
-        const status = document.getElementById('filtroStatus')?.value;
+        const filtroStatus = document.getElementById('filtroStatus');
+        const status = filtroStatus ? filtroStatus.value : '';
         if (status) url += `&status=${status}`;
 
-        const busca = document.getElementById('buscaOrcamento')?.value;
+        const buscaInput = document.getElementById('buscaOrcamento');
+        const busca = buscaInput ? buscaInput.value : '';
         if (busca) url += `&busca=${encodeURIComponent(busca)}`;
 
         const data = await apiGet(url);
-        orcamentosData = data.orcamentos || data || [];
+        orcamentosData = extrairArray(data, 'orcamentos');
 
         console.log('[Orçamentos] Carregados:', orcamentosData.length);
         renderizarOrcamentos(orcamentosData);
@@ -309,14 +378,16 @@ function renderizarOrcamentos(orcamentos) {
     }
 
     tbody.innerHTML = orcamentos.map(orc => {
-        const numero = orc.numero || orc.id?.substring(0, 8) || '-';
+        const numero = orc.numero || orc.numero_orcamento || orc.id?.substring(0, 8) || '-';
         const clienteNome = orc.cliente_nome || orc.cliente?.nome || '-';
         const clienteEmpresa = orc.cliente_empresa || orc.cliente?.empresa || '';
-        const nomeDisplay = clienteEmpresa ? `${escapeHtml(clienteNome)}<br><small>${escapeHtml(clienteEmpresa)}</small>` : escapeHtml(clienteNome);
+        const nomeDisplay = clienteEmpresa
+            ? `${escapeHtml(clienteNome)}<br><small>${escapeHtml(clienteEmpresa)}</small>`
+            : escapeHtml(clienteNome);
 
-        const emissao = formatDate(orc.data_emissao || orc.created_at);
-        const validade = orc.data_validade ? formatDate(orc.data_validade) : '-';
-        const valor = formatCurrency(orc.valor_total || 0);
+        const emissao = typeof formatDate === 'function' ? formatDate(orc.data_emissao || orc.created_at) : (orc.data_emissao || '-');
+        const validade = orc.data_validade ? (typeof formatDate === 'function' ? formatDate(orc.data_validade) : orc.data_validade) : '-';
+        const valor = typeof formatCurrency === 'function' ? formatCurrency(orc.valor_total || 0) : `R$ ${(orc.valor_total || 0).toFixed(2)}`;
         const status = orc.status || 'pendente';
 
         const badgeClass = {
@@ -353,24 +424,32 @@ function renderizarOrcamentos(orcamentos) {
 }
 
 // ========== BUSCA COM DEBOUNCE ==========
-const buscarOrcamentosDebounced = debounce(() => {
-    carregarOrcamentos();
-}, 400);
+const buscarOrcamentosDebounced = typeof debounce === 'function'
+    ? debounce(() => { carregarOrcamentos(); }, 400)
+    : function() { carregarOrcamentos(); };
 
 // ========== MODAL: MUDAR STATUS ==========
 function abrirModalStatus(id, statusAtual) {
-    document.getElementById('statusOrcamentoId').value = id;
-    document.getElementById('novoStatus').value = statusAtual;
-    document.getElementById('modalStatus').classList.add('active');
+    const idInput = document.getElementById('statusOrcamentoId');
+    const statusSelect = document.getElementById('novoStatus');
+    const modal = document.getElementById('modalStatus');
+
+    if (idInput) idInput.value = id;
+    if (statusSelect) statusSelect.value = statusAtual;
+    if (modal) modal.classList.add('active');
 }
 
 function fecharModalStatus() {
-    document.getElementById('modalStatus').classList.remove('active');
+    const modal = document.getElementById('modalStatus');
+    if (modal) modal.classList.remove('active');
 }
 
 async function confirmarMudarStatus() {
-    const id = document.getElementById('statusOrcamentoId').value;
-    const novoStatus = document.getElementById('novoStatus').value;
+    const idInput = document.getElementById('statusOrcamentoId');
+    const statusSelect = document.getElementById('novoStatus');
+
+    const id = idInput ? idInput.value : '';
+    const novoStatus = statusSelect ? statusSelect.value : '';
 
     if (!id || !novoStatus) return;
 
@@ -389,12 +468,14 @@ async function confirmarMudarStatus() {
 // ========== MODAL: DELETAR ORÇAMENTO ==========
 function confirmarDeleteOrcamento(id) {
     deleteOrcamentoId = id;
-    document.getElementById('confirmDeleteOrcamento').classList.add('active');
+    const modal = document.getElementById('confirmDeleteOrcamento');
+    if (modal) modal.classList.add('active');
 }
 
 function fecharConfirmDeleteOrcamento() {
     deleteOrcamentoId = null;
-    document.getElementById('confirmDeleteOrcamento').classList.remove('active');
+    const modal = document.getElementById('confirmDeleteOrcamento');
+    if (modal) modal.classList.remove('active');
 }
 
 async function deletarOrcamento() {
