@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orçamentos - WD Máquinas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-layout">
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <div class="sidebar-logo-icon">WD</div>
+                    <div class="sidebar-logo-text">
+                        <h1>WD Máquinas</h1>
+                        <span>Sistema de Orçamentos</span>
+                    </div>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-nav-label">Menu</div>
+                <a href="index.html" class="sidebar-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    Dashboard
+                </a>
+                <a href="orcamentos.html" class="sidebar-link active">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    Orçamentos
+                </a>
+                <a href="clientes.html" class="sidebar-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                    Clientes
+                </a>
+                <a href="produtos.html" class="sidebar-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                    Produtos
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main -->
+        <main class="main-content">
+            <header class="main-header">
+                <div class="header-left">
+                    <button class="menu-toggle" id="menuToggle">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                    </button>
+                    <h2 id="pageTitle">Orçamentos</h2>
+                </div>
+                <div class="header-right" id="headerActions">
+                    <button class="btn btn-primary btn-sm" onclick="mostrarFormulario()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Novo Orçamento
+                    </button>
+                </div>
+            </header>
+
+            <div class="page-content">
+                <!-- LISTA DE ORÇAMENTOS -->
+                <div id="viewLista">
+                    <div class="actions-bar">
+                        <div class="search-box">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            <input type="text" id="buscaOrcamento" placeholder="Buscar orçamento..." oninput="buscarOrcamentos()">
+                        </div>
+                        <div style="display:flex;gap:8px;">
+                            <select id="filtroStatus" onchange="buscarOrcamentos()" style="padding:10px 14px;border:1px solid var(--gray-300);border-radius:var(--radius);font-size:14px;">
+                                <option value="">Todos os status</option>
+                                <option value="pendente">Pendente</option>
+                                <option value="aprovado">Aprovado</option>
+                                <option value="recusado">Recusado</option>
+                                <option value="expirado">Expirado</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-body-no-pad">
+                            <div class="table-wrapper">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Cliente</th>
+                                            <th>Emissão</th>
+                                            <th>Validade</th>
+                                            <th>Valor</th>
+                                            <th>Status</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbodyOrcamentos">
+                                        <tr><td colspan="7"><div class="spinner"></div></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FORMULÁRIO DE NOVO ORÇAMENTO -->
+                <div id="viewFormulario" style="display:none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Novo Orçamento</h3>
+                            <button class="btn btn-secondary btn-sm" onclick="mostrarLista()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                                Voltar
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <form id="formOrcamento" onsubmit="salvarOrcamento(event)">
+                                <div class="form-grid">
+                                    <!-- Cliente -->
+                                    <div class="form-group">
+                                        <label>Cliente <span class="required">*</span></label>
+                                        <select id="orcClienteId" required>
+                                            <option value="">Selecione o cliente...</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Datas -->
+                                    <div class="form-group">
+                                        <label>Data de Emissão</label>
+                                        <input type="date" id="orcDataEmissao">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Data de Validade</label>
+                                        <input type="date" id="orcDataValidade">
+                                    </div>
+
+                                    <!-- Prazos -->
+                                    <div class="form-group full-width">
+                                        <label>Prazo de Pagamento</label>
+                                        <input type="text" id="orcPrazoPagamento" value="Dividimos em Até 10x Sem Juros no Cartão de Crédito ou 10% de Desconto no Boleto ou Pix à Vista">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Prazo para Despacho</label>
+                                        <input type="text" id="orcPrazoDespacho" value
