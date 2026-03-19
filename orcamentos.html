@@ -1,59 +1,86 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Orçamentos - WD Máquinas</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Orçamentos | WD Máquinas - Orçamentos</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
 </head>
 <body>
-    <div class="app-layout">
-        <div class="sidebar-overlay" id="sidebarOverlay"></div>
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <div class="sidebar-logo">
-                    <div class="sidebar-logo-icon">WD</div>
-                    <div class="sidebar-logo-text"><h1>WD Máquinas</h1><span>Orçamentos</span></div>
-                </div>
-                <button class="sidebar-toggle" id="sidebarCollapse" title="Recolher menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
+
+    <!-- ========== SIDEBAR ========== -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <span class="logo-icon">⚙️</span>
+                <span class="logo-text">WD Máquinas</span>
             </div>
-            <nav class="sidebar-nav">
-                <div class="sidebar-nav-label">Menu</div>
-                <a href="index.html" class="sidebar-link" title="Dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="sidebar-link-text">Dashboard</span></a>
-                <a href="orcamentos.html" class="sidebar-link active" title="Orçamentos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span class="sidebar-link-text">Orçamentos</span></a>
-                <a href="clientes.html" class="sidebar-link" title="Clientes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="sidebar-link-text">Clientes</span></a>
-                <a href="produtos.html" class="sidebar-link" title="Produtos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg><span class="sidebar-link-text">Produtos</span></a>
-                <a href="configuracoes.html" class="sidebar-link" title="Configurações"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span class="sidebar-link-text">Configurações</span></a>
-            </nav>
-        </aside>
+            <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Recolher menu">
+                <span class="chevron-icon">◀</span>
+            </button>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="index.html" class="sidebar-link">
+                <span class="link-icon">📊</span>
+                <span class="link-text">Dashboard</span>
+            </a>
+            <a href="clientes.html" class="sidebar-link">
+                <span class="link-icon">👥</span>
+                <span class="link-text">Clientes</span>
+            </a>
+            <a href="produtos.html" class="sidebar-link">
+                <span class="link-icon">📦</span>
+                <span class="link-text">Produtos</span>
+            </a>
+            <a href="orcamentos.html" class="sidebar-link active">
+                <span class="link-icon">📋</span>
+                <span class="link-text">Orçamentos</span>
+            </a>
+            <a href="configuracoes.html" class="sidebar-link">
+                <span class="link-icon">⚙️</span>
+                <span class="link-text">Configurações</span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <small class="footer-text">WD Máquinas © 2025</small>
+        </div>
+    </aside>
 
-        <main class="main-content">
-            <header class="main-header">
-                <div class="header-left">
-                    <button class="menu-toggle" id="menuToggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
-                    <h2 id="pageTitle">Orçamentos</h2>
-                </div>
-                <div class="header-right" id="headerActions">
-                    <button class="btn btn-primary btn-sm" onclick="mostrarFormulario()">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        Novo Orçamento
-                    </button>
-                    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Alternar Tema"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/></svg></button>
-                </div>
-            </header>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-            <div class="page-content">
-                <!-- LISTA -->
-                <div id="viewLista">
-                    <div class="actions-bar">
-                        <div class="search-box">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                            <input type="text" id="buscaOrcamento" placeholder="Buscar orçamento..." oninput="buscarOrcamentos()">
-                        </div>
-                        <div style="display:flex;gap:8px;">
-                            <select id="filtroStatus" onchange="buscarOrcamentos()" style="padding:10px 14px;border:1px solid var(--border-color);border-radius:var(--radius);font-size:14px;background:var(--bg-input);color:var(--text-primary);">
+    <!-- ========== MAIN ========== -->
+    <main class="main-content" id="mainContent">
+
+        <!-- Header -->
+        <header class="main-header">
+            <div class="header-left">
+                <button class="menu-toggle" id="menuToggle" title="Abrir menu">☰</button>
+                <h1 class="page-title">Orçamentos</h1>
+            </div>
+            <div class="header-right">
+                <!-- ID = btnNovoOrcamento (JS usa para esconder ao abrir form) -->
+                <button class="btn btn-primary btn-sm" id="btnNovoOrcamento" onclick="mostrarFormulario()">+ Novo Orçamento</button>
+                <button class="theme-toggle-btn" id="themeToggleBtn" title="Alternar tema">
+                    <span id="themeIcon">🌙</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <div class="page-content">
+
+            <!-- ===== SEÇÃO LISTA (id=secaoLista) ===== -->
+            <div id="secaoLista">
+
+                <!-- Filtros -->
+                <div class="card">
+                    <div class="card-body" style="padding: 15px;">
+                        <div class="filter-bar" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                            <!-- ID = buscaOrcamento -->
+                            <input type="text" id="buscaOrcamento" class="form-input" placeholder="Buscar por cliente..." style="flex:1; min-width:200px;" oninput="buscarOrcamentosDebounced()">
+                            <!-- ID = filtroStatus -->
+                            <select id="filtroStatus" class="form-input" style="width:auto; min-width:150px;" onchange="carregarOrcamentos()">
                                 <option value="">Todos os status</option>
                                 <option value="pendente">Pendente</option>
                                 <option value="aprovado">Aprovado</option>
@@ -62,132 +89,148 @@
                             </select>
                         </div>
                     </div>
+                </div>
 
-                    <div class="card">
-                        <div class="card-body-no-pad">
-                            <div class="table-wrapper">
-                                <table class="data-table">
-                                    <thead>
-                                        <tr>
-                                            <th>#</th>
-                                            <th>Cliente</th>
-                                            <th>Emissão</th>
-                                            <th>Validade</th>
-                                            <th>Valor</th>
-                                            <th>Status</th>
-                                            <th>Ações</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tbodyOrcamentos">
-                                        <tr><td colspan="7"><div class="spinner"></div></td></tr>
-                                    </tbody>
-                                </table>
+                <!-- Tabela de orçamentos -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Cliente</th>
+                                        <th>Emissão</th>
+                                        <th>Validade</th>
+                                        <th>Valor Total</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <!-- ID = tabelaOrcamentos -->
+                                <tbody id="tabelaOrcamentos">
+                                    <tr>
+                                        <td colspan="7" class="empty-state">
+                                            <div class="loading-spinner"></div>
+                                            <p>Carregando orçamentos...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== SEÇÃO FORMULÁRIO (id=secaoFormulario) ===== -->
+            <div id="secaoFormulario" style="display:none;">
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Novo Orçamento</h2>
+                        <button class="btn btn-secondary btn-sm" onclick="mostrarLista()">← Voltar à lista</button>
+                    </div>
+                    <div class="card-body">
+                        <form id="formOrcamento" onsubmit="salvarOrcamento(event)">
+
+                            <div class="form-grid">
+                                <!-- ID = orcCliente -->
+                                <div class="form-group form-group-full">
+                                    <label for="orcCliente">Cliente *</label>
+                                    <select id="orcCliente" class="form-input" required>
+                                        <option value="">Selecione um cliente...</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="orcDataEmissao">Data de Emissão</label>
+                                    <input type="date" id="orcDataEmissao" class="form-input">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="orcDataValidade">Data de Validade</label>
+                                    <input type="date" id="orcDataValidade" class="form-input">
+                                </div>
+
+                                <!-- ID = orcFormaPagamento -->
+                                <div class="form-group">
+                                    <label for="orcFormaPagamento">Forma de Pagamento</label>
+                                    <input type="text" id="orcFormaPagamento" class="form-input" placeholder="Ex: 50% entrada + 50% na entrega">
+                                </div>
+
+                                <!-- ID = orcPrazoEntrega -->
+                                <div class="form-group">
+                                    <label for="orcPrazoEntrega">Prazo de Entrega/Despacho</label>
+                                    <input type="text" id="orcPrazoEntrega" class="form-input" placeholder="Ex: 15 dias úteis">
+                                </div>
+
+                                <div class="form-group form-group-full">
+                                    <label for="orcObservacoes">Observações</label>
+                                    <textarea id="orcObservacoes" class="form-input" rows="2" placeholder="Observações adicionais..."></textarea>
+                                </div>
                             </div>
-                        </div>
+
+                            <!-- Itens do Orçamento -->
+                            <div class="orc-itens-section" style="margin-top:20px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                                    <h3>Itens do Orçamento</h3>
+                                    <button type="button" class="btn btn-success btn-sm" onclick="adicionarItem()">+ Adicionar Item</button>
+                                </div>
+
+                                <div class="table-responsive">
+                                    <table class="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th style="width:40%;">Produto</th>
+                                                <th style="width:12%;">Qtd</th>
+                                                <th style="width:18%;">Valor Unit.</th>
+                                                <th style="width:18%;">Subtotal</th>
+                                                <th style="width:12%;">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <!-- ID = tabelaItensOrcamento (é um <tbody>) -->
+                                        <tbody id="tabelaItensOrcamento">
+                                            <!-- Itens adicionados dinamicamente pelo JS -->
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <td colspan="3" style="text-align:right;"><strong>TOTAL:</strong></td>
+                                                <!-- ID = orcTotalDisplay -->
+                                                <td><strong id="orcTotalDisplay">R$ 0,00</strong></td>
+                                                <td></td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div style="margin-top:20px; text-align:right;">
+                                <button type="button" class="btn btn-secondary" onclick="mostrarLista()">Cancelar</button>
+                                <button type="submit" class="btn btn-primary">Salvar e Visualizar</button>
+                            </div>
+
+                        </form>
                     </div>
                 </div>
 
-                <!-- FORMULÁRIO -->
-                <div id="viewFormulario" style="display:none;">
-                    <div class="card">
-                        <div class="card-header">
-                            <h3>Novo Orçamento</h3>
-                            <button class="btn btn-secondary btn-sm" onclick="mostrarLista()">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-                                Voltar
-                            </button>
-                        </div>
-                        <div class="card-body">
-                            <form id="formOrcamento" onsubmit="salvarOrcamento(event)">
-                                <div class="form-grid">
-                                    <div class="form-group">
-                                        <label>Cliente <span class="required">*</span></label>
-                                        <select id="orcClienteId" required>
-                                            <option value="">Selecione o cliente...</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Data de Emissão</label>
-                                        <input type="date" id="orcDataEmissao">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Data de Validade</label>
-                                        <input type="date" id="orcDataValidade">
-                                    </div>
-                                    <div class="form-group full-width">
-                                        <label>Prazo de Pagamento</label>
-                                        <input type="text" id="orcPrazoPagamento" value="Dividimos em Até 10x Sem Juros no Cartão de Crédito ou 10% de Desconto no Boleto ou Pix à Vista">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Prazo para Despacho</label>
-                                        <input type="text" id="orcPrazoDespacho" value="Em Até 5 Dias Úteis">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Observações</label>
-                                        <textarea id="orcObservacoes" placeholder="Observações adicionais..."></textarea>
-                                    </div>
-                                </div>
+            </div><!-- #secaoFormulario -->
 
-                                <!-- Itens -->
-                                <div style="margin-top:28px;">
-                                    <h4 style="font-size:15px;font-weight:700;margin-bottom:14px;color:var(--text-primary);">Itens do Orçamento</h4>
-                                    <div id="itensContainer"></div>
-                                    <button type="button" class="add-item-btn" onclick="adicionarItem()">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                                        Adicionar Produto
-                                    </button>
-                                </div>
+        </div><!-- .page-content -->
+    </main>
 
-                                <!-- Total -->
-                                <div style="margin-top:20px;padding:18px;background:var(--bg-surface-hover);border-radius:var(--radius);display:flex;justify-content:space-between;align-items:center;border:1px solid var(--border-color);">
-                                    <span style="font-size:15px;font-weight:600;color:var(--text-secondary);">Total do Orçamento:</span>
-                                    <span id="totalOrcamento" style="font-size:26px;font-weight:800;color:var(--primary);">R$ 0,00</span>
-                                </div>
-
-                                <div class="form-actions">
-                                    <button type="button" class="btn btn-secondary" onclick="mostrarLista()">Cancelar</button>
-                                    <button type="submit" class="btn btn-primary">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                                        Salvar Orçamento
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <!-- Modal Confirmar Exclusão -->
-    <div class="modal-overlay" id="modalConfirmDelete">
-        <div class="modal" style="max-width:420px">
-            <div class="modal-body">
-                <div class="confirm-dialog">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-                    <h4>Excluir Orçamento?</h4>
-                    <p>Esta ação não pode ser desfeita.</p>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="fecharConfirmDelete()">Cancelar</button>
-                <button class="btn btn-danger" id="btnConfirmDelete">Excluir</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Status -->
+    <!-- ========== MODAL: Mudar Status ========== -->
     <div class="modal-overlay" id="modalStatus">
-        <div class="modal" style="max-width:420px">
+        <div class="modal modal-sm">
             <div class="modal-header">
-                <h3>Alterar Status</h3>
-                <button class="modal-close" onclick="fecharModalStatus()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                <h2>Alterar Status</h2>
+                <button class="modal-close" onclick="fecharModalStatus()">✕</button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="statusOrcamentoId">
                 <div class="form-group">
-                    <label>Novo Status</label>
-                    <select id="statusNovoValor">
+                    <label for="novoStatus">Novo Status</label>
+                    <!-- ID = novoStatus -->
+                    <select id="novoStatus" class="form-input">
                         <option value="pendente">Pendente</option>
                         <option value="aprovado">Aprovado</option>
                         <option value="recusado">Recusado</option>
@@ -197,14 +240,35 @@
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="fecharModalStatus()">Cancelar</button>
-                <button class="btn btn-primary" onclick="confirmarMudarStatus()">Salvar</button>
+                <button class="btn btn-primary" onclick="confirmarMudarStatus()">Confirmar</button>
             </div>
         </div>
     </div>
 
+    <!-- ========== MODAL: Confirmar exclusão ========== -->
+    <!-- ID = confirmDeleteOrcamento -->
+    <div class="modal-overlay" id="confirmDeleteOrcamento">
+        <div class="modal modal-sm">
+            <div class="modal-header">
+                <h2>Confirmar Exclusão</h2>
+                <button class="modal-close" onclick="fecharConfirmDeleteOrcamento()">✕</button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir este orçamento? Esta ação não pode ser desfeita.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="fecharConfirmDeleteOrcamento()">Cancelar</button>
+                <button class="btn btn-danger" onclick="deletarOrcamento()">Excluir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
+    <!-- Scripts -->
     <script src="js/app.js"></script>
     <script src="js/orcamentos.js"></script>
+
 </body>
 </html>
