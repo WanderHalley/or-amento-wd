@@ -65,6 +65,7 @@
 
         <!-- ========== MAIN ========== -->
         <main class="main-content">
+            <!-- Header -->
             <header class="top-header">
                 <button class="menu-toggle" id="menuToggle">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -88,7 +89,9 @@
                 </div>
             </header>
 
+            <!-- Content -->
             <div class="content-area">
+
                 <!-- Stat Cards -->
                 <div class="stats-grid">
                     <div class="stat-card">
@@ -128,7 +131,8 @@
                     <div class="stat-card stat-highlight">
                         <div class="stat-icon">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                <line x1="12" y1="1" x2="12" y2="23"/>
+                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
                             </svg>
                         </div>
                         <div class="stat-info">
@@ -182,46 +186,48 @@
     <script>
         /**
          * Dashboard — index.html
-         * Parsing corrigido para os formatos REAIS da API:
-         *   /api/dashboard   → { total_clientes, total_produtos_ativos, ... }
-         *   /api/orcamentos  → { orcamentos: [...], total }
+         *
+         * Formatos REAIS da API (testados ao vivo):
+         *   GET /api/dashboard   → { total_clientes, total_produtos_ativos, total_orcamentos_pendentes, total_valor_aprovados }
+         *   GET /api/orcamentos  → { orcamentos: [...], total }
          */
 
         document.addEventListener('DOMContentLoaded', async () => {
-            // app.js cuida do tema e sidebar
             await carregarDashboard();
             await carregarUltimosOrcamentos();
         });
 
-        // ========== HELPERS com fallback ==========
+        // ========== HELPERS COM FALLBACK ==========
         function fmtCurrency(v) {
             if (typeof formatCurrency === 'function') return formatCurrency(v);
             return 'R$ ' + Number(v || 0).toFixed(2).replace('.', ',');
         }
+
         function fmtDate(d) {
             if (typeof formatDate === 'function') return formatDate(d);
             if (!d) return '-';
-            const parts = d.split('-');
-            if (parts.length === 3) return parts[2] + '/' + parts[1] + '/' + parts[0];
+            const part = d.split('T')[0].split('-');
+            if (part.length === 3) return part[2] + '/' + part[1] + '/' + part[0];
             return d;
         }
+
         function safeEscape(s) {
             if (typeof escapeHtml === 'function') return escapeHtml(s);
             const div = document.createElement('div');
-            div.textContent = s;
+            div.textContent = String(s || '');
             return div.innerHTML;
         }
 
-        // ========== DASHBOARD ==========
+        // ========== DASHBOARD STATS ==========
         async function carregarDashboard() {
+            const el = (id) => document.getElementById(id);
+
             try {
                 const data = await apiGet('/api/dashboard');
                 console.log('[Dashboard] Resposta:', data);
 
-                // API retorna direto: { total_clientes, total_produtos_ativos, ... }
-                // Sem wrapper "success" ou "data"
-                const el = (id) => document.getElementById(id);
-
+                // API retorna DIRETO (sem wrapper success/data):
+                // { total_clientes: 1, total_produtos_ativos: 1, total_orcamentos_pendentes: 2, total_valor_aprovados: 0 }
                 const clientes = data.total_clientes ?? 0;
                 const produtos = data.total_produtos_ativos ?? 0;
                 const pendentes = data.total_orcamentos_pendentes ?? 0;
@@ -233,8 +239,7 @@
                 if (el('statAprovados')) el('statAprovados').textContent = fmtCurrency(aprovados);
 
             } catch (error) {
-                console.error('[Dashboard] Erro:', error);
-                const el = (id) => document.getElementById(id);
+                console.error('[Dashboard] Erro ao carregar stats:', error);
                 if (el('statClientes')) el('statClientes').textContent = '0';
                 if (el('statProdutos')) el('statProdutos').textContent = '0';
                 if (el('statPendentes')) el('statPendentes').textContent = '0';
@@ -252,7 +257,7 @@
                 console.log('[Dashboard] Orçamentos resposta:', data);
 
                 // API retorna: { orcamentos: [...], total }
-                const orcamentos = data.orcamentos || data.data || data || [];
+                const orcamentos = data.orcamentos || data.data || [];
 
                 if (!Array.isArray(orcamentos) || orcamentos.length === 0) {
                     tbody.innerHTML = `
@@ -294,7 +299,12 @@
                             <td><strong>${valor}</strong></td>
                             <td><span class="badge ${badgeClass}">${statusLabel}</span></td>
                             <td>
-                                <a href="preview.html?id=${orc.id}" class="btn btn-secondary btn-sm" title="Visualizar">👁️</a>
+                                <a href="preview.html?id=${orc.id}" class="btn btn-secondary btn-sm" title="Visualizar">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                        <circle cx="12" cy="12" r="3"/>
+                                    </svg>
+                                </a>
                             </td>
                         </tr>`;
                 }).join('');
