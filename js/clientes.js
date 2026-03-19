@@ -176,11 +176,9 @@ async function salvarCliente(event) {
     try {
         let result;
         if (id) {
-            // Atualizar
             result = await apiPut(`/api/clientes/${id}`, dados);
             showToast('Cliente atualizado com sucesso!', 'success');
         } else {
-            // Criar
             result = await apiPost('/api/clientes', dados);
             showToast('Cliente criado com sucesso!', 'success');
         }
