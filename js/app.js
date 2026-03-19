@@ -6,9 +6,10 @@
  */
 
 // ============================================================
-// CONFIGURAÇÃO - Altere para a URL do seu backend no HF Spaces
+// CONFIGURAÇÃO DA API
+// >>> URL REAL do backend no Hugging Face Spaces <<<
 // ============================================================
-const API_BASE_URL = 'https://Wanderhalleylee-orcamento-wd.hf.space/health';
+const API_BASE_URL = 'https://wanderhalleylee-orcamento-wd.hf.space';
 
 // ============================================================
 // Funções de API (fetch wrapper com tratamento de erro)
@@ -21,13 +22,19 @@ const API_BASE_URL = 'https://Wanderhalleylee-orcamento-wd.hf.space/health';
  */
 async function apiGet(endpoint) {
     try {
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        const url = `${API_BASE_URL}${endpoint}`;
+        console.log('[API GET]', url);
+        const response = await fetch(url, {
             method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            mode: 'cors'
         });
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.detail || `Erro ${response.status}`);
+            throw new Error(errorData.detail || `Erro HTTP ${response.status}: ${response.statusText}`);
         }
         return await response.json();
     } catch (error) {
@@ -44,14 +51,20 @@ async function apiGet(endpoint) {
  */
 async function apiPost(endpoint, data) {
     try {
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        const url = `${API_BASE_URL}${endpoint}`;
+        console.log('[API POST]', url, data);
+        const response = await fetch(url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            mode: 'cors',
             body: JSON.stringify(data)
         });
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.detail || `Erro ${response.status}`);
+            throw new Error(errorData.detail || `Erro HTTP ${response.status}: ${response.statusText}`);
         }
         return await response.json();
     } catch (error) {
@@ -68,14 +81,20 @@ async function apiPost(endpoint, data) {
  */
 async function apiPut(endpoint, data) {
     try {
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        const url = `${API_BASE_URL}${endpoint}`;
+        console.log('[API PUT]', url, data);
+        const response = await fetch(url, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            mode: 'cors',
             body: JSON.stringify(data)
         });
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.detail || `Erro ${response.status}`);
+            throw new Error(errorData.detail || `Erro HTTP ${response.status}: ${response.statusText}`);
         }
         return await response.json();
     } catch (error) {
@@ -91,13 +110,19 @@ async function apiPut(endpoint, data) {
  */
 async function apiDelete(endpoint) {
     try {
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        const url = `${API_BASE_URL}${endpoint}`;
+        console.log('[API DELETE]', url);
+        const response = await fetch(url, {
             method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' }
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            mode: 'cors'
         });
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.detail || `Erro ${response.status}`);
+            throw new Error(errorData.detail || `Erro HTTP ${response.status}: ${response.statusText}`);
         }
         return await response.json();
     } catch (error) {
@@ -131,7 +156,6 @@ function formatCurrency(value) {
 function formatDate(dateStr) {
     if (!dateStr) return '-';
     try {
-        // Trata tanto "2026-03-19" quanto "2026-03-19T00:00:00"
         const parts = dateStr.split('T')[0].split('-');
         if (parts.length === 3) {
             return `${parts[2]}/${parts[1]}/${parts[0]}`;
@@ -148,7 +172,10 @@ function formatDate(dateStr) {
  */
 function getToday() {
     const now = new Date();
-    return now.toISOString().split('T')[0];
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
 }
 
 /**
@@ -159,7 +186,10 @@ function getToday() {
 function getDatePlusDays(days) {
     const date = new Date();
     date.setDate(date.getDate() + days);
-    return date.toISOString().split('T')[0];
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
 }
 
 /**
@@ -276,8 +306,5 @@ function debounce(func, wait = 300) {
 }
 
 // ============================================================
-// Inicialização global
+// Inicialização global (sidebar é iniciado em cada página)
 // ============================================================
-document.addEventListener('DOMContentLoaded', () => {
-    initSidebar();
-});
