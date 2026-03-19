@@ -89,11 +89,12 @@
                 </div>
             </header>
 
-            <!-- Page Content -->
+            <!-- Content -->
             <div class="content-area">
 
                 <!-- ===== SEÇÃO: LISTA DE ORÇAMENTOS ===== -->
                 <div id="secaoLista">
+
                     <!-- Filtros -->
                     <div class="card" style="margin-bottom: 20px;">
                         <div class="card-body" style="padding: 15px;">
@@ -110,7 +111,7 @@
                         </div>
                     </div>
 
-                    <!-- Tabela -->
+                    <!-- Tabela de orçamentos -->
                     <div class="card">
                         <div class="card-body">
                             <div class="table-container">
@@ -142,6 +143,7 @@
 
                 <!-- ===== SEÇÃO: FORMULÁRIO NOVO ORÇAMENTO ===== -->
                 <div id="secaoFormulario" style="display:none;">
+
                     <div class="card">
                         <div class="card-header">
                             <h3>Novo Orçamento</h3>
@@ -151,6 +153,7 @@
                             <form id="formOrcamento" onsubmit="salvarOrcamento(event)">
 
                                 <div class="form-grid">
+                                    <!-- Cliente -->
                                     <div class="form-group full-width">
                                         <label for="orcCliente">Cliente *</label>
                                         <select id="orcCliente" class="form-input" required>
@@ -158,26 +161,27 @@
                                         </select>
                                     </div>
 
+                                    <!-- Datas -->
                                     <div class="form-group">
                                         <label for="orcDataEmissao">Data de Emissão</label>
                                         <input type="date" id="orcDataEmissao" class="form-input">
                                     </div>
-
                                     <div class="form-group">
                                         <label for="orcDataValidade">Data de Validade</label>
                                         <input type="date" id="orcDataValidade" class="form-input">
                                     </div>
 
+                                    <!-- Condições -->
                                     <div class="form-group">
                                         <label for="orcFormaPagamento">Forma de Pagamento</label>
                                         <input type="text" id="orcFormaPagamento" class="form-input" placeholder="Ex: 10x cartão ou 10% à vista">
                                     </div>
-
                                     <div class="form-group">
                                         <label for="orcPrazoEntrega">Prazo de Entrega/Despacho</label>
                                         <input type="text" id="orcPrazoEntrega" class="form-input" placeholder="Ex: 5 dias úteis">
                                     </div>
 
+                                    <!-- Observações -->
                                     <div class="form-group full-width">
                                         <label for="orcObservacoes">Observações</label>
                                         <textarea id="orcObservacoes" class="form-input" rows="2" placeholder="Observações adicionais..."></textarea>
@@ -203,7 +207,7 @@
                                                 </tr>
                                             </thead>
                                             <tbody id="tabelaItensOrcamento">
-                                                <!-- Itens adicionados dinamicamente -->
+                                                <!-- Itens adicionados dinamicamente pelo JS -->
                                             </tbody>
                                             <tfoot>
                                                 <tr>
@@ -216,6 +220,7 @@
                                     </div>
                                 </div>
 
+                                <!-- Botões -->
                                 <div style="margin-top:20px; text-align:right; display:flex; gap:10px; justify-content:flex-end;">
                                     <button type="button" class="btn btn-secondary" onclick="mostrarLista()">Cancelar</button>
                                     <button type="submit" class="btn btn-primary">Salvar e Visualizar</button>
@@ -224,7 +229,8 @@
                             </form>
                         </div>
                     </div>
-                </div>
+
+                </div><!-- #secaoFormulario -->
 
             </div><!-- .content-area -->
         </main>
