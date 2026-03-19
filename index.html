@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WD Máquinas - Sistema de Orçamentos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Overlay mobile -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <div class="sidebar-logo-icon">WD</div>
+                    <div class="sidebar-logo-text">
+                        <h1>WD Máquinas</h1>
+                        <span>Sistema de Orçamentos</span>
+                    </div>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-nav-label">Menu</div>
+                <a href="index.html" class="sidebar-link active">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    Dashboard
+                </a>
+                <a href="orcamentos.html" class="sidebar-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    Orçamentos
+                </a>
+                <a href="clientes.html" class="sidebar-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    Clientes
+                </a>
+                <a href="produtos.html" class="sidebar-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                    Produtos
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main -->
+        <main class="main-content">
+            <header class="main-header">
+                <div class="header-left">
+                    <button class="menu-toggle" id="menuToggle">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                    </button>
+                    <h2>Dashboard</h2>
+                </div>
+                <div class="header-right">
+                    <a href="orcamentos.html?novo=1" class="btn btn-primary btn-sm">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Novo Orçamento
+                    </a>
+                </div>
+            </header>
+
+            <div class="page-content">
+                <!-- Stats Cards -->
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card">
+                        <div class="stat-icon blue">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="statClientes">-</h3>
+                            <p>Clientes cadastrados</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="statProdutos">-</h3>
+                            <p>Produtos ativos</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon yellow">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="statOrcamentos">-</h3>
+                            <p>Orçamentos pendentes</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="statValor">R$ -</h3>
+                            <p>Total aprovados</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Últimos orçamentos -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Últimos Orçamentos</h3>
+                        <a href="orcamentos.html" class="btn btn-outline btn-sm">Ver todos</a>
+                    </div>
+                    <div class="card-body-no-pad">
+                        <div class="table-wrapper">
+                            <table class="data-table" id="tabelaUltimosOrcamentos">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Cliente</th>
+                                        <th>Data</th>
+                                        <th>Valor</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyUltimos">
+                                    <tr>
+                                        <td colspan="6">
+                                            <div class="spinner"></div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="js/app.js"></script>
+    <script>
+        // ============================================================
+        // Dashboard - Carregar dados
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', async () => {
+            initSidebar();
+
+            try {
+                // Carregar dashboard stats
+                const dashData = await apiGet('/api/dashboard');
+                if (dashData.success) {
+                    const d = dashData.data;
+                    document.getElementById('statClientes').textContent = d.total_clientes;
+                    document.getElementById('statProdutos').textContent = d.total_produtos;
+                    document.getElementById('statOrcamentos').textContent = d.orcamentos_pendentes;
+                    document.getElementById('statValor').textContent = formatCurrency(d.valor_total_aprovados);
+                }
+            } catch (e) {
+                console.error('Erro ao carregar dashboard:', e);
+            }
+
+            try {
+                // Carregar últimos orçamentos
+                const orcData = await apiGet('/api/orcamentos?limit=10');
+                const tbody = document.getElementById('tbodyUltimos');
+
+                if (orcData.success && orcData.data.length > 0) {
+                    tbody.innerHTML = orcData.data.map(orc => `
+                        <tr>
+                            <td><strong>#${orc.numero_orcamento || '-'}</strong></td>
+                            <td>${orc.clientes ? orc.clientes.nome : '-'}${orc.clientes && orc.clientes.empresa ? ` <span style="color:var(--gray-400)">- ${orc.clientes.empresa}</span>` : ''}</td>
+                            <td>${formatDate(orc.data_emissao)}</td>
+                            <td><strong>${formatCurrency(orc.valor_total)}</strong></td>
+                            <td><span class="badge badge-${orc.status}">${capitalizeFirst(orc.status)}</span></td>
+                            <td>
+                                <a href="preview.html?id=${orc.id}" class="btn-icon view" title="Visualizar">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </a>
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6">
+                                <div class="empty-state">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                    <h4>Nenhum orçamento ainda</h4>
+                                    <p>Crie seu primeiro orçamento para começar</p>
+                                    <a href="orcamentos.html?novo=1" class="btn btn-primary btn-sm">Criar Orçamento</a>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }
+            } catch (e) {
+                console.error('Erro ao carregar orçamentos:', e);
+                document.getElementById('tbodyUltimos').innerHTML = `
+                    <tr><td colspan="6" style="text-align:center;padding:24px;color:var(--danger)">Erro ao carregar dados. Verifique a conexão com a API.</td></tr>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
