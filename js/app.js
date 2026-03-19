@@ -8,7 +8,7 @@
 // ============================================================
 // CONFIGURAÇÃO - Altere para a URL do seu backend no HF Spaces
 // ============================================================
-const API_BASE_URL = 'https://SEU-USUARIO-orcamento-wd.hf.space';
+const API_BASE_URL = 'https://Wanderhalleylee-orcamento-wd.hf.space/health';
 
 // ============================================================
 // Funções de API (fetch wrapper com tratamento de erro)
