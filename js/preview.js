@@ -14,7 +14,6 @@ let orcamentoAtual = null;
 document.addEventListener('DOMContentLoaded', () => {
     initSidebar();
 
-    // Pegar ID da URL
     const params = new URLSearchParams(window.location.search);
     const orcId = params.get('id');
 
@@ -87,7 +86,6 @@ function renderizarPreview(orc) {
     itens.forEach(item => {
         const produto = item.produtos || {};
 
-        // Imagem do produto
         if (produto.imagem_url) {
             imagensHTML += `
                 <div class="orc-produto-imagem">
@@ -96,7 +94,6 @@ function renderizarPreview(orc) {
             `;
         }
 
-        // Especificações
         if (produto.descricao || produto.especificacoes) {
             specsHTML += `
                 <div class="orc-specs">
@@ -107,7 +104,6 @@ function renderizarPreview(orc) {
             `;
         }
 
-        // Dimensões
         if (produto.altura_cm || produto.largura_cm || produto.profundidade_cm || produto.peso_kg) {
             dimensoesHTML += `
                 <div class="orc-dimensoes">
@@ -144,7 +140,6 @@ function renderizarPreview(orc) {
         }
     });
 
-    // Montar HTML completo do preview
     container.innerHTML = `
         <!-- HEADER -->
         <div class="orc-header">
@@ -200,7 +195,7 @@ function renderizarPreview(orc) {
             </div>
         </div>
 
-        <!-- INFORMAÇÕES: PAGAMENTO, DESPACHO, DIMENSÕES -->
+        <!-- INFORMAÇÕES -->
         <div class="orc-info-grid">
             <div class="orc-info-box">
                 <h5>Prazo de Pagamento</h5>
@@ -237,9 +232,6 @@ function renderizarPreview(orc) {
 // Compartilhar via WhatsApp
 // ============================================================
 
-/**
- * Gera link de compartilhamento do orçamento via WhatsApp.
- */
 function compartilharWhatsApp() {
     if (!orcamentoAtual) {
         showToast('Nenhum orçamento carregado', 'warning');
@@ -250,7 +242,6 @@ function compartilharWhatsApp() {
     const cliente = orc.clientes || {};
     const empresa = orc.empresa || {};
 
-    // Montar itens em texto
     const itensTexto = (orc.itens || []).map((item, i) => {
         const prod = item.produtos || {};
         return `${i + 1}. ${prod.nome || 'Produto'} - Qtd: ${item.quantidade} - ${formatCurrency(item.valor_total)}`;
@@ -269,10 +260,8 @@ function compartilharWhatsApp() {
 
     const encoded = encodeURIComponent(texto);
 
-    // Se o cliente tem telefone, direcionar para ele
     let whatsUrl = `https://wa.me/?text=${encoded}`;
     if (cliente.telefone) {
-        // Limpar telefone - remover tudo que não é número
         const tel = cliente.telefone.replace(/\D/g, '');
         if (tel.length >= 10) {
             const telFull = tel.startsWith('55') ? tel : '55' + tel;
