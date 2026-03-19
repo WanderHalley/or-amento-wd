@@ -1,600 +1,598 @@
 /**
- * ============================================================
- * app.js - Módulo Global
- * Dark/Light mode, Sidebar colapsável, Máscaras, API, Toast
- * ============================================================
+ * app.js — Módulo global do frontend
+ * WD Máquinas — Sistema de Orçamentos
+ *
+ * Este arquivo provê:
+ *   - API_BASE_URL e wrappers fetch (apiGet, apiPost, apiPut, apiDelete)
+ *   - Formatação: moeda, data, telefone, CEP, CPF, CNPJ, CPF/CNPJ
+ *   - Máscaras de input
+ *   - unmaskValue (e alias unmask)
+ *   - readFileAsBase64 (e alias readImageAsBase64)
+ *   - Toast notifications
+ *   - Sidebar toggle (busca sidebarCollapse OU sidebarCollapseBtn)
+ *   - Theme dark/light toggle (busca themeToggle OU themeToggleBtn)
+ *   - getConfig / saveConfig (localStorage)
+ *   - debounce, escapeHtml, getToday, getDatePlusDays, formatFileName
  */
 
-// ============================================================
-// CONFIGURAÇÃO DA API
-// ============================================================
+// =============================================
+// API BASE URL — ALTERAR PARA SUA URL DO HF SPACES
+// =============================================
 const API_BASE_URL = 'https://wanderhalleylee-orcamento-wd.hf.space';
 
-// ============================================================
-// Configurações Padrão da Empresa (usadas no localStorage)
-// ============================================================
-const CONFIG_DEFAULTS = {
-    logo_base64: '',
-    nome: 'WD MÁQUINAS',
-    cnpj: '29.595.239/0001-33',
-    endereco: 'Avenida Dom Pedro I, 733 - Franca .SP',
-    bairro_cep: 'Jardim Doutor Antonio Petraglia, CEP - 14.409-170',
-    telefone: '(16) 99196-6519',
+// =============================================
+// CONFIGURAÇÕES PADRÃO DA EMPRESA (localStorage)
+// =============================================
+const DEFAULT_CONFIG = {
+    logo: '',
+    nomeEmpresa: 'WD Máquinas',
+    cnpj: '29595239000133',
+    endereco: 'Avenida Dom Pedro I, 733 - Franca/SP',
+    telefone: '16991966519',
     email: 'wdmaquinas@outlook.com',
-    site_instagram: '',
-    condicoes_padrao: 'Dividimos em Até 10x Sem Juros no Cartão de Crédito ou 10% de Desconto no Boleto ou Pix à Vista',
-    validade_dias: 30
+    site: '',
+    condicoesPadrao: 'Dividimos em Até 10x Sem Juros no Cartão de Crédito ou 10% de Desconto no Boleto ou Pix à Vista',
+    validadeDias: 30,
+    prazoEntregaPadrao: 'Em Até 5 Dias Úteis',
+    observacoesPadrao: '',
 };
 
 /**
- * Retorna configurações da empresa (localStorage ou padrão).
- * @returns {Object}
+ * Retorna configurações salvas no localStorage (ou padrão)
  */
 function getConfig() {
     try {
         const saved = localStorage.getItem('wd_config');
         if (saved) {
-            return { ...CONFIG_DEFAULTS, ...JSON.parse(saved) };
+            return { ...DEFAULT_CONFIG, ...JSON.parse(saved) };
         }
     } catch (e) {
-        console.warn('Erro ao ler config:', e);
+        console.warn('[Config] Erro ao ler localStorage:', e);
     }
-    return { ...CONFIG_DEFAULTS };
+    return { ...DEFAULT_CONFIG };
 }
 
 /**
- * Salva configurações da empresa no localStorage.
- * @param {Object} config
+ * Salva configurações no localStorage
  */
 function saveConfig(config) {
     try {
         localStorage.setItem('wd_config', JSON.stringify(config));
+        console.log('[Config] Salvo com sucesso');
     } catch (e) {
-        console.warn('Erro ao salvar config:', e);
+        console.error('[Config] Erro ao salvar:', e);
     }
 }
 
-// ============================================================
-// DARK / LIGHT MODE
-// ============================================================
+// =============================================
+// API WRAPPERS (fetch com URL completa)
+// =============================================
 
 /**
- * Inicializa o tema (dark como padrão).
+ * GET request à API
  */
-function initTheme() {
-    const saved = localStorage.getItem('wd_theme');
-    // Dark é padrão: só muda pra light se salvo explicitamente
-    if (saved === 'light') {
-        document.documentElement.setAttribute('data-theme', 'light');
-    } else {
-        document.documentElement.removeAttribute('data-theme');
-        localStorage.setItem('wd_theme', 'dark');
-    }
-    updateThemeIcon();
-}
+async function apiGet(path) {
+    const url = API_BASE_URL + path;
+    console.log('[API GET]', url);
 
-/**
- * Alterna entre dark e light mode.
- */
-function toggleTheme() {
-    const current = localStorage.getItem('wd_theme') || 'dark';
-    const next = current === 'dark' ? 'light' : 'dark';
+    const response = await fetch(url, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+    });
 
-    if (next === 'light') {
-        document.documentElement.setAttribute('data-theme', 'light');
-    } else {
-        document.documentElement.removeAttribute('data-theme');
+    if (!response.ok) {
+        const errorText = await response.text().catch(() => response.statusText);
+        throw new Error(`GET ${path} failed (${response.status}): ${errorText}`);
     }
 
-    localStorage.setItem('wd_theme', next);
-    updateThemeIcon();
+    return await response.json();
 }
 
 /**
- * Atualiza o ícone do botão de tema (sol/lua).
+ * POST request à API
  */
-function updateThemeIcon() {
-    const btn = document.getElementById('themeToggle');
-    if (!btn) return;
+async function apiPost(path, body) {
+    const url = API_BASE_URL + path;
+    console.log('[API POST]', url, body);
 
-    const isDark = (localStorage.getItem('wd_theme') || 'dark') === 'dark';
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+    });
 
-    if (isDark) {
-        // Mostra ícone de sol (para mudar pra light)
-        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
-        btn.title = 'Modo Claro';
-    } else {
-        // Mostra ícone de lua (para mudar pra dark)
-        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
-        btn.title = 'Modo Escuro';
+    if (!response.ok) {
+        const errorText = await response.text().catch(() => response.statusText);
+        throw new Error(`POST ${path} failed (${response.status}): ${errorText}`);
     }
-}
 
-// ============================================================
-// SIDEBAR COLAPSÁVEL
-// ============================================================
+    return await response.json();
+}
 
 /**
- * Inicializa a sidebar (colapsável no desktop, overlay no mobile).
+ * PUT request à API
  */
-function initSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const toggle = document.getElementById('menuToggle');
-    const overlay = document.getElementById('sidebarOverlay');
-    const collapseBtn = document.getElementById('sidebarCollapse');
+async function apiPut(path, body) {
+    const url = API_BASE_URL + path;
+    console.log('[API PUT]', url, body);
 
-    if (!sidebar) return;
+    const response = await fetch(url, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+    });
 
-    // Restaurar estado salvo (desktop)
-    const savedState = localStorage.getItem('wd_sidebar');
-    if (savedState === 'collapsed' && window.innerWidth > 768) {
-        sidebar.classList.add('collapsed');
-        document.body.classList.add('sidebar-collapsed');
+    if (!response.ok) {
+        const errorText = await response.text().catch(() => response.statusText);
+        throw new Error(`PUT ${path} failed (${response.status}): ${errorText}`);
     }
 
-    // Botão de collapse (desktop - chevron na sidebar)
-    if (collapseBtn) {
-        collapseBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('collapsed');
-            const isCollapsed = sidebar.classList.contains('collapsed');
-            document.body.classList.toggle('sidebar-collapsed', isCollapsed);
-            localStorage.setItem('wd_sidebar', isCollapsed ? 'collapsed' : 'expanded');
-        });
-    }
-
-    // Botão hamburger (mobile)
-    if (toggle) {
-        toggle.addEventListener('click', () => {
-            sidebar.classList.toggle('open');
-            if (overlay) overlay.classList.toggle('active');
-        });
-    }
-
-    // Overlay click fecha sidebar no mobile
-    if (overlay) {
-        overlay.addEventListener('click', () => {
-            sidebar.classList.remove('open');
-            overlay.classList.remove('active');
-        });
-    }
+    return await response.json();
 }
 
-// ============================================================
-// Funções de API (fetch wrapper)
-// ============================================================
+/**
+ * DELETE request à API
+ */
+async function apiDelete(path) {
+    const url = API_BASE_URL + path;
+    console.log('[API DELETE]', url);
 
-async function apiGet(endpoint) {
-    try {
-        const url = `${API_BASE_URL}${endpoint}`;
-        console.log('[API GET]', url);
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-            mode: 'cors'
-        });
-        if (!response.ok) {
-            const err = await response.json().catch(() => ({}));
-            throw new Error(err.detail || `Erro HTTP ${response.status}`);
-        }
-        return await response.json();
-    } catch (error) {
-        console.error(`GET ${endpoint} falhou:`, error);
-        throw error;
+    const response = await fetch(url, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text().catch(() => response.statusText);
+        throw new Error(`DELETE ${path} failed (${response.status}): ${errorText}`);
     }
+
+    return await response.json();
 }
 
-async function apiPost(endpoint, data) {
-    try {
-        const url = `${API_BASE_URL}${endpoint}`;
-        console.log('[API POST]', url);
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-            mode: 'cors',
-            body: JSON.stringify(data)
-        });
-        if (!response.ok) {
-            const err = await response.json().catch(() => ({}));
-            throw new Error(err.detail || `Erro HTTP ${response.status}`);
-        }
-        return await response.json();
-    } catch (error) {
-        console.error(`POST ${endpoint} falhou:`, error);
-        throw error;
-    }
-}
+// =============================================
+// FORMATAÇÃO
+// =============================================
 
-async function apiPut(endpoint, data) {
-    try {
-        const url = `${API_BASE_URL}${endpoint}`;
-        console.log('[API PUT]', url);
-        const response = await fetch(url, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-            mode: 'cors',
-            body: JSON.stringify(data)
-        });
-        if (!response.ok) {
-            const err = await response.json().catch(() => ({}));
-            throw new Error(err.detail || `Erro HTTP ${response.status}`);
-        }
-        return await response.json();
-    } catch (error) {
-        console.error(`PUT ${endpoint} falhou:`, error);
-        throw error;
-    }
-}
-
-async function apiDelete(endpoint) {
-    try {
-        const url = `${API_BASE_URL}${endpoint}`;
-        console.log('[API DELETE]', url);
-        const response = await fetch(url, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-            mode: 'cors'
-        });
-        if (!response.ok) {
-            const err = await response.json().catch(() => ({}));
-            throw new Error(err.detail || `Erro HTTP ${response.status}`);
-        }
-        return await response.json();
-    } catch (error) {
-        console.error(`DELETE ${endpoint} falhou:`, error);
-        throw error;
-    }
-}
-
-// ============================================================
-// Formatação (Moeda, Data, Texto)
-// ============================================================
-
+/**
+ * Formata valor em Reais: 3235 → "R$ 3.235,00"
+ */
 function formatCurrency(value) {
-    if (value === null || value === undefined || isNaN(value)) return 'R$ 0,00';
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+    const num = Number(value) || 0;
+    return num.toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+    });
 }
 
+/**
+ * Formata data ISO para DD/MM/YYYY: "2026-03-19" → "19/03/2026"
+ */
 function formatDate(dateStr) {
     if (!dateStr) return '-';
-    try {
-        const parts = dateStr.split('T')[0].split('-');
-        if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
-        return dateStr;
-    } catch { return dateStr; }
+    // Se já está em formato DD/MM/YYYY, retorna como está
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) return dateStr;
+
+    // Pega só a parte da data (ignora hora se tiver)
+    const datePart = dateStr.split('T')[0];
+    const parts = datePart.split('-');
+    if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+    return dateStr;
 }
 
 /**
- * Formata data para nome de arquivo DD-MM-YYYY
+ * Retorna data de hoje no formato YYYY-MM-DD
  */
-function formatDateFile(dateStr) {
-    if (!dateStr) {
-        const d = new Date();
-        return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
-    }
-    try {
-        const parts = dateStr.split('T')[0].split('-');
-        if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
-        return dateStr;
-    } catch { return dateStr; }
-}
-
 function getToday() {
-    const n = new Date();
-    return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
+    return new Date().toISOString().split('T')[0];
 }
 
+/**
+ * Retorna data de hoje + N dias no formato YYYY-MM-DD
+ */
 function getDatePlusDays(days) {
     const d = new Date();
-    d.setDate(d.getDate() + days);
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    d.setDate(d.getDate() + (days || 0));
+    return d.toISOString().split('T')[0];
 }
 
+/**
+ * Capitaliza primeira letra
+ */
 function capitalizeFirst(str) {
     if (!str) return '';
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-function escapeHtml(str) {
-    if (!str) return '';
-    const d = document.createElement('div');
-    d.textContent = str;
-    return d.innerHTML;
-}
-
-// ============================================================
-// MÁSCARAS DE FORMATAÇÃO (Melhoria 8)
-// ============================================================
-
 /**
- * Remove tudo que não é dígito.
- * @param {string} value
- * @returns {string}
+ * Escapa HTML para prevenir XSS
  */
-function onlyDigits(value) {
-    return (value || '').replace(/\D/g, '');
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = String(text);
+    return div.innerHTML;
 }
 
 /**
- * Formata telefone: (00) 00000-0000 ou (00) 0000-0000
- * @param {string} value - Valor com ou sem formatação
- * @returns {string} Valor formatado
+ * Gera nome de arquivo para PDF: "Produto - 19-03-2026.pdf"
+ */
+function formatFileName(name, dateStr) {
+    const cleanName = (name || 'Orcamento').replace(/[^a-zA-Z0-9À-ú\s\-#]/g, '').trim();
+    let dateFormatted = '';
+    if (dateStr) {
+        const parts = dateStr.split('T')[0].split('-');
+        if (parts.length === 3) {
+            dateFormatted = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+    }
+    if (!dateFormatted) {
+        const now = new Date();
+        dateFormatted = `${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}`;
+    }
+    return `${cleanName} - ${dateFormatted}`;
+}
+
+// =============================================
+// MÁSCARAS DE FORMATAÇÃO
+// =============================================
+
+/**
+ * Formata telefone: 16991966519 → "(16) 99196-6519"
+ * Aceita 10 dígitos (fixo) ou 11 (celular)
  */
 function formatPhone(value) {
-    const d = onlyDigits(value);
-    if (d.length <= 2) return d.length ? `(${d}` : '';
-    if (d.length <= 6) return `(${d.slice(0,2)}) ${d.slice(2)}`;
-    if (d.length <= 10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
-    return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7,11)}`;
+    if (!value) return '';
+    const digits = String(value).replace(/\D/g, '');
+    if (digits.length <= 2) return `(${digits}`;
+    if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+    if (digits.length <= 10) {
+        // Fixo: (XX) XXXX-XXXX
+        return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6, 10)}`;
+    }
+    // Celular: (XX) XXXXX-XXXX
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
 }
 
 /**
- * Formata CEP: 00000-000
- * @param {string} value
- * @returns {string}
+ * Formata CEP: 14409170 → "14409-170"
  */
 function formatCEP(value) {
-    const d = onlyDigits(value);
-    if (d.length <= 5) return d;
-    return `${d.slice(0,5)}-${d.slice(5,8)}`;
+    if (!value) return '';
+    const digits = String(value).replace(/\D/g, '');
+    if (digits.length <= 5) return digits;
+    return `${digits.slice(0, 5)}-${digits.slice(5, 8)}`;
 }
 
 /**
- * Formata CPF: 000.000.000-00
- * @param {string} value
- * @returns {string}
+ * Formata CPF: 12345678901 → "123.456.789-01"
  */
 function formatCPF(value) {
-    const d = onlyDigits(value);
-    if (d.length <= 3) return d;
-    if (d.length <= 6) return `${d.slice(0,3)}.${d.slice(3)}`;
-    if (d.length <= 9) return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6)}`;
-    return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6,9)}-${d.slice(9,11)}`;
+    if (!value) return '';
+    const digits = String(value).replace(/\D/g, '');
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+    if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9, 11)}`;
 }
 
 /**
- * Formata CNPJ: 00.000.000/0000-00
- * @param {string} value
- * @returns {string}
+ * Formata CNPJ: 29595239000133 → "29.595.239/0001-33"
  */
 function formatCNPJ(value) {
-    const d = onlyDigits(value);
-    if (d.length <= 2) return d;
-    if (d.length <= 5) return `${d.slice(0,2)}.${d.slice(2)}`;
-    if (d.length <= 8) return `${d.slice(0,2)}.${d.slice(2,5)}.${d.slice(5)}`;
-    if (d.length <= 12) return `${d.slice(0,2)}.${d.slice(2,5)}.${d.slice(5,8)}/${d.slice(8)}`;
-    return `${d.slice(0,2)}.${d.slice(2,5)}.${d.slice(5,8)}/${d.slice(8,12)}-${d.slice(12,14)}`;
+    if (!value) return '';
+    const digits = String(value).replace(/\D/g, '');
+    if (digits.length <= 2) return digits;
+    if (digits.length <= 5) return `${digits.slice(0, 2)}.${digits.slice(2)}`;
+    if (digits.length <= 8) return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5)}`;
+    if (digits.length <= 12) return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8)}`;
+    return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8, 12)}-${digits.slice(12, 14)}`;
 }
 
 /**
- * Detecta CPF ou CNPJ e formata automaticamente.
- * @param {string} value
- * @returns {string}
+ * Formata CPF ou CNPJ automaticamente baseado na quantidade de dígitos
+ * Até 11 dígitos → CPF, acima → CNPJ
  */
 function formatCPFCNPJ(value) {
-    const d = onlyDigits(value);
-    if (d.length <= 11) return formatCPF(value);
-    return formatCNPJ(value);
-}
-
-/**
- * Aplica máscara em tempo real a um input.
- * @param {HTMLElement} input - Elemento input
- * @param {string} tipo - 'phone', 'cep', 'cpf', 'cnpj', 'cpfcnpj'
- */
-function maskInput(input, tipo) {
-    if (!input) return;
-
-    const formatters = {
-        phone: formatPhone,
-        cep: formatCEP,
-        cpf: formatCPF,
-        cnpj: formatCNPJ,
-        cpfcnpj: formatCPFCNPJ
-    };
-
-    const maxLengths = {
-        phone: 15,
-        cep: 9,
-        cpf: 14,
-        cnpj: 18,
-        cpfcnpj: 18
-    };
-
-    const formatter = formatters[tipo];
-    if (!formatter) return;
-
-    input.addEventListener('input', function(e) {
-        const cursorPos = this.selectionStart;
-        const oldLen = this.value.length;
-        this.value = formatter(this.value);
-        const newLen = this.value.length;
-        const diff = newLen - oldLen;
-        // Tentar manter posição do cursor razoável
-        this.setSelectionRange(cursorPos + diff, cursorPos + diff);
-    });
-
-    // Limitar tamanho
-    if (maxLengths[tipo]) {
-        input.setAttribute('maxlength', maxLengths[tipo]);
+    if (!value) return '';
+    const digits = String(value).replace(/\D/g, '');
+    if (digits.length <= 11) {
+        return formatCPF(digits);
     }
+    return formatCNPJ(digits);
 }
 
 /**
- * Retorna valor limpo (apenas dígitos) de um input com máscara.
- * Útil para enviar ao backend sem formatação.
- * @param {string} value
- * @returns {string}
+ * Remove máscara — retorna apenas dígitos
+ * Nome principal: unmaskValue (chamado pelos JS de páginas)
  */
-function unmask(value) {
-    return onlyDigits(value);
+function unmaskValue(value) {
+    if (!value) return '';
+    return String(value).replace(/\D/g, '');
 }
+
+// Alias: alguns arquivos usam "unmask" em vez de "unmaskValue"
+window.unmask = unmaskValue;
 
 /**
- * Aplica formatação de exibição para telefone (para tabelas/preview).
- * Recebe valor limpo (só dígitos) e retorna formatado.
- * @param {string} raw - Valor sem formatação
- * @returns {string}
+ * Aplica máscara em um input conforme o usuário digita
+ * @param {HTMLInputElement} input
+ * @param {Function} formatFn — função de formatação (formatPhone, formatCEP, etc.)
  */
-function displayPhone(raw) {
-    if (!raw) return '-';
-    return formatPhone(raw);
+function maskInput(input, formatFn) {
+    if (!input || !formatFn) return;
+    input.addEventListener('input', function () {
+        const cursorPos = this.selectionStart;
+        const oldLength = this.value.length;
+        this.value = formatFn(this.value);
+        const newLength = this.value.length;
+        const newPos = cursorPos + (newLength - oldLength);
+        this.setSelectionRange(newPos, newPos);
+    });
 }
+
+// =============================================
+// LEITURA DE ARQUIVO COMO BASE64
+// =============================================
 
 /**
- * Aplica formatação de exibição para CEP.
- * @param {string} raw
- * @returns {string}
+ * Lê um arquivo como Base64 com validação de tamanho e tipo
+ * Nome principal: readFileAsBase64 (chamado por produtos.js e configuracoes.js)
+ *
+ * @param {File} file — arquivo do input
+ * @param {number} maxBytes — tamanho máximo em bytes (ex: 2 * 1024 * 1024 = 2MB)
+ * @param {string[]} [allowedTypes] — tipos MIME permitidos (opcional)
+ * @returns {Promise<string>} — data URL em base64
  */
-function displayCEP(raw) {
-    if (!raw) return '-';
-    return formatCEP(raw);
-}
-
-/**
- * Aplica formatação de exibição para CPF/CNPJ.
- * @param {string} raw
- * @returns {string}
- */
-function displayCPFCNPJ(raw) {
-    if (!raw) return '-';
-    return formatCPFCNPJ(raw);
-}
-
-// ============================================================
-// Toast (Notificações)
-// ============================================================
-
-function showToast(message, type = 'info', duration = 4000) {
-    const container = document.getElementById('toastContainer');
-    if (!container) return;
-
-    const icons = {
-        success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
-        error: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
-        warning: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
-        info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
-    };
-
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.innerHTML = `
-        ${icons[type] || icons.info}
-        <span>${escapeHtml(message)}</span>
-        <button class="toast-close" onclick="this.parentElement.remove()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-    `;
-
-    container.appendChild(toast);
-
-    setTimeout(() => {
-        if (toast.parentElement) {
-            toast.style.animation = 'slideOut 0.3s ease forwards';
-            setTimeout(() => toast.remove(), 300);
-        }
-    }, duration);
-}
-
-// ============================================================
-// Debounce
-// ============================================================
-
-function debounce(func, wait = 300) {
-    let timeout;
-    return function executedFunction(...args) {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func(...args), wait);
-    };
-}
-
-// ============================================================
-// Helper: Gera sidebar HTML reutilizável
-// Evita repetir sidebar em cada HTML
-// ============================================================
-
-/**
- * Retorna o HTML da sidebar com o link ativo marcado.
- * @param {string} activePage - Nome da página ativa
- * @returns {string} HTML
- */
-function getSidebarHTML(activePage) {
-    const links = [
-        { href: 'index.html', id: 'dashboard', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>', label: 'Dashboard' },
-        { href: 'orcamentos.html', id: 'orcamentos', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>', label: 'Orçamentos' },
-        { href: 'clientes.html', id: 'clientes', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>', label: 'Clientes' },
-        { href: 'produtos.html', id: 'produtos', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>', label: 'Produtos' },
-        { href: 'configuracoes.html', id: 'configuracoes', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>', label: 'Configurações' }
-    ];
-
-    return links.map(l => {
-        const isActive = l.id === activePage ? ' active' : '';
-        return `<a href="${l.href}" class="sidebar-link${isActive}" title="${l.label}">
-            ${l.icon}
-            <span class="sidebar-link-text">${l.label}</span>
-        </a>`;
-    }).join('\n');
-}
-
-// ============================================================
-// Helper: Gera a estrutura base do header com tema toggle
-// ============================================================
-
-/**
- * Retorna HTML padrão do header-right com botão de tema.
- * @param {string} extraHTML - Botões extras (ex: Novo Orçamento)
- * @returns {string}
- */
-function getHeaderRightHTML(extraHTML = '') {
-    return `${extraHTML}
-        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Alternar Tema">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/></svg>
-        </button>`;
-}
-
-// ============================================================
-// Helper: Lê imagem como Base64
-// ============================================================
-
-/**
- * Lê um arquivo de imagem e retorna como Base64 string.
- * @param {File} file - Arquivo do input
- * @param {number} maxSizeMB - Tamanho máximo em MB
- * @returns {Promise<string>} Base64 data URL
- */
-function readImageAsBase64(file, maxSizeMB = 2) {
+function readFileAsBase64(file, maxBytes, allowedTypes) {
     return new Promise((resolve, reject) => {
         if (!file) {
             reject(new Error('Nenhum arquivo selecionado'));
             return;
         }
 
-        // Validar tipo
-        const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
-        if (!validTypes.includes(file.type)) {
-            reject(new Error('Formato inválido. Use JPG, PNG ou WEBP.'));
+        // Validar tamanho
+        if (maxBytes && file.size > maxBytes) {
+            const maxMB = (maxBytes / (1024 * 1024)).toFixed(1);
+            reject(new Error(`Arquivo muito grande. Máximo: ${maxMB} MB`));
             return;
         }
 
-        // Validar tamanho
-        const maxBytes = maxSizeMB * 1024 * 1024;
-        if (file.size > maxBytes) {
-            reject(new Error(`Imagem muito grande. Máximo: ${maxSizeMB}MB`));
-            return;
+        // Validar tipo
+        if (allowedTypes && Array.isArray(allowedTypes) && allowedTypes.length > 0) {
+            if (!allowedTypes.includes(file.type)) {
+                reject(new Error(`Tipo de arquivo não permitido: ${file.type}. Aceitos: ${allowedTypes.join(', ')}`));
+                return;
+            }
         }
 
         const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
+        reader.onload = function (e) {
+            resolve(e.target.result);
+        };
+        reader.onerror = function () {
+            reject(new Error('Erro ao ler arquivo'));
+        };
         reader.readAsDataURL(file);
     });
 }
 
-// ============================================================
-// Inicialização global - executada em TODAS as páginas
-// ============================================================
-document.addEventListener('DOMContentLoaded', () => {
-    initTheme();
-    initSidebar();
-    // Atualiza ícone do tema após DOM carregado
+/**
+ * Alias: o app.js original tinha readImageAsBase64(file, maxSizeMB)
+ * Mantém compatibilidade — converte maxSizeMB para bytes e chama readFileAsBase64
+ */
+function readImageAsBase64(file, maxSizeMB) {
+    const maxBytes = (maxSizeMB || 2) * 1024 * 1024;
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    return readFileAsBase64(file, maxBytes, allowedTypes);
+}
+
+// Garantir que ambos os nomes estão no escopo global
+window.readFileAsBase64 = readFileAsBase64;
+window.readImageAsBase64 = readImageAsBase64;
+window.unmaskValue = unmaskValue;
+
+// =============================================
+// TOAST NOTIFICATIONS
+// =============================================
+
+/**
+ * Mostra notificação toast
+ * @param {string} message — texto da mensagem
+ * @param {string} type — 'success' | 'error' | 'warning' | 'info'
+ * @param {number} duration — duração em ms (padrão 4000)
+ */
+function showToast(message, type = 'info', duration = 4000) {
+    const container = document.getElementById('toastContainer');
+    if (!container) {
+        console.warn('[Toast] Container não encontrado, usando alert:', message);
+        return;
+    }
+
+    const icons = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️',
+    };
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `
+        <span class="toast-icon">${icons[type] || icons.info}</span>
+        <span class="toast-message">${escapeHtml(message)}</span>
+        <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+    `;
+
+    container.appendChild(toast);
+
+    // Animar entrada
+    requestAnimationFrame(() => {
+        toast.classList.add('toast-show');
+    });
+
+    // Auto remover
+    setTimeout(() => {
+        toast.classList.remove('toast-show');
+        toast.classList.add('toast-hide');
+        setTimeout(() => {
+            if (toast.parentElement) toast.remove();
+        }, 300);
+    }, duration);
+}
+
+// =============================================
+// DEBOUNCE
+// =============================================
+
+/**
+ * Cria versão debounced de uma função
+ */
+function debounce(fn, delay = 300) {
+    let timer;
+    return function (...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn.apply(this, args), delay);
+    };
+}
+
+// =============================================
+// THEME (Dark / Light)
+// =============================================
+
+/**
+ * Inicializa tema baseado no localStorage
+ */
+function initTheme() {
+    const saved = localStorage.getItem('wd_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', saved);
     updateThemeIcon();
+}
+
+/**
+ * Alterna entre dark e light
+ */
+function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme') || 'dark';
+    const next = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('wd_theme', next);
+    updateThemeIcon();
+    console.log('[Theme] Alternado para:', next);
+}
+
+/**
+ * Atualiza ícone do botão de tema
+ */
+function updateThemeIcon() {
+    const theme = document.documentElement.getAttribute('data-theme') || 'dark';
+
+    // Buscar ícone — pode estar em diferentes IDs dependendo da página
+    const iconEl = document.getElementById('themeIcon');
+    if (iconEl) {
+        iconEl.textContent = theme === 'dark' ? '🌙' : '☀️';
+    }
+}
+
+// =============================================
+// SIDEBAR
+// =============================================
+
+/**
+ * Inicializa sidebar: collapse e mobile toggle
+ * Busca IDs: sidebarCollapse OU sidebarCollapseBtn (compatibilidade)
+ */
+function initSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    if (!sidebar) return;
+
+    // Restaurar estado salvo
+    const collapsed = localStorage.getItem('wd_sidebar_collapsed') === 'true';
+    if (collapsed) {
+        sidebar.classList.add('collapsed');
+    }
+
+    // Botão collapse — aceita AMBOS os IDs
+    const collapseBtn = document.getElementById('sidebarCollapse') || document.getElementById('sidebarCollapseBtn');
+    if (collapseBtn) {
+        collapseBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            const isCollapsed = sidebar.classList.contains('collapsed');
+            localStorage.setItem('wd_sidebar_collapsed', isCollapsed);
+            console.log('[Sidebar] Collapsed:', isCollapsed);
+        });
+    }
+
+    // Menu toggle mobile
+    const menuToggle = document.getElementById('menuToggle');
+    if (menuToggle) {
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('mobile-open');
+        });
+    }
+
+    // Overlay mobile — fechar ao clicar
+    const overlay = document.getElementById('sidebarOverlay');
+    if (overlay) {
+        overlay.addEventListener('click', () => {
+            sidebar.classList.remove('mobile-open');
+        });
+    }
+
+    // Fechar sidebar mobile ao clicar em link
+    const navLinks = sidebar.querySelectorAll('.nav-link, .sidebar-link');
+    navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('mobile-open');
+            }
+        });
+    });
+}
+
+// =============================================
+// HELPER: extrair array da resposta da API
+// =============================================
+
+/**
+ * A API retorna em formatos diferentes dependendo do endpoint:
+ *   { clientes: [...] }              — /api/clientes
+ *   { produtos: [...] }              — /api/produtos
+ *   { orcamentos: [...] }            — /api/orcamentos
+ *   { success: true, data: [...] }   — formato alternativo
+ *   [...]                            — array direto
+ *
+ * Esta função extrai o array independente do formato.
+ */
+function extrairArray(data, chave) {
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    if (chave && data[chave] && Array.isArray(data[chave])) return data[chave];
+    if (data.data && Array.isArray(data.data)) return data.data;
+    return [];
+}
+
+// =============================================
+// INICIALIZAÇÃO GLOBAL
+// =============================================
+
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('[App] Inicializando...');
+    console.log('[App] API_BASE_URL:', API_BASE_URL);
+
+    // Tema
+    initTheme();
+
+    // Sidebar
+    initSidebar();
+
+    // Theme toggle button — aceita AMBOS os IDs
+    const themeBtn = document.getElementById('themeToggle') || document.getElementById('themeToggleBtn');
+    if (themeBtn) {
+        themeBtn.addEventListener('click', toggleTheme);
+    }
+
+    console.log('[App] Inicializado com sucesso');
 });
