@@ -30,9 +30,6 @@ document.addEventListener('DOMContentLoaded', () => {
 // Views: Lista vs Formulário
 // ============================================================
 
-/**
- * Mostra a lista de orçamentos.
- */
 function mostrarLista() {
     document.getElementById('viewLista').style.display = '';
     document.getElementById('viewFormulario').style.display = 'none';
@@ -46,9 +43,6 @@ function mostrarLista() {
     carregarOrcamentos();
 }
 
-/**
- * Mostra o formulário de criação de orçamento.
- */
 async function mostrarFormulario() {
     document.getElementById('viewLista').style.display = 'none';
     document.getElementById('viewFormulario').style.display = '';
@@ -79,9 +73,6 @@ async function mostrarFormulario() {
     adicionarItem();
 }
 
-/**
- * Carrega clientes no select do formulário.
- */
 async function carregarClientesSelect() {
     try {
         const result = await apiGet('/api/clientes?limit=200');
@@ -99,9 +90,6 @@ async function carregarClientesSelect() {
     }
 }
 
-/**
- * Carrega produtos para uso nos itens do orçamento.
- */
 async function carregarProdutosSelect() {
     try {
         const result = await apiGet('/api/produtos?ativo=true&limit=200');
@@ -117,9 +105,6 @@ async function carregarProdutosSelect() {
 // Itens dinâmicos do orçamento
 // ============================================================
 
-/**
- * Adiciona uma nova linha de item ao formulário.
- */
 function adicionarItem() {
     itemCounter++;
     const container = document.getElementById('itensContainer');
@@ -153,10 +138,6 @@ function adicionarItem() {
     container.insertAdjacentHTML('beforeend', html);
 }
 
-/**
- * Atualiza a informação de valor do item e recalcula o total.
- * @param {number} idx - Índice do item
- */
 function atualizarItemValor(idx) {
     const select = document.getElementById(`itemProduto_${idx}`);
     const qtdInput = document.getElementById(`itemQtd_${idx}`);
@@ -178,10 +159,6 @@ function atualizarItemValor(idx) {
     recalcularTotal();
 }
 
-/**
- * Remove um item do formulário.
- * @param {number} idx - Índice do item
- */
 function removerItem(idx) {
     const row = document.getElementById(`itemRow_${idx}`);
     if (row) {
@@ -190,9 +167,6 @@ function removerItem(idx) {
     }
 }
 
-/**
- * Recalcula o total do orçamento baseado nos itens visíveis.
- */
 function recalcularTotal() {
     let total = 0;
     const rows = document.querySelectorAll('#itensContainer .item-row');
@@ -217,10 +191,6 @@ function recalcularTotal() {
 // Salvar Orçamento
 // ============================================================
 
-/**
- * Salva o orçamento no banco de dados.
- * @param {Event} event
- */
 async function salvarOrcamento(event) {
     event.preventDefault();
 
@@ -266,7 +236,6 @@ async function salvarOrcamento(event) {
         const result = await apiPost('/api/orcamentos', dados);
         if (result.success) {
             showToast('Orçamento criado com sucesso!', 'success');
-            // Redirecionar para preview
             const orcId = result.data.id;
             window.location.href = `preview.html?id=${orcId}`;
         }
@@ -279,9 +248,6 @@ async function salvarOrcamento(event) {
 // Listar Orçamentos
 // ============================================================
 
-/**
- * Carrega a lista de orçamentos.
- */
 async function carregarOrcamentos() {
     const tbody = document.getElementById('tbodyOrcamentos');
     if (!tbody) return;
@@ -303,10 +269,6 @@ async function carregarOrcamentos() {
     }
 }
 
-/**
- * Renderiza os orçamentos na tabela.
- * @param {Array} orcamentos
- */
 function renderizarOrcamentos(orcamentos) {
     const tbody = document.getElementById('tbodyOrcamentos');
 
@@ -354,7 +316,6 @@ function renderizarOrcamentos(orcamentos) {
     }).join('');
 }
 
-// Busca com debounce
 const buscarOrcamentosDebounced = debounce(() => {
     carregarOrcamentos();
 }, 400);
@@ -367,27 +328,16 @@ function buscarOrcamentos() {
 // Status
 // ============================================================
 
-/**
- * Abre o modal para alterar o status de um orçamento.
- * @param {string} id
- * @param {string} statusAtual
- */
 function abrirModalStatus(id, statusAtual) {
     document.getElementById('statusOrcamentoId').value = id;
     document.getElementById('statusNovoValor').value = statusAtual;
     document.getElementById('modalStatus').classList.add('active');
 }
 
-/**
- * Fecha o modal de status.
- */
 function fecharModalStatus() {
     document.getElementById('modalStatus').classList.remove('active');
 }
 
-/**
- * Confirma a alteração de status.
- */
 async function confirmarMudarStatus() {
     const id = document.getElementById('statusOrcamentoId').value;
     const status = document.getElementById('statusNovoValor').value;
@@ -406,10 +356,6 @@ async function confirmarMudarStatus() {
 // Excluir Orçamento
 // ============================================================
 
-/**
- * Abre o modal de confirmação para excluir.
- * @param {string} id
- */
 function confirmarDeleteOrcamento(id) {
     deleteOrcamentoId = id;
     document.getElementById('modalConfirmDelete').classList.add('active');
@@ -418,18 +364,11 @@ function confirmarDeleteOrcamento(id) {
     };
 }
 
-/**
- * Fecha o modal de confirmação.
- */
 function fecharConfirmDelete() {
     document.getElementById('modalConfirmDelete').classList.remove('active');
     deleteOrcamentoId = null;
 }
 
-/**
- * Exclui o orçamento.
- * @param {string} id
- */
 async function deletarOrcamento(id) {
     try {
         await apiDelete(`/api/orcamentos/${id}`);
