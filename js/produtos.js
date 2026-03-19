@@ -64,7 +64,6 @@ function renderizarProdutos(produtos) {
     }
 
     tbody.innerHTML = produtos.map(p => {
-        // Montar string de dimensões
         const dims = [];
         if (p.altura_cm) dims.push(`A: ${p.altura_cm}cm`);
         if (p.largura_cm) dims.push(`L: ${p.largura_cm}cm`);
@@ -110,9 +109,6 @@ function buscarProdutos() {
 // Modal - Abrir / Fechar
 // ============================================================
 
-/**
- * Abre o modal para criar um novo produto.
- */
 function abrirModalProduto() {
     document.getElementById('modalProdutoTitulo').textContent = 'Novo Produto';
     document.getElementById('formProduto').reset();
@@ -120,17 +116,10 @@ function abrirModalProduto() {
     document.getElementById('modalProduto').classList.add('active');
 }
 
-/**
- * Fecha o modal de produto.
- */
 function fecharModalProduto() {
     document.getElementById('modalProduto').classList.remove('active');
 }
 
-/**
- * Abre o modal para editar um produto existente.
- * @param {string} id
- */
 async function editarProduto(id) {
     try {
         const result = await apiGet(`/api/produtos/${id}`);
@@ -158,10 +147,6 @@ async function editarProduto(id) {
 // Salvar (Criar / Atualizar)
 // ============================================================
 
-/**
- * Salva o produto (cria novo ou atualiza existente).
- * @param {Event} event
- */
 async function salvarProduto(event) {
     event.preventDefault();
 
@@ -207,10 +192,6 @@ async function salvarProduto(event) {
 // Excluir
 // ============================================================
 
-/**
- * Abre o modal de confirmação para excluir um produto.
- * @param {string} id
- */
 function confirmarDeleteProduto(id) {
     deleteProdutoId = id;
     document.getElementById('modalConfirmDelete').classList.add('active');
@@ -219,18 +200,11 @@ function confirmarDeleteProduto(id) {
     };
 }
 
-/**
- * Fecha o modal de confirmação de exclusão.
- */
 function fecharConfirmDelete() {
     document.getElementById('modalConfirmDelete').classList.remove('active');
     deleteProdutoId = null;
 }
 
-/**
- * Exclui um produto pelo ID.
- * @param {string} id
- */
 async function deletarProduto(id) {
     try {
         await apiDelete(`/api/produtos/${id}`);
