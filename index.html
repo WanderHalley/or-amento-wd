@@ -8,10 +8,20 @@
 </head>
 <body>
     <div class="app-layout">
+
+        <!-- Sidebar Overlay (mobile) -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
         <!-- ========== SIDEBAR ========== -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <h2>WD Máquinas</h2>
+                <div class="sidebar-logo">
+                    <div class="sidebar-logo-icon">WD</div>
+                    <div class="sidebar-logo-text">
+                        <h1>WD Máquinas</h1>
+                        <span>Sistema de Orçamentos</span>
+                    </div>
+                </div>
                 <button class="sidebar-toggle" id="sidebarCollapse">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M15 18l-6-6 6-6"/>
@@ -19,31 +29,15 @@
                 </button>
             </div>
             <nav class="sidebar-nav">
-                <a href="index.html" class="nav-link active">
+                <div class="sidebar-nav-label">Menu</div>
+                <a href="index.html" class="sidebar-link active" title="Dashboard">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
                         <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
                     </svg>
-                    <span>Dashboard</span>
+                    <span class="sidebar-link-text">Dashboard</span>
                 </a>
-                <a href="clientes.html" class="nav-link">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                        <circle cx="9" cy="7" r="4"/>
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                    </svg>
-                    <span>Clientes</span>
-                </a>
-                <a href="produtos.html" class="nav-link">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
-                        <line x1="12" y1="22.08" x2="12" y2="12"/>
-                    </svg>
-                    <span>Produtos</span>
-                </a>
-                <a href="orcamentos.html" class="nav-link">
+                <a href="orcamentos.html" class="sidebar-link" title="Orçamentos">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                         <polyline points="14 2 14 8 20 8"/>
@@ -51,14 +45,31 @@
                         <line x1="16" y1="17" x2="8" y2="17"/>
                         <polyline points="10 9 9 9 8 9"/>
                     </svg>
-                    <span>Orçamentos</span>
+                    <span class="sidebar-link-text">Orçamentos</span>
                 </a>
-                <a href="configuracoes.html" class="nav-link">
+                <a href="clientes.html" class="sidebar-link" title="Clientes">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    <span class="sidebar-link-text">Clientes</span>
+                </a>
+                <a href="produtos.html" class="sidebar-link" title="Produtos">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                        <line x1="12" y1="22.08" x2="12" y2="12"/>
+                    </svg>
+                    <span class="sidebar-link-text">Produtos</span>
+                </a>
+                <a href="configuracoes.html" class="sidebar-link" title="Configurações">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="3"/>
                         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
                     </svg>
-                    <span>Configurações</span>
+                    <span class="sidebar-link-text">Configurações</span>
                 </a>
             </nav>
         </aside>
@@ -66,16 +77,18 @@
         <!-- ========== MAIN ========== -->
         <main class="main-content">
             <!-- Header -->
-            <header class="top-header">
-                <button class="menu-toggle" id="menuToggle">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="3" y1="12" x2="21" y2="12"/>
-                        <line x1="3" y1="6" x2="21" y2="6"/>
-                        <line x1="3" y1="18" x2="21" y2="18"/>
-                    </svg>
-                </button>
-                <h1>Dashboard</h1>
-                <div class="header-actions">
+            <header class="main-header">
+                <div class="header-left">
+                    <button class="menu-toggle" id="menuToggle">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12"/>
+                            <line x1="3" y1="6" x2="21" y2="6"/>
+                            <line x1="3" y1="18" x2="21" y2="18"/>
+                        </svg>
+                    </button>
+                    <h2>Dashboard</h2>
+                </div>
+                <div class="header-right">
                     <a href="orcamentos.html?novo=1" class="btn btn-primary btn-sm">+ Novo Orçamento</a>
                     <button class="theme-toggle" id="themeToggle" title="Alternar tema">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -226,8 +239,6 @@
                 const data = await apiGet('/api/dashboard');
                 console.log('[Dashboard] Resposta:', data);
 
-                // API retorna DIRETO (sem wrapper success/data):
-                // { total_clientes: 1, total_produtos_ativos: 1, total_orcamentos_pendentes: 2, total_valor_aprovados: 0 }
                 const clientes = data.total_clientes ?? 0;
                 const produtos = data.total_produtos_ativos ?? 0;
                 const pendentes = data.total_orcamentos_pendentes ?? 0;
@@ -256,7 +267,6 @@
                 const data = await apiGet('/api/orcamentos?limit=10');
                 console.log('[Dashboard] Orçamentos resposta:', data);
 
-                // API retorna: { orcamentos: [...], total }
                 const orcamentos = data.orcamentos || data.data || [];
 
                 if (!Array.isArray(orcamentos) || orcamentos.length === 0) {
@@ -278,11 +288,11 @@
                     const status = orc.status || 'pendente';
 
                     const badgeClass = {
-                        'pendente': 'badge-warning',
-                        'aprovado': 'badge-success',
-                        'recusado': 'badge-danger',
-                        'expirado': 'badge-secondary'
-                    }[status] || 'badge-secondary';
+                        'pendente': 'badge-pendente',
+                        'aprovado': 'badge-aprovado',
+                        'recusado': 'badge-recusado',
+                        'expirado': 'badge-expirado'
+                    }[status] || 'badge-expirado';
 
                     const statusLabel = {
                         'pendente': 'Pendente',
