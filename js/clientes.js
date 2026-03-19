@@ -17,6 +17,14 @@ let clientesData = [];
 let deleteClienteId = null;
 
 // ========== HELPER: extrair array da resposta da API ==========
+/**
+ * A API pode retornar em vários formatos:
+ *   { clientes: [...] }              — formato padrão
+ *   { success: true, data: [...] }   — formato alternativo
+ *   [...]                            — array direto
+ *
+ * Esta função extrai o array independente do formato.
+ */
 function extrairArrayClientes(data) {
     if (!data) return [];
     if (Array.isArray(data)) return data;
@@ -27,11 +35,15 @@ function extrairArrayClientes(data) {
 
 // ========== INICIALIZAÇÃO ==========
 document.addEventListener('DOMContentLoaded', () => {
+    // Tema e sidebar são inicializados pelo app.js
     if (typeof initTheme === 'function') initTheme();
     if (typeof initSidebar === 'function') initSidebar();
     if (typeof updateThemeIcon === 'function') updateThemeIcon();
 
+    // Aplicar máscaras nos campos do modal
     aplicarMascarasCliente();
+
+    // Carregar clientes
     carregarClientes();
 });
 
@@ -43,7 +55,7 @@ function aplicarMascarasCliente() {
     const cepInput = document.getElementById('clienteCep');
     const cpfCnpjInput = document.getElementById('clienteCpfCnpj');
 
-    if (telInput && typeof formatPhone    if (telInput && typeof formatPhone === 'function') {
+    if (telInput && typeof formatPhone === 'function') {
         telInput.addEventListener('input', function () {
             this.value = formatPhone(this.value);
         });
@@ -114,13 +126,21 @@ function renderizarClientes(clientes) {
     tbody.innerHTML = clientes.map(c => {
         const nome = escapeHtml(c.nome || '-');
         const empresa = escapeHtml(c.empresa || '-');
-        // Compatível com cpf_cnpj (novo) e cnpj_cpf (antigo)
+
+        // Telefone: formata se a função existir
         const telefoneRaw = c.telefone || '';
-        const telefone = telefoneRaw ? (typeof formatPhone === 'function' ? formatPhone(telefoneRaw) : telefoneRaw) : '-';
+        const telefone = telefoneRaw
+            ? (typeof formatPhone === 'function' ? formatPhone(telefoneRaw) : telefoneRaw)
+            : '-';
+
         const email = escapeHtml(c.email || '-');
+
+        // Cidade/UF
         const cidade = c.cidade || '';
         const estado = c.estado || '';
-        const local = cidade && estado ? `${escapeHtml(cidade)}/${escapeHtml(estado)}` : escapeHtml(cidade || estado || '-');
+        const local = cidade && estado
+            ? `${escapeHtml(cidade)}/${escapeHtml(estado)}`
+            : escapeHtml(cidade || estado || '-');
 
         return `
             <tr>
@@ -178,46 +198,58 @@ function fecharModalCliente() {
 // ========== EDITAR CLIENTE ==========
 async function editarCliente(id) {
     try {
-        const cliente = await apiGet(`/api/clientes/${id}`);
-        // Se veio dentro de { data: {...} }
-        const c = cliente.data || cliente;
+        const response = await apiGet(`/api/clientes/${id}`);
+        // Compatível: pode vir direto ou dentro de { data: {...} }
+        const cliente = response.data || response;
 
-        console.log('[Clientes] Editando:', c);
+        console.log('[Clientes] Editando:', cliente);
 
         const titulo = document.getElementById('modalClienteTitulo');
         if (titulo) titulo.textContent = 'Editar Cliente';
 
         const idInput = document.getElementById('clienteId');
-        if (idInput) idInput.value = c.id;
+        if (idInput) idInput.value = cliente.id;
 
         const nomeInput = document.getElementById('clienteNome');
-        if (nomeInput) nomeInput.value = c.nome || '';
+        if (nomeInput) nomeInput.value = cliente.nome || '';
 
         const empresaInput = document.getElementById('clienteEmpresa');
-        if (empresaInput) empresaInput.value = c.empresa || '';
+        if (empresaInput) empresaInput.value = cliente.empresa || '';
 
-        // Compatível com cpf_cnpj E cnpj_cpf
+        // Compatível com cpf_cnpj (schema novo) E cnpj_cpf (schema antigo)
         const cpfCnpjInput = document.getElementById('clienteCpfCnpj');
-        const cpfCnpjValue = c.cpf_cnpj || c.cnpj_cpf || '';
-        if (cpfCnpjInput) cpfCnpjInput.value = cpfCnpjValue ? (typeof formatCPFCNPJ === 'function' ? formatCPFCNPJ(cpfCnpjValue) : cpfCnpjValue) : '';
+        const cpfCnpjValue = cliente.cpf_cnpj || cliente.cnpj_cpf || '';
+        if (cpfCnpjInput) {
+            cpfCnpjInput.value = cpfCnpjValue
+                ? (typeof formatCPFCNPJ === 'function' ? formatCPFCNPJ(cpfCnpjValue) : cpfCnpjValue)
+                : '';
+        }
 
         const telInput = document.getElementById('clienteTelefone');
-        if (telInput) telInput.value = c.telefone ? (typeof formatPhone === 'function' ? formatPhone(c.telefone) : c.telefone) : '';
+        if (telInput) {
+            telInput.value = cliente.telefone
+                ? (typeof formatPhone === 'function' ? formatPhone(cliente.telefone) : cliente.telefone)
+                : '';
+        }
 
         const emailInput = document.getElementById('clienteEmail');
-        if (emailInput) emailInput.value = c.email || '';
+        if (emailInput) emailInput.value = cliente.email || '';
 
         const enderecoInput = document.getElementById('clienteEndereco');
-        if (enderecoInput) enderecoInput.value = c.endereco || '';
+        if (enderecoInput) enderecoInput.value = cliente.endereco || '';
 
         const cidadeInput = document.getElementById('clienteCidade');
-        if (cidadeInput) cidadeInput.value = c.cidade || '';
+        if (cidadeInput) cidadeInput.value = cliente.cidade || '';
 
         const estadoInput = document.getElementById('clienteEstado');
-        if (estadoInput) estadoInput.value = c.estado || '';
+        if (estadoInput) estadoInput.value = cliente.estado || '';
 
         const cepInput = document.getElementById('clienteCep');
-        if (cepInput) cepInput.value = c.cep ? (typeof formatCEP === 'function' ? formatCEP(c.cep) : c.cep) : '';
+        if (cepInput) {
+            cepInput.value = cliente.cep
+                ? (typeof formatCEP === 'function' ? formatCEP(cliente.cep) : cliente.cep)
+                : '';
+        }
 
         const modal = document.getElementById('modalCliente');
         if (modal) modal.classList.add('active');
@@ -238,12 +270,13 @@ async function salvarCliente(event) {
     const nomeInput = document.getElementById('clienteNome');
     const nome = nomeInput ? nomeInput.value.trim() : '';
 
+    // Validação
     if (!nome) {
         showToast('O nome do cliente é obrigatório', 'warning');
         return;
     }
 
-    // Ler campos do form
+    // Ler todos os campos do formulário
     const empresaInput = document.getElementById('clienteEmpresa');
     const cpfCnpjInput = document.getElementById('clienteCpfCnpj');
     const telInput = document.getElementById('clienteTelefone');
@@ -253,8 +286,10 @@ async function salvarCliente(event) {
     const estadoInput = document.getElementById('clienteEstado');
     const cepInput = document.getElementById('clienteCep');
 
-    // Extrair só dígitos dos campos mascarados
-    const unmask = typeof unmaskValue === 'function' ? unmaskValue : (v) => v.replace(/\D/g, '');
+    // Função para remover máscara (só dígitos)
+    const unmask = typeof unmaskValue === 'function'
+        ? unmaskValue
+        : function (v) { return v ? v.replace(/\D/g, '') : ''; };
 
     const dados = {
         nome: nome,
@@ -272,9 +307,11 @@ async function salvarCliente(event) {
 
     try {
         if (id) {
+            // Atualizar cliente existente
             await apiPut(`/api/clientes/${id}`, dados);
             showToast('Cliente atualizado com sucesso!', 'success');
         } else {
+            // Criar novo cliente
             await apiPost('/api/clientes', dados);
             showToast('Cliente criado com sucesso!', 'success');
         }
@@ -316,4 +353,3 @@ async function deletarCliente() {
         fecharConfirmDeleteCliente();
     }
 }
-
