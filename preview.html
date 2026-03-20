@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Preview Orçamento | WD Máquinas</title>
+    <title>Preview Orçamento - WD Máquinas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    <!-- jsPDF + html2canvas para gerar PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
@@ -130,11 +133,68 @@
                         </button>
                     </div>
 
-                    <!-- Conteúdo do Orçamento -->
+                    <!-- Conteúdo do Preview com TODOS os IDs esperados pelo preview.js -->
                     <div class="preview-content" id="previewContent">
-                        <div style="text-align:center;padding:60px">
+                        <!-- Loading -->
+                        <div id="previewLoading" style="text-align:center; padding:60px;">
                             <div class="spinner"></div>
-                            <p style="margin-top:16px;color:var(--text-muted)">Carregando orçamento...</p>
+                            <p style="margin-top:16px; color:var(--text-muted);">Carregando orçamento...</p>
+                        </div>
+
+                        <!-- Área do preview (oculta até carregar) -->
+                        <div id="previewArea" style="display:none;">
+                            <!-- Header da empresa -->
+                            <div id="previewHeader"></div>
+
+                            <!-- Info do orçamento (número, data, status) -->
+                            <div id="previewInfo"></div>
+
+                            <!-- Dados do cliente -->
+                            <div style="margin:20px 0;">
+                                <h3 style="margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">Dados do Cliente</h3>
+                                <div id="previewClienteContent"></div>
+                            </div>
+
+                            <!-- Tabela de itens -->
+                            <div style="margin:20px 0;">
+                                <h3 style="margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">Itens do Orçamento</h3>
+                                <div class="table-container">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Produto</th>
+                                                <th style="text-align:center;">Qtd</th>
+                                                <th style="text-align:right;">Valor Unit.</th>
+                                                <th style="text-align:right;">Subtotal</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="previewItensBody"></tbody>
+                                        <tfoot id="previewItensFoot"></tfoot>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Detalhes dos produtos (imagens, specs) -->
+                            <div id="previewProdutosDetalhe" style="display:none; margin:20px 0;">
+                                <h3 style="margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">Detalhes dos Produtos</h3>
+                                <div id="previewProdutosDetalheContent"></div>
+                            </div>
+
+                            <!-- Condições comerciais -->
+                            <div style="margin:20px 0;">
+                                <h3 style="margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">Condições Comerciais</h3>
+                                <div id="previewCondicoesContent"></div>
+                            </div>
+
+                            <!-- Observações -->
+                            <div id="previewObservacoes" style="display:none; margin:20px 0;">
+                                <h3 style="margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">Observações</h3>
+                                <div id="previewObservacoesContent"></div>
+                            </div>
+
+                            <!-- Rodapé -->
+                            <div id="previewFooter"></div>
                         </div>
                     </div>
                 </div>
@@ -147,21 +207,21 @@
         <div class="modal" style="max-width:500px">
             <div class="modal-header">
                 <h3>Enviar por Email</h3>
-                <button class="modal-close" onclick="fecharModalEmail()">&times;</button>
+                <button class="modal-close" onclick="fecharModalEmail()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
             </div>
             <div class="modal-body">
                 <div class="form-grid" style="grid-template-columns:1fr">
                     <div class="form-group">
                         <label>Email do destinatário <span class="required">*</span></label>
-                        <input type="email" id="emailDestinatario" class="form-input" placeholder="email@exemplo.com" required>
+                        <input type="email" id="emailDestinatario" placeholder="email@exemplo.com" required>
                     </div>
                     <div class="form-group">
                         <label>Assunto</label>
-                        <input type="text" id="emailAssunto" class="form-input" placeholder="Assunto do email">
+                        <input type="text" id="emailAssunto" placeholder="Assunto do email">
                     </div>
                     <div class="form-group">
                         <label>Mensagem (opcional)</label>
-                        <textarea id="emailMensagem" class="form-input" rows="3" placeholder="Mensagem adicional..."></textarea>
+                        <textarea id="emailMensagem" rows="3" placeholder="Mensagem adicional..."></textarea>
                     </div>
                 </div>
             </div>
@@ -175,10 +235,8 @@
         </div>
     </div>
 
-    <!-- Toast -->
-    <div id="toastContainer" class="toast-container"></div>
+    <div class="toast-container" id="toastContainer"></div>
 
-    <!-- Scripts -->
     <script src="js/app.js"></script>
     <script src="js/preview.js"></script>
 </body>
