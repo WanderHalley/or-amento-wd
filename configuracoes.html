@@ -102,7 +102,7 @@
             </header>
 
             <!-- Content -->
-            <div class="page-content">
+            <div class="content-area">
 
                 <!-- ========== DADOS DA EMPRESA ========== -->
                 <div class="card">
@@ -116,65 +116,88 @@
                             <div class="form-group" style="margin-bottom:20px;">
                                 <label for="cfgLogo">Logo da Empresa</label>
                                 <div style="margin-top:8px;">
+                                    <!-- Preview do logo -->
                                     <div id="cfgLogoPreview" style="margin-bottom:10px;">
                                         <img id="cfgLogoImg" src="" alt="Logo" style="max-width:200px; max-height:100px; border-radius:8px; border:1px solid var(--border-color); display:none;">
                                     </div>
+                                    <!-- Input de arquivo -->
                                     <input type="file" id="cfgLogo" class="form-input" accept="image/jpeg,image/png,image/webp" onchange="previewLogoConfig(event)">
                                     <small style="color:var(--text-muted); display:block; margin-top:4px;">JPG, PNG ou WEBP. Máximo 500 KB. Recomendado: 400×120 px.</small>
+                                    <!-- Botão remover -->
                                     <button type="button" class="btn btn-danger btn-sm" id="btnRemoverLogo" onclick="removerLogoConfig()" style="margin-top:8px; display:none;">Remover logo</button>
                                 </div>
                             </div>
 
                             <div class="form-grid">
+                                <!-- Nome -->
                                 <div class="form-group full-width">
                                     <label for="cfgNomeEmpresa">Nome da Empresa *</label>
                                     <input type="text" id="cfgNomeEmpresa" class="form-input" required placeholder="WD Máquinas">
                                 </div>
+
+                                <!-- CNPJ -->
                                 <div class="form-group">
                                     <label for="cfgCnpj">CNPJ</label>
                                     <input type="text" id="cfgCnpj" class="form-input" placeholder="00.000.000/0000-00" maxlength="18">
                                 </div>
+
+                                <!-- Telefone -->
                                 <div class="form-group">
                                     <label for="cfgTelefone">Telefone</label>
                                     <input type="text" id="cfgTelefone" class="form-input" placeholder="(00) 00000-0000" maxlength="15">
                                 </div>
+
+                                <!-- Email -->
                                 <div class="form-group">
                                     <label for="cfgEmail">E-mail</label>
                                     <input type="email" id="cfgEmail" class="form-input" placeholder="contato@empresa.com">
                                 </div>
+
+                                <!-- Site -->
                                 <div class="form-group">
                                     <label for="cfgSite">Site / Instagram</label>
                                     <input type="text" id="cfgSite" class="form-input" placeholder="www.empresa.com ou @empresa">
                                 </div>
+
+                                <!-- Endereço -->
                                 <div class="form-group full-width">
                                     <label for="cfgEndereco">Endereço Completo</label>
                                     <input type="text" id="cfgEndereco" class="form-input" placeholder="Rua, número, bairro, cidade - UF, CEP">
                                 </div>
                             </div>
 
+                            <!-- Separador -->
                             <hr style="margin: 25px 0; border-color: var(--border-color);">
 
                             <!-- ========== PADRÕES DO ORÇAMENTO ========== -->
                             <h3 style="margin-bottom:15px;">Padrões do Orçamento</h3>
                             <div class="form-grid">
+                                <!-- Condições de pagamento -->
                                 <div class="form-group full-width">
                                     <label for="cfgCondicoesPadrao">Condições de Pagamento Padrão</label>
                                     <textarea id="cfgCondicoesPadrao" class="form-input" rows="3" placeholder="Ex: 50% de entrada e 50% na entrega do equipamento."></textarea>
                                 </div>
+
+                                <!-- Validade -->
                                 <div class="form-group">
                                     <label for="cfgValidadeDias">Validade Padrão (dias)</label>
                                     <input type="number" id="cfgValidadeDias" class="form-input" min="1" max="365" placeholder="15">
                                 </div>
+
+                                <!-- Prazo de entrega -->
                                 <div class="form-group">
                                     <label for="cfgPrazoEntregaPadrao">Prazo de Entrega Padrão</label>
                                     <input type="text" id="cfgPrazoEntregaPadrao" class="form-input" placeholder="Ex: 15 a 20 dias úteis">
                                 </div>
+
+                                <!-- Observações padrão -->
                                 <div class="form-group full-width">
                                     <label for="cfgObservacoesPadrao">Observações Padrão</label>
                                     <textarea id="cfgObservacoesPadrao" class="form-input" rows="3" placeholder="Texto padrão que aparece em todos os orçamentos..."></textarea>
                                 </div>
                             </div>
 
+                            <!-- Botões -->
                             <div style="margin-top:20px; text-align:right; display:flex; gap:10px; justify-content:flex-end;">
                                 <button type="button" class="btn btn-secondary" onclick="resetarConfiguracoes()">Restaurar Padrões</button>
                                 <button type="submit" class="btn btn-primary">Salvar Configurações</button>
@@ -203,7 +226,7 @@
                     </div>
                 </div>
 
-            </div><!-- .page-content -->
+            </div><!-- .content-area -->
         </main>
     </div><!-- .app-layout -->
 
