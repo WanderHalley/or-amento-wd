@@ -1,18 +1,18 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clientes - WD Máquinas</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Clientes | WD Máquinas</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div class="app-layout">
+
+        <!-- Sidebar Overlay (mobile) -->
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-        <!-- Sidebar -->
+        <!-- ========== SIDEBAR ========== -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-logo">
@@ -22,59 +22,101 @@
                         <span>Sistema de Orçamentos</span>
                     </div>
                 </div>
+                <button class="sidebar-toggle" id="sidebarCollapse">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M15 18l-6-6 6-6"/>
+                    </svg>
+                </button>
             </div>
             <nav class="sidebar-nav">
                 <div class="sidebar-nav-label">Menu</div>
-                <a href="index.html" class="sidebar-link">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                    Dashboard
+                <a href="index.html" class="sidebar-link" title="Dashboard">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                        <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+                    </svg>
+                    <span class="sidebar-link-text">Dashboard</span>
                 </a>
-                <a href="orcamentos.html" class="sidebar-link">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                    Orçamentos
+                <a href="orcamentos.html" class="sidebar-link" title="Orçamentos">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                        <polyline points="10 9 9 9 8 9"/>
+                    </svg>
+                    <span class="sidebar-link-text">Orçamentos</span>
                 </a>
-                <a href="clientes.html" class="sidebar-link active">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                    Clientes
+                <a href="clientes.html" class="sidebar-link active" title="Clientes">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    <span class="sidebar-link-text">Clientes</span>
                 </a>
-                <a href="produtos.html" class="sidebar-link">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-                    Produtos
+                <a href="produtos.html" class="sidebar-link" title="Produtos">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                        <line x1="12" y1="22.08" x2="12" y2="12"/>
+                    </svg>
+                    <span class="sidebar-link-text">Produtos</span>
+                </a>
+                <a href="configuracoes.html" class="sidebar-link" title="Configurações">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    </svg>
+                    <span class="sidebar-link-text">Configurações</span>
                 </a>
             </nav>
         </aside>
 
-        <!-- Main -->
+        <!-- ========== MAIN ========== -->
         <main class="main-content">
+            <!-- Header -->
             <header class="main-header">
                 <div class="header-left">
                     <button class="menu-toggle" id="menuToggle">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12"/>
+                            <line x1="3" y1="6" x2="21" y2="6"/>
+                            <line x1="3" y1="18" x2="21" y2="18"/>
+                        </svg>
                     </button>
                     <h2>Clientes</h2>
                 </div>
                 <div class="header-right">
-                    <button class="btn btn-primary btn-sm" onclick="abrirModalCliente()">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        Novo Cliente
+                    <button class="btn btn-primary btn-sm" onclick="abrirModalCliente()">+ Novo Cliente</button>
+                    <button class="theme-toggle" id="themeToggle" title="Alternar tema">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/>
+                            <line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/>
+                            <line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                        </svg>
                     </button>
                 </div>
             </header>
 
+            <!-- Content -->
             <div class="page-content">
-                <!-- Barra de ações -->
-                <div class="actions-bar">
-                    <div class="search-box">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                        <input type="text" id="buscaCliente" placeholder="Buscar por nome ou empresa..." oninput="buscarClientes()">
+
+                <!-- Busca -->
+                <div class="card" style="margin-bottom: 20px;">
+                    <div class="card-body" style="padding: 15px;">
+                        <input type="text" id="buscaCliente" class="form-input" placeholder="Buscar por nome, empresa, email ou telefone..." oninput="buscarClientesDebounced()">
                     </div>
                 </div>
 
-                <!-- Tabela -->
+                <!-- Tabela de clientes -->
                 <div class="card">
-                    <div class="card-body-no-pad">
-                        <div class="table-wrapper">
-                            <table class="data-table">
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table>
                                 <thead>
                                     <tr>
                                         <th>Nome</th>
@@ -85,58 +127,66 @@
                                         <th>Ações</th>
                                     </tr>
                                 </thead>
-                                <tbody id="tbodyClientes">
-                                    <tr><td colspan="6"><div class="spinner"></div></td></tr>
+                                <tbody id="tabelaClientes">
+                                    <tr>
+                                        <td colspan="6" style="text-align:center; padding:40px;">
+                                            <div class="spinner"></div>
+                                            <p>Carregando clientes...</p>
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
-            </div>
-        </main>
-    </div>
 
-    <!-- Modal Cliente -->
+            </div><!-- .page-content -->
+        </main>
+    </div><!-- .app-layout -->
+
+    <!-- ========== MODAL: Criar/Editar Cliente ========== -->
     <div class="modal-overlay" id="modalCliente">
         <div class="modal">
             <div class="modal-header">
                 <h3 id="modalClienteTitulo">Novo Cliente</h3>
-                <button class="modal-close" onclick="fecharModalCliente()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                </button>
+                <button class="modal-close" onclick="fecharModalCliente()">&times;</button>
             </div>
-            <div class="modal-body">
-                <form id="formCliente" onsubmit="salvarCliente(event)">
+            <form id="formCliente" onsubmit="salvarCliente(event)">
+                <div class="modal-body">
                     <input type="hidden" id="clienteId">
                     <div class="form-grid">
-                        <div class="form-group">
-                            <label>Nome <span class="required">*</span></label>
-                            <input type="text" id="clienteNome" required placeholder="Nome do contato">
+                        <div class="form-group full-width">
+                            <label for="clienteNome">Nome *</label>
+                            <input type="text" id="clienteNome" class="form-input" required placeholder="Nome completo do cliente">
                         </div>
                         <div class="form-group">
-                            <label>Empresa</label>
-                            <input type="text" id="clienteEmpresa" placeholder="Nome da empresa">
+                            <label for="clienteEmpresa">Empresa</label>
+                            <input type="text" id="clienteEmpresa" class="form-input" placeholder="Nome da empresa">
                         </div>
                         <div class="form-group">
-                            <label>Telefone</label>
-                            <input type="text" id="clienteTelefone" placeholder="(00) 00000-0000">
+                            <label for="clienteCpfCnpj">CPF/CNPJ</label>
+                            <input type="text" id="clienteCpfCnpj" class="form-input" placeholder="CPF ou CNPJ" maxlength="18">
                         </div>
                         <div class="form-group">
-                            <label>Email</label>
-                            <input type="email" id="clienteEmail" placeholder="email@exemplo.com">
+                            <label for="clienteTelefone">Telefone</label>
+                            <input type="text" id="clienteTelefone" class="form-input" placeholder="(00) 00000-0000" maxlength="15">
+                        </div>
+                        <div class="form-group">
+                            <label for="clienteEmail">E-mail</label>
+                            <input type="email" id="clienteEmail" class="form-input" placeholder="email@exemplo.com">
                         </div>
                         <div class="form-group full-width">
-                            <label>Endereço</label>
-                            <input type="text" id="clienteEndereco" placeholder="Rua, número, bairro">
+                            <label for="clienteEndereco">Endereço</label>
+                            <input type="text" id="clienteEndereco" class="form-input" placeholder="Rua, número, bairro">
                         </div>
                         <div class="form-group">
-                            <label>Cidade</label>
-                            <input type="text" id="clienteCidade" placeholder="Cidade">
+                            <label for="clienteCidade">Cidade</label>
+                            <input type="text" id="clienteCidade" class="form-input" placeholder="Cidade">
                         </div>
                         <div class="form-group">
-                            <label>Estado</label>
-                            <select id="clienteEstado">
-                                <option value="">Selecione</option>
+                            <label for="clienteEstado">Estado</label>
+                            <select id="clienteEstado" class="form-input">
+                                <option value="">Selecione...</option>
                                 <option value="AC">AC</option><option value="AL">AL</option>
                                 <option value="AP">AP</option><option value="AM">AM</option>
                                 <option value="BA">BA</option><option value="CE">CE</option>
@@ -154,46 +204,40 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>CEP</label>
-                            <input type="text" id="clienteCep" placeholder="00000-000">
-                        </div>
-                        <div class="form-group">
-                            <label>CNPJ/CPF</label>
-                            <input type="text" id="clienteCnpjCpf" placeholder="00.000.000/0000-00">
-                        </div>
-                        <div class="form-group full-width">
-                            <label>Observações</label>
-                            <textarea id="clienteObservacoes" placeholder="Observações sobre o cliente..."></textarea>
+                            <label for="clienteCep">CEP</label>
+                            <input type="text" id="clienteCep" class="form-input" placeholder="00000-000" maxlength="9">
                         </div>
                     </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="fecharModalCliente()">Cancelar</button>
-                <button class="btn btn-primary" onclick="document.getElementById('formCliente').requestSubmit()">Salvar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Confirmar Exclusão -->
-    <div class="modal-overlay" id="modalConfirmDelete">
-        <div class="modal" style="max-width:420px">
-            <div class="modal-body">
-                <div class="confirm-dialog">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-                    <h4>Excluir Cliente?</h4>
-                    <p>Esta ação não pode ser desfeita.</p>
                 </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="fecharModalCliente()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Cliente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========== MODAL: Confirmar exclusão ========== -->
+    <div class="modal-overlay" id="confirmDeleteCliente">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Confirmar Exclusão</h3>
+                <button class="modal-close" onclick="fecharConfirmDeleteCliente()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita.</p>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="fecharConfirmDelete()">Cancelar</button>
-                <button class="btn btn-danger" id="btnConfirmDelete">Excluir</button>
+                <button class="btn btn-secondary" onclick="fecharConfirmDeleteCliente()">Cancelar</button>
+                <button class="btn btn-danger" onclick="deletarCliente()">Excluir</button>
             </div>
         </div>
     </div>
 
-    <div class="toast-container" id="toastContainer"></div>
+    <!-- Toast -->
+    <div id="toastContainer" class="toast-container"></div>
 
+    <!-- Scripts -->
     <script src="js/app.js"></script>
     <script src="js/clientes.js"></script>
 </body>
