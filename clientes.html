@@ -103,7 +103,7 @@
             </header>
 
             <!-- Content -->
-            <div class="page-content">
+            <div class="content-area">
 
                 <!-- Busca -->
                 <div class="card" style="margin-bottom: 20px;">
@@ -140,7 +140,7 @@
                     </div>
                 </div>
 
-            </div><!-- .page-content -->
+            </div><!-- .content-area -->
         </main>
     </div><!-- .app-layout -->
 
@@ -153,36 +153,45 @@
             </div>
             <form id="formCliente" onsubmit="salvarCliente(event)">
                 <div class="modal-body">
+                    <!-- ID oculto para edição -->
                     <input type="hidden" id="clienteId">
+
                     <div class="form-grid">
                         <div class="form-group full-width">
                             <label for="clienteNome">Nome *</label>
                             <input type="text" id="clienteNome" class="form-input" required placeholder="Nome completo do cliente">
                         </div>
+
                         <div class="form-group">
                             <label for="clienteEmpresa">Empresa</label>
                             <input type="text" id="clienteEmpresa" class="form-input" placeholder="Nome da empresa">
                         </div>
+
                         <div class="form-group">
                             <label for="clienteCpfCnpj">CPF/CNPJ</label>
                             <input type="text" id="clienteCpfCnpj" class="form-input" placeholder="CPF ou CNPJ" maxlength="18">
                         </div>
+
                         <div class="form-group">
                             <label for="clienteTelefone">Telefone</label>
                             <input type="text" id="clienteTelefone" class="form-input" placeholder="(00) 00000-0000" maxlength="15">
                         </div>
+
                         <div class="form-group">
                             <label for="clienteEmail">E-mail</label>
                             <input type="email" id="clienteEmail" class="form-input" placeholder="email@exemplo.com">
                         </div>
+
                         <div class="form-group full-width">
                             <label for="clienteEndereco">Endereço</label>
                             <input type="text" id="clienteEndereco" class="form-input" placeholder="Rua, número, bairro">
                         </div>
+
                         <div class="form-group">
                             <label for="clienteCidade">Cidade</label>
                             <input type="text" id="clienteCidade" class="form-input" placeholder="Cidade">
                         </div>
+
                         <div class="form-group">
                             <label for="clienteEstado">Estado</label>
                             <select id="clienteEstado" class="form-input">
@@ -203,6 +212,7 @@
                                 <option value="TO">TO</option>
                             </select>
                         </div>
+
                         <div class="form-group">
                             <label for="clienteCep">CEP</label>
                             <input type="text" id="clienteCep" class="form-input" placeholder="00000-000" maxlength="9">
