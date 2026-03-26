@@ -267,8 +267,7 @@ function renderizarPreview(orc) {
 }
 
 /* ============================================================
-   PDF — Sempre cabe em UMA folha A4
-   Cria clone offscreen → html2canvas → escala para caber
+   PDF — Preenche a folha A4 inteira, sem bordas
    ============================================================ */
 
 async function salvarPDF() {
@@ -287,20 +286,9 @@ async function salvarPDF() {
     try {
         var previewArea = document.getElementById('previewArea');
 
-        /*
-         * A4 em pixels (96 dpi):
-         *   largura = 210mm = 794px
-         *   altura  = 297mm = 1123px
-         *
-         * Usamos largura interna de 720px (margem de ~37px cada lado)
-         * e altura máxima de 1040px (margem top/bottom de ~41px)
-         *
-         * Se o conteúdo for maior que 1040px de altura,
-         * reduzimos a fonte proporcionalmente para caber.
-         */
-
-        var a4W = 720;
-        var a4H = 1040;
+        var a4Wpx = 794;
+        var a4Hpx = 1123;
+        var paddingInterno = 40;
 
         /* Clonar conteúdo */
         clone = previewArea.cloneNode(true);
@@ -310,69 +298,48 @@ async function salvarPDF() {
         var badgesClone = clone.querySelectorAll('.no-print');
         badgesClone.forEach(function (el) { el.style.display = 'none'; });
 
-        /* Posicionar offscreen com largura fixa */
-        clone.style.cssText = 'position:absolute;left:-9999px;top:0;' +
-            'width:' + a4W + 'px;max-width:' + a4W + 'px;' +
-            'padding:0;margin:0;' +
+        /* Posicionar offscreen com dimensões exatas de A4 */
+        clone.style.cssText =
+            'position:absolute;left:-9999px;top:0;' +
+            'width:' + a4Wpx + 'px;' +
+            'min-height:' + a4Hpx + 'px;' +
+            'padding:' + paddingInterno + 'px;' +
+            'margin:0;' +
             'background:#ffffff;color:#1a1a1a;' +
             "font-family:'Inter',sans-serif;" +
-            'font-size:13px;line-height:1.5;' +
-            'display:block;box-sizing:border-box;';
+            'font-size:14px;line-height:1.5;' +
+            'display:block;box-sizing:border-box;' +
+            'overflow:hidden;';
 
         document.body.appendChild(clone);
-
-        /* Esperar render */
         await new Promise(function (r) { setTimeout(r, 200); });
 
-        /* Medir altura real do conteúdo */
+        /* Medir altura real */
         var alturaReal = clone.scrollHeight;
 
-        /*
-         * Se o conteúdo é mais alto que a4H, reduzir a fonte
-         * para que caiba. Calculamos o fator de escala.
-         */
-        if (alturaReal > a4H) {
-            var fator = a4H / alturaReal;
-            /* Limite mínimo: não reduzir abaixo de 60% (8px font) */
-            if (fator < 0.6) fator = 0.6;
-
-            var novaFonte = Math.floor(13 * fator);
-            if (novaFonte < 8) novaFonte = 8;
-            clone.style.fontSize = novaFonte + 'px';
-
-            /* Reduzir paddings/margins proporcionalmente via transform */
+        /* Se excede A4, aplicar scale para comprimir */
+        if (alturaReal > a4Hpx) {
+            var escala = a4Hpx / alturaReal;
+            clone.style.transform = 'scale(' + escala + ')';
             clone.style.transformOrigin = 'top left';
-
-            /* Esperar re-render com fonte menor */
-            await new Promise(function (r) { setTimeout(r, 200); });
-            alturaReal = clone.scrollHeight;
-        }
-
-        /*
-         * Se AINDA não cabe (muito conteúdo), usar CSS transform scale
-         * para forçar caber na altura desejada
-         */
-        var scaleForCapture = 1;
-        if (alturaReal > a4H) {
-            scaleForCapture = a4H / alturaReal;
-            clone.style.transform = 'scale(' + scaleForCapture + ')';
-            clone.style.transformOrigin = 'top left';
-            clone.style.width = (a4W / scaleForCapture) + 'px';
-            clone.style.maxWidth = (a4W / scaleForCapture) + 'px';
+            clone.style.width = (a4Wpx / escala) + 'px';
+            clone.style.padding = (paddingInterno / escala) + 'px';
 
             await new Promise(function (r) { setTimeout(r, 200); });
         }
 
-        /* Capturar com html2canvas */
-        var captureWidth = scaleForCapture < 1 ? Math.ceil(a4W / scaleForCapture) : a4W;
+        /* Capturar */
+        var captureW = Math.ceil(clone.getBoundingClientRect().width) || a4Wpx;
+
         var canvas = await html2canvas(clone, {
             scale: 2,
             useCORS: true,
             allowTaint: true,
             backgroundColor: '#ffffff',
             logging: false,
-            width: captureWidth,
-            windowWidth: captureWidth
+            width: a4Wpx,
+            height: a4Hpx,
+            windowWidth: captureW
         });
 
         /* Remover clone */
@@ -390,35 +357,12 @@ async function salvarPDF() {
         }
 
         var pdf = new jsPDFClass('p', 'mm', 'a4');
-        var pdfW = pdf.internal.pageSize.getWidth();   /* 210 */
-        var pdfH = pdf.internal.pageSize.getHeight();   /* 297 */
+        var pdfW = pdf.internal.pageSize.getWidth();
+        var pdfH = pdf.internal.pageSize.getHeight();
 
-        var marginX = 10;
-        var marginY = 10;
-        var areaW = pdfW - (marginX * 2);   /* 190mm */
-        var areaH = pdfH - (marginY * 2);   /* 277mm */
-
-        /* Calcular tamanho da imagem proporcional */
-        var imgW = areaW;
-        var imgH = (canvas.height * imgW) / canvas.width;
-
-        /* Se a imagem é mais alta que a área, reduzir para caber */
-        if (imgH > areaH) {
-            var ratio = areaH / imgH;
-            imgH = areaH;
-            imgW = imgW * ratio;
-            /* Centralizar horizontalmente */
-            marginX = (pdfW - imgW) / 2;
-        }
-
-        /* Centralizar verticalmente se sobrar espaço */
-        var offsetY = marginY;
-        if (imgH < areaH) {
-            offsetY = marginY + ((areaH - imgH) / 2) * 0.3; /* leve deslocamento para cima */
-        }
-
+        /* Imagem ocupa a folha INTEIRA — margem 0 */
         var imgData = canvas.toDataURL('image/jpeg', 0.95);
-        pdf.addImage(imgData, 'JPEG', marginX, offsetY, imgW, imgH);
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH);
 
         /* Salvar */
         var nomeArquivo = gerarNomeArquivo() + '.pdf';
