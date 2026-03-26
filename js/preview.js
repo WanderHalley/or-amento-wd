@@ -32,14 +32,37 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 function bindEventosPreview() {
-    const btnPDF = document.getElementById('btnSalvarPDF');
+    var btnPDF = document.getElementById('btnSalvarPDF');
     if (btnPDF) btnPDF.addEventListener('click', salvarPDF);
 
-    const btnWhats = document.getElementById('btnWhatsApp');
+    var btnWhats = document.getElementById('btnWhatsApp');
     if (btnWhats) btnWhats.addEventListener('click', compartilharWhatsApp);
 
-    const btnPrint = document.getElementById('btnImprimir');
-    if (btnPrint) btnPrint.addEventListener('click', function () { window.print(); });
+    var btnPrint = document.getElementById('btnImprimir');
+    if (btnPrint) btnPrint.addEventListener('click', imprimirOrcamento);
+
+    var btnEmail = document.getElementById('btnEnviarEmail');
+    if (btnEmail) btnEmail.addEventListener('click', abrirModalEmail);
+
+    var btnFecharEmail = document.getElementById('btnFecharModalEmail');
+    if (btnFecharEmail) btnFecharEmail.addEventListener('click', fecharModalEmail);
+
+    var btnCancelarEmail = document.getElementById('btnCancelarEmail');
+    if (btnCancelarEmail) btnCancelarEmail.addEventListener('click', fecharModalEmail);
+
+    var btnConfirmarEmail = document.getElementById('btnConfirmarEmail');
+    if (btnConfirmarEmail) btnConfirmarEmail.addEventListener('click', enviarEmail);
+
+    var modalEmail = document.getElementById('modalEmail');
+    if (modalEmail) {
+        modalEmail.addEventListener('click', function (e) {
+            if (e.target === modalEmail) fecharModalEmail();
+        });
+    }
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') fecharModalEmail();
+    });
 }
 
 /* ============================================================
@@ -48,7 +71,7 @@ function bindEventosPreview() {
 
 async function carregarOrcamentoPreview(id) {
     try {
-        const result = await apiGet('/api/orcamentos/' + id);
+        var result = await apiGet('/api/orcamentos/' + id);
         if (result.success && result.data) {
             orcamentoAtual = result.data;
             renderizarPreview(orcamentoAtual);
@@ -68,44 +91,44 @@ async function carregarOrcamentoPreview(id) {
    ============================================================ */
 
 function renderizarPreview(orc) {
-    const loading = document.getElementById('previewLoading');
-    const area = document.getElementById('previewArea');
+    var loading = document.getElementById('previewLoading');
+    var area = document.getElementById('previewArea');
 
     loading.style.display = 'none';
     area.style.display = '';
 
-    const empresa = orc.empresa || {};
-    const cliente = orc.clientes || {};
-    const itens = orc.itens || [];
+    var empresa = orc.empresa || {};
+    var cliente = orc.clientes || {};
+    var itens = orc.itens || [];
 
     /* Logo */
-    let logoHtml = '';
+    var logoHtml = '';
     if (empresa.logo_base64) {
         logoHtml = '<img src="' + empresa.logo_base64 + '" alt="Logo" class="orc-empresa-logo">';
     }
 
     /* Itens tabela */
-    let itensHTML = '';
+    var itensHTML = '';
     itens.forEach(function (item, index) {
-        const produto = item.produtos || {};
+        var produto = item.produtos || {};
         itensHTML += '<tr>' +
             '<td>' + (index + 1) + '</td>' +
             '<td class="nome-produto">' + escapeHtml(produto.nome || 'Produto') + '</td>' +
-            '<td style="text-align:center;">' + item.quantidade + '</td>' +
-            '<td style="text-align:right;">' + formatCurrency(item.valor_unitario) + '</td>' +
-            '<td style="text-align:right;"><strong>' + formatCurrency(item.valor_total) + '</strong></td>' +
+            '<td>' + item.quantidade + '</td>' +
+            '<td>' + formatCurrency(item.valor_unitario) + '</td>' +
+            '<td><strong>' + formatCurrency(item.valor_total) + '</strong></td>' +
             '</tr>';
     });
 
     /* Especificações, dimensões e imagens */
-    let specsHTML = '';
-    let dimensoesHTML = '';
-    let imagensHTML = '';
+    var specsHTML = '';
+    var dimensoesHTML = '';
+    var imagensHTML = '';
 
     itens.forEach(function (item) {
-        const produto = item.produtos || {};
+        var produto = item.produtos || {};
 
-        const imgSrc = produto.imagem_base64 || produto.imagem_url || '';
+        var imgSrc = produto.imagem_base64 || produto.imagem_url || '';
         if (imgSrc) {
             imagensHTML += '<div class="orc-produto-imagem">' +
                 '<img src="' + escapeHtml(imgSrc) + '" alt="' + escapeHtml(produto.nome || '') + '">' +
@@ -131,11 +154,11 @@ function renderizarPreview(orc) {
     });
 
     /* Observações */
-    let obsHtml = '';
+    var obsHtml = '';
     if (orc.observacoes) {
         obsHtml = '<div class="orc-section">' +
             '<div class="orc-section-title">Observações</div>' +
-            '<p style="color:var(--text-secondary);font-size:14px;line-height:1.6;">' + escapeHtml(orc.observacoes) + '</p>' +
+            '<p class="orc-obs-text">' + escapeHtml(orc.observacoes) + '</p>' +
             '</div>';
     }
 
@@ -143,47 +166,52 @@ function renderizarPreview(orc) {
     area.innerHTML =
         '<!-- HEADER -->' +
         '<div class="orc-header">' +
-        '<div class="orc-empresa">' +
-        logoHtml +
-        '<h2>' + escapeHtml(empresa.nome || 'WD MÁQUINAS') + '</h2>' +
-        (empresa.endereco ? '<p>' + escapeHtml(empresa.endereco) + '</p>' : '') +
-        (empresa.cnpj ? '<p>CNPJ: ' + escapeHtml(formatCNPJ(empresa.cnpj)) + '</p>' : '') +
-        (empresa.telefone || empresa.email ? '<p>' + (empresa.telefone ? escapeHtml(formatPhone(empresa.telefone)) : '') + (empresa.telefone && empresa.email ? ' | ' : '') + (empresa.email ? escapeHtml(empresa.email) : '') + '</p>' : '') +
-        '</div>' +
-        '<div class="orc-meta">' +
-        '<h3>ORÇAMENTO</h3>' +
-        '<div class="orc-numero">#' + escapeHtml(String(orc.numero_orcamento || '-')) + '</div>' +
-        '<div class="orc-meta-row"><strong>Emissão:</strong> ' + formatDate(orc.data_emissao) + '</div>' +
-        '<div class="orc-meta-row"><strong>Validade:</strong> ' + formatDate(orc.data_validade) + '</div>' +
-        '<div style="margin-top:8px;"><span class="badge badge-' + (orc.status || 'pendente') + '">' + capitalizeFirst(orc.status || 'pendente') + '</span></div>' +
-        '</div>' +
+            '<div class="orc-empresa">' +
+                logoHtml +
+                '<h2>' + escapeHtml(empresa.nome || 'WD MÁQUINAS') + '</h2>' +
+                (empresa.endereco ? '<p>' + escapeHtml(empresa.endereco) + '</p>' : '') +
+                (empresa.cnpj ? '<p>CNPJ: ' + escapeHtml(formatCNPJ(empresa.cnpj)) + '</p>' : '') +
+                (empresa.telefone || empresa.email ? '<p>' + (empresa.telefone ? escapeHtml(formatPhone(empresa.telefone)) : '') + (empresa.telefone && empresa.email ? ' | ' : '') + (empresa.email ? escapeHtml(empresa.email) : '') + '</p>' : '') +
+            '</div>' +
+            '<div class="orc-meta">' +
+                '<h3>ORÇAMENTO</h3>' +
+                '<div class="orc-numero">#' + escapeHtml(String(orc.numero_orcamento || '-')) + '</div>' +
+                '<div class="orc-meta-row"><strong>Emissão:</strong> ' + formatDate(orc.data_emissao) + '</div>' +
+                '<div class="orc-meta-row"><strong>Validade:</strong> ' + formatDate(orc.data_validade) + '</div>' +
+                '<div class="orc-status-badge no-print">' +
+                    '<span class="badge badge-' + (orc.status || 'pendente') + '">' + capitalizeFirst(orc.status || 'pendente') + '</span>' +
+                '</div>' +
+            '</div>' +
         '</div>' +
 
         '<!-- CLIENTE -->' +
         '<div class="orc-section"><div class="orc-section-title">Dados do Cliente</div>' +
-        '<div class="orc-cliente-box">' +
-        '<div class="nome">' + escapeHtml(cliente.nome || '-') + (cliente.empresa ? ' - ' + escapeHtml(cliente.empresa) : '') + '</div>' +
-        (cliente.cpf_cnpj ? '<div class="info">CPF/CNPJ: ' + escapeHtml(formatCPFCNPJ(cliente.cpf_cnpj)) + '</div>' : '') +
-        (cliente.telefone ? '<div class="info">Tel: ' + escapeHtml(formatPhone(cliente.telefone)) + '</div>' : '') +
-        (cliente.email ? '<div class="info">Email: ' + escapeHtml(cliente.email) + '</div>' : '') +
-        (cliente.endereco ? '<div class="info">Endereço: ' + escapeHtml(cliente.endereco) + (cliente.cidade ? ', ' + escapeHtml(cliente.cidade) : '') + (cliente.estado ? '/' + escapeHtml(cliente.estado) : '') + (cliente.cep ? ' - CEP: ' + escapeHtml(formatCEP(cliente.cep)) : '') + '</div>' : '') +
-        '</div></div>' +
+            '<div class="orc-cliente-box">' +
+                '<div class="nome">' + escapeHtml(cliente.nome || '-') + (cliente.empresa ? ' - ' + escapeHtml(cliente.empresa) : '') + '</div>' +
+                (cliente.cpf_cnpj ? '<div class="info">CPF/CNPJ: ' + escapeHtml(formatCPFCNPJ(cliente.cpf_cnpj)) + '</div>' : '') +
+                (cliente.telefone ? '<div class="info">Tel: ' + escapeHtml(formatPhone(cliente.telefone)) + '</div>' : '') +
+                (cliente.email ? '<div class="info">Email: ' + escapeHtml(cliente.email) + '</div>' : '') +
+                (cliente.endereco ? '<div class="info">Endereço: ' + escapeHtml(cliente.endereco) + (cliente.cidade ? ', ' + escapeHtml(cliente.cidade) : '') + (cliente.estado ? '/' + escapeHtml(cliente.estado) : '') + (cliente.cep ? ' - CEP: ' + escapeHtml(formatCEP(cliente.cep)) : '') + '</div>' : '') +
+            '</div>' +
+        '</div>' +
 
         '<!-- ITENS -->' +
         '<div class="orc-section"><div class="orc-section-title">Itens do Orçamento</div>' +
-        '<table class="orc-tabela"><thead><tr>' +
-        '<th style="width:50px;">#</th><th>Produto</th><th style="width:80px;text-align:center;">Qtd</th><th style="width:130px;text-align:right;">Valor Un.</th><th style="width:130px;text-align:right;">Total</th>' +
-        '</tr></thead><tbody>' + itensHTML + '</tbody></table></div>' +
+            '<table class="orc-tabela"><thead><tr>' +
+                '<th style="width:50px;">#</th><th>Produto</th><th style="width:80px;">Qtd</th><th style="width:130px;">Valor Un.</th><th style="width:130px;">Total</th>' +
+            '</tr></thead><tbody>' + itensHTML + '</tbody></table>' +
+        '</div>' +
 
         '<!-- TOTAL -->' +
         '<div class="orc-total-row"><div class="orc-total-box"><span>VALOR TOTAL</span><strong>' + formatCurrency(orc.valor_total) + '</strong></div></div>' +
 
         '<!-- CONDIÇÕES -->' +
         '<div class="orc-section"><div class="orc-section-title">Condições Comerciais</div>' +
-        '<div class="orc-info-grid">' +
-        '<div class="orc-info-box"><h5>Forma de Pagamento</h5><p>' + escapeHtml(orc.forma_pagamento || '-') + '</p></div>' +
-        '<div class="orc-info-box"><h5>Prazo de Entrega</h5><p>' + escapeHtml(orc.prazo_entrega || '-') + '</p></div>' +
-        '</div></div>' +
+            '<div class="orc-info-grid">' +
+                '<div class="orc-info-box"><h5>Forma de Pagamento</h5><p>' + escapeHtml(orc.forma_pagamento || '-') + '</p></div>' +
+                '<div class="orc-info-box"><h5>Prazo de Entrega</h5><p>' + escapeHtml(orc.prazo_entrega || '-') + '</p></div>' +
+            '</div>' +
+        '</div>' +
 
         obsHtml +
 
@@ -198,10 +226,10 @@ function renderizarPreview(orc) {
 
         '<!-- FOOTER -->' +
         '<div class="orc-footer">' +
-        '<p>' + escapeHtml(empresa.nome || 'WD MÁQUINAS') +
-        (empresa.telefone ? ' - ' + escapeHtml(formatPhone(empresa.telefone)) : '') +
-        (empresa.email ? ' - ' + escapeHtml(empresa.email) : '') + '</p>' +
-        '<p style="margin-top:4px;">Orçamento válido até ' + formatDate(orc.data_validade) + '</p>' +
+            '<p>' + escapeHtml(empresa.nome || 'WD MÁQUINAS') +
+            (empresa.telefone ? ' - ' + escapeHtml(formatPhone(empresa.telefone)) : '') +
+            (empresa.email ? ' - ' + escapeHtml(empresa.email) : '') + '</p>' +
+            '<p>Orçamento válido até ' + formatDate(orc.data_validade) + '</p>' +
         '</div>';
 }
 
@@ -215,49 +243,102 @@ async function salvarPDF() {
         return;
     }
 
-    const btn = document.getElementById('btnSalvarPDF');
+    var btn = document.getElementById('btnSalvarPDF');
+    if (btn.disabled) return;
     btn.disabled = true;
     btn.textContent = 'Gerando PDF...';
 
     try {
-        const previewArea = document.getElementById('previewArea');
-        const canvas = await html2canvas(previewArea, {
+        var previewArea = document.getElementById('previewArea');
+
+        /* Aplicar classe de modo PDF para forçar cores claras */
+        previewArea.classList.add('pdf-mode');
+
+        /* Esconder badge de status para o PDF */
+        var statusBadges = previewArea.querySelectorAll('.no-print');
+        statusBadges.forEach(function (el) { el.style.display = 'none'; });
+
+        /* Aguardar repaint */
+        await new Promise(function (resolve) { setTimeout(resolve, 100); });
+
+        var canvas = await html2canvas(previewArea, {
             scale: 2,
             useCORS: true,
             allowTaint: true,
-            backgroundColor: '#ffffff'
+            backgroundColor: '#ffffff',
+            logging: false,
+            width: previewArea.scrollWidth,
+            height: previewArea.scrollHeight,
+            windowWidth: previewArea.scrollWidth
         });
 
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
+        /* Restaurar aparência */
+        previewArea.classList.remove('pdf-mode');
+        statusBadges.forEach(function (el) { el.style.display = ''; });
 
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
-        const imgWidth = pdfWidth - 20;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-        let heightLeft = imgHeight;
-        let position = 10;
-
-        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-        heightLeft -= (pdfHeight - 20);
-
-        while (heightLeft > 0) {
-            position = heightLeft - imgHeight + 10;
-            pdf.addPage();
-            pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-            heightLeft -= (pdfHeight - 20);
+        /* Verificar se jsPDF está disponível */
+        var jsPDFConstructor = null;
+        if (typeof window.jspdf !== 'undefined' && window.jspdf.jsPDF) {
+            jsPDFConstructor = window.jspdf.jsPDF;
+        } else if (typeof window.jsPDF !== 'undefined') {
+            jsPDFConstructor = window.jsPDF;
+        } else {
+            throw new Error('Biblioteca jsPDF não carregada. Verifique sua conexão.');
         }
 
-        const nomeArquivo = 'Orcamento_' + (orcamentoAtual.numero_orcamento || '') + '_' + formatFileDate() + '.pdf';
+        var pdf = new jsPDFConstructor('p', 'mm', 'a4');
+        var imgData = canvas.toDataURL('image/jpeg', 0.92);
+
+        var pdfWidth = pdf.internal.pageSize.getWidth();
+        var pdfHeight = pdf.internal.pageSize.getHeight();
+        var marginX = 5;
+        var marginY = 5;
+        var imgWidth = pdfWidth - (marginX * 2);
+        var imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+        var heightLeft = imgHeight;
+        var position = marginY;
+        var pageContentHeight = pdfHeight - (marginY * 2);
+
+        /* Primeira página */
+        pdf.addImage(imgData, 'JPEG', marginX, position, imgWidth, imgHeight);
+        heightLeft -= pageContentHeight;
+
+        /* Páginas adicionais */
+        while (heightLeft > 0) {
+            pdf.addPage();
+            position = marginY - (imgHeight - heightLeft);
+            pdf.addImage(imgData, 'JPEG', marginX, position, imgWidth, imgHeight);
+            heightLeft -= pageContentHeight;
+        }
+
+        var nomeArquivo = 'Orcamento_' + (orcamentoAtual.numero_orcamento || '') + '_' + formatFileDate() + '.pdf';
         pdf.save(nomeArquivo);
         showToast('PDF gerado com sucesso!', 'success');
     } catch (error) {
+        /* Restaurar em caso de erro */
+        var previewAreaRestore = document.getElementById('previewArea');
+        previewAreaRestore.classList.remove('pdf-mode');
+        var badges = previewAreaRestore.querySelectorAll('.no-print');
+        badges.forEach(function (el) { el.style.display = ''; });
+
         showToast('Erro ao gerar PDF: ' + error.message, 'error');
     } finally {
         btn.disabled = false;
         btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Salvar PDF';
     }
+}
+
+/* ============================================================
+   Imprimir — com cores forçadas
+   ============================================================ */
+
+function imprimirOrcamento() {
+    if (!orcamentoAtual) {
+        showToast('Nenhum orçamento carregado', 'warning');
+        return;
+    }
+    window.print();
 }
 
 /* ============================================================
@@ -270,16 +351,16 @@ function compartilharWhatsApp() {
         return;
     }
 
-    const orc = orcamentoAtual;
-    const cliente = orc.clientes || {};
-    const empresa = orc.empresa || {};
+    var orc = orcamentoAtual;
+    var cliente = orc.clientes || {};
+    var empresa = orc.empresa || {};
 
-    const itensTexto = (orc.itens || []).map(function (item, i) {
-        const prod = item.produtos || {};
+    var itensTexto = (orc.itens || []).map(function (item, i) {
+        var prod = item.produtos || {};
         return (i + 1) + '. ' + (prod.nome || 'Produto') + ' - Qtd: ' + item.quantidade + ' - ' + formatCurrency(item.valor_total);
     }).join('\n');
 
-    const texto = '*' + (empresa.nome || 'WD MÁQUINAS') + '*\n' +
+    var texto = '*' + (empresa.nome || 'WD MÁQUINAS') + '*\n' +
         '*ORÇAMENTO #' + (orc.numero_orcamento || '-') + '*\n\n' +
         '*Cliente:* ' + (cliente.nome || '-') + (cliente.empresa ? ' - ' + cliente.empresa : '') + '\n' +
         '*Emissão:* ' + formatDate(orc.data_emissao) + '\n' +
@@ -291,16 +372,87 @@ function compartilharWhatsApp() {
         (empresa.telefone ? formatPhone(empresa.telefone) : '') +
         (empresa.email ? ' | ' + empresa.email : '');
 
-    const encoded = encodeURIComponent(texto);
-    let whatsUrl = 'https://wa.me/?text=' + encoded;
+    var encoded = encodeURIComponent(texto);
+    var whatsUrl = 'https://wa.me/?text=' + encoded;
 
     if (cliente.telefone) {
-        const tel = unmask(cliente.telefone);
+        var tel = unmask(cliente.telefone);
         if (tel.length >= 10) {
-            const telFull = tel.indexOf('55') === 0 ? tel : '55' + tel;
+            var telFull = tel.indexOf('55') === 0 ? tel : '55' + tel;
             whatsUrl = 'https://wa.me/' + telFull + '?text=' + encoded;
         }
     }
 
     window.open(whatsUrl, '_blank');
+}
+
+/* ============================================================
+   Email — Modal e envio via mailto
+   ============================================================ */
+
+function abrirModalEmail() {
+    if (!orcamentoAtual) {
+        showToast('Nenhum orçamento carregado', 'warning');
+        return;
+    }
+
+    var orc = orcamentoAtual;
+    var cliente = orc.clientes || {};
+    var empresa = orc.empresa || {};
+
+    /* Preencher campos com dados do cliente */
+    var emailInput = document.getElementById('emailDestinatario');
+    if (emailInput && cliente.email) {
+        emailInput.value = cliente.email;
+    } else if (emailInput) {
+        emailInput.value = '';
+    }
+
+    var assuntoInput = document.getElementById('emailAssunto');
+    if (assuntoInput) {
+        assuntoInput.value = 'Orçamento #' + (orc.numero_orcamento || '') + ' - ' + (empresa.nome || 'WD Máquinas');
+    }
+
+    var msgInput = document.getElementById('emailMensagem');
+    if (msgInput) {
+        msgInput.value = 'Prezado(a) ' + (cliente.nome || 'Cliente') + ',\n\n' +
+            'Segue o orçamento #' + (orc.numero_orcamento || '') + ' conforme solicitado.\n' +
+            'Valor total: ' + formatCurrency(orc.valor_total) + '\n' +
+            'Validade: ' + formatDate(orc.data_validade) + '\n\n' +
+            'Qualquer dúvida, estamos à disposição.\n\n' +
+            'Atenciosamente,\n' +
+            (empresa.nome || 'WD Máquinas') + '\n' +
+            (empresa.telefone ? formatPhone(empresa.telefone) : '');
+    }
+
+    document.getElementById('modalEmail').classList.add('active');
+}
+
+function fecharModalEmail() {
+    document.getElementById('modalEmail').classList.remove('active');
+}
+
+function enviarEmail() {
+    var email = document.getElementById('emailDestinatario').value.trim();
+    var assunto = document.getElementById('emailAssunto').value.trim();
+    var mensagem = document.getElementById('emailMensagem').value.trim();
+
+    if (!email) {
+        showToast('Informe o email do destinatário', 'warning');
+        return;
+    }
+
+    /* Validação simples de email */
+    if (email.indexOf('@') === -1 || email.indexOf('.') === -1) {
+        showToast('Email inválido', 'warning');
+        return;
+    }
+
+    var mailtoUrl = 'mailto:' + encodeURIComponent(email) +
+        '?subject=' + encodeURIComponent(assunto) +
+        '&body=' + encodeURIComponent(mensagem);
+
+    window.open(mailtoUrl, '_blank');
+    fecharModalEmail();
+    showToast('Abrindo cliente de email...', 'info');
 }
