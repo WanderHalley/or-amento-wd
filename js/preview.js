@@ -1,512 +1,652 @@
-/**
- * ============================================================
- * preview.js — Visualização / Preview do Orçamento
- * ============================================================
- */
+// ==========================================
+// PREVIEW - Visualização de Orçamento
+// PDF A4 perfeito | Nome: produto+cliente+data
+// Sem empresa duplicada | Status oculto no PDF
+// WhatsApp e Email com PDF anexo
+// ==========================================
 
-/* Estado */
 let orcamentoAtual = null;
 
-/* ============================================================
-   Inicialização
-   ============================================================ */
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     initSidebar();
-    bindEventosPreview();
+    bindPreviewEvents();
 
-    var params = new URLSearchParams(window.location.search);
-    var orcId = params.get('id');
-
-    if (!orcId) {
-        document.getElementById('previewLoading').style.display = 'none';
-        document.getElementById('previewArea').style.display = '';
-        document.getElementById('previewArea').innerHTML = '<div class="empty-state">' +
-            '<h4>Nenhum orçamento selecionado</h4>' +
-            '<p>Selecione um orçamento para visualizar</p>' +
-            '<a href="orcamentos.html" class="btn btn-primary btn-sm">Ver Orçamentos</a></div>';
-        return;
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id');
+    if (id) {
+        carregarOrcamentoPreview(id);
+    } else {
+        document.getElementById('previewArea').innerHTML =
+            '<div class="empty-state"><h3>Nenhum orçamento selecionado</h3></div>';
     }
-
-    carregarOrcamentoPreview(orcId);
 });
 
-function bindEventosPreview() {
-    var btnPDF = document.getElementById('btnSalvarPDF');
+// ==========================================
+// EVENTOS
+// ==========================================
+
+function bindPreviewEvents() {
+    const btnPDF = document.getElementById('btnSalvarPDF');
     if (btnPDF) btnPDF.addEventListener('click', salvarPDF);
 
-    var btnWhats = document.getElementById('btnWhatsApp');
+    const btnWhats = document.getElementById('btnWhatsApp');
     if (btnWhats) btnWhats.addEventListener('click', compartilharWhatsApp);
 
-    var btnPrint = document.getElementById('btnImprimir');
+    const btnPrint = document.getElementById('btnImprimir');
     if (btnPrint) btnPrint.addEventListener('click', imprimirOrcamento);
 
-    var btnEmail = document.getElementById('btnEnviarEmail');
+    const btnEmail = document.getElementById('btnEnviarEmail');
     if (btnEmail) btnEmail.addEventListener('click', abrirModalEmail);
 
-    var btnFecharEmail = document.getElementById('btnFecharModalEmail');
+    const btnFecharEmail = document.getElementById('btnFecharModalEmail');
     if (btnFecharEmail) btnFecharEmail.addEventListener('click', fecharModalEmail);
 
-    var btnCancelarEmail = document.getElementById('btnCancelarEmail');
+    const btnCancelarEmail = document.getElementById('btnCancelarEmail');
     if (btnCancelarEmail) btnCancelarEmail.addEventListener('click', fecharModalEmail);
 
-    var btnConfirmarEmail = document.getElementById('btnConfirmarEmail');
-    if (btnConfirmarEmail) btnConfirmarEmail.addEventListener('click', enviarEmail);
+    const btnEnviar = document.getElementById('btnEnviarEmailConfirm');
+    if (btnEnviar) btnEnviar.addEventListener('click', enviarEmail);
 
-    var modalEmail = document.getElementById('modalEmail');
-    if (modalEmail) {
-        modalEmail.addEventListener('click', function (e) {
-            if (e.target === modalEmail) fecharModalEmail();
-        });
-    }
-
-    document.addEventListener('keydown', function (e) {
+    document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') fecharModalEmail();
     });
 }
 
-/* ============================================================
-   Helper — Limpar texto para nome de arquivo
-   ============================================================ */
+// ==========================================
+// HELPERS - NOME DE ARQUIVO
+// ==========================================
 
 function limparParaNome(texto) {
     if (!texto) return '';
     return texto
         .toLowerCase()
-        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9\s]/g, ' ')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9\s]/g, '')
         .replace(/\s+/g, '.')
-        .replace(/\.+/g, '.')
         .replace(/^\.+|\.+$/g, '');
 }
 
-/* ============================================================
-   Helper — Gerar nome do arquivo
-   produto + cliente + data atual
-   ============================================================ */
-
 function gerarNomeArquivo() {
-    var orc = orcamentoAtual;
-    if (!orc) return 'orcamento';
+    var nomeProduto = 'orcamento';
+    var nomeCliente = 'cliente';
 
-    var nomeProduto = '';
-    var itens = orc.itens || [];
-    if (itens.length > 0) {
-        var primeiroProduto = itens[0].produtos || {};
-        nomeProduto = primeiroProduto.nome || '';
+    if (orcamentoAtual) {
+        if (orcamentoAtual.itens && orcamentoAtual.itens.length > 0) {
+            var item = orcamentoAtual.itens[0];
+            var prodNome = item.produto_nome || item.descricao || '';
+            if (prodNome) nomeProduto = limparParaNome(prodNome);
+        }
+        if (orcamentoAtual.cliente) {
+            var cliNome = orcamentoAtual.cliente.nome || '';
+            if (cliNome) nomeCliente = limparParaNome(cliNome);
+        }
     }
-    if (!nomeProduto) nomeProduto = 'orcamento';
-
-    var cliente = orc.clientes || {};
-    var nomeCliente = cliente.nome || '';
 
     var hoje = new Date();
-    var dia = String(hoje.getDate()).padStart(2, '0');
-    var mes = String(hoje.getMonth() + 1).padStart(2, '0');
-    var ano = String(hoje.getFullYear()).slice(-2);
-    var dataFormatada = dia + '.' + mes + '.' + ano;
+    var dd = String(hoje.getDate()).padStart(2, '0');
+    var mm = String(hoje.getMonth() + 1).padStart(2, '0');
+    var aa = String(hoje.getFullYear()).slice(-2);
+    var dataStr = dd + '.' + mm + '.' + aa;
 
-    var partes = [];
-    partes.push(limparParaNome(nomeProduto));
-    if (nomeCliente) partes.push(limparParaNome(nomeCliente));
-    partes.push(dataFormatada);
-
-    return partes.join('.');
+    return nomeProduto + '.' + nomeCliente + '.' + dataStr;
 }
 
-/* ============================================================
-   Carregar Orçamento
-   ============================================================ */
+// ==========================================
+// CARREGAR ORÇAMENTO
+// ==========================================
 
 async function carregarOrcamentoPreview(id) {
     try {
-        var result = await apiGet('/api/orcamentos/' + id);
-        if (result.success && result.data) {
-            orcamentoAtual = result.data;
-            renderizarPreview(orcamentoAtual);
+        var response = await apiGet('/api/orcamentos/' + id);
+        if (response.success) {
+            orcamentoAtual = response.data;
+            renderizarPreview();
+        } else {
+            showToast('Erro ao carregar orçamento', 'error');
         }
     } catch (error) {
-        document.getElementById('previewLoading').style.display = 'none';
-        document.getElementById('previewArea').style.display = '';
-        document.getElementById('previewArea').innerHTML = '<div class="empty-state">' +
-            '<h4>Erro ao carregar orçamento</h4>' +
-            '<p>' + escapeHtml(error.message) + '</p>' +
-            '<a href="orcamentos.html" class="btn btn-primary btn-sm">Voltar</a></div>';
+        console.error('Erro ao carregar:', error);
+        showToast('Erro ao carregar orçamento', 'error');
     }
 }
 
-/* ============================================================
-   Renderizar Preview
-   ============================================================ */
+// ==========================================
+// RENDERIZAR PREVIEW
+// ==========================================
 
-function renderizarPreview(orc) {
-    var loading = document.getElementById('previewLoading');
+function renderizarPreview() {
     var area = document.getElementById('previewArea');
+    if (!area || !orcamentoAtual) return;
 
-    loading.style.display = 'none';
-    area.style.display = '';
-
-    var empresa = orc.empresa || {};
-    var cliente = orc.clientes || {};
+    var orc = orcamentoAtual;
+    var cliente = orc.cliente || {};
     var itens = orc.itens || [];
+    var config = orc.configuracoes || {};
 
-    var logoHtml = '';
-    if (empresa.logo_base64) {
-        logoHtml = '<img src="' + empresa.logo_base64 + '" alt="Logo" class="orc-empresa-logo">';
+    // Status badge - só aparece na tela, NÃO no PDF/impressão
+    var statusMap = {
+        'rascunho': { label: 'Rascunho', cor: '#6c757d' },
+        'enviado': { label: 'Enviado', cor: '#0066cc' },
+        'aprovado': { label: 'Aprovado', cor: '#28a745' },
+        'rejeitado': { label: 'Rejeitado', cor: '#dc3545' }
+    };
+    var statusInfo = statusMap[orc.status] || statusMap['rascunho'];
+
+    // Datas
+    var dataCriacao = orc.created_at ? new Date(orc.created_at).toLocaleDateString('pt-BR') : '-';
+    var dataValidade = orc.validade ? new Date(orc.validade).toLocaleDateString('pt-BR') : '-';
+
+    // Itens HTML
+    var itensHTML = '';
+    var totalGeral = 0;
+    for (var i = 0; i < itens.length; i++) {
+        var item = itens[i];
+        var subtotal = (item.quantidade || 0) * (item.valor_unitario || 0);
+        totalGeral += subtotal;
+        itensHTML +=
+            '<tr>' +
+                '<td style="padding:8px 6px;border-bottom:1px solid #dee2e6;text-align:center;font-size:11px;color:#333;">' + (i + 1) + '</td>' +
+                '<td style="padding:8px 6px;border-bottom:1px solid #dee2e6;font-size:11px;color:#333;">' + (item.produto_nome || item.descricao || '-') + '</td>' +
+                '<td style="padding:8px 6px;border-bottom:1px solid #dee2e6;text-align:center;font-size:11px;color:#333;">' + (item.quantidade || 0) + '</td>' +
+                '<td style="padding:8px 6px;border-bottom:1px solid #dee2e6;text-align:right;font-size:11px;color:#333;">R$ ' + (item.valor_unitario || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '</td>' +
+                '<td style="padding:8px 6px;border-bottom:1px solid #dee2e6;text-align:right;font-size:11px;color:#333;font-weight:600;">R$ ' + subtotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '</td>' +
+            '</tr>';
     }
 
-    var itensHTML = '';
-    itens.forEach(function (item, index) {
-        var produto = item.produtos || {};
-        itensHTML += '<tr>' +
-            '<td>' + (index + 1) + '</td>' +
-            '<td class="nome-produto">' + escapeHtml(produto.nome || 'Produto') + '</td>' +
-            '<td>' + item.quantidade + '</td>' +
-            '<td>' + formatCurrency(item.valor_unitario) + '</td>' +
-            '<td><strong>' + formatCurrency(item.valor_total) + '</strong></td>' +
-            '</tr>';
-    });
-
-    var specsHTML = '';
-    var dimensoesHTML = '';
-    var imagensHTML = '';
-
-    itens.forEach(function (item) {
-        var produto = item.produtos || {};
-
-        var imgSrc = produto.imagem_base64 || produto.imagem_url || '';
-        if (imgSrc) {
-            imagensHTML += '<div class="orc-produto-imagem">' +
-                '<img src="' + escapeHtml(imgSrc) + '" alt="' + escapeHtml(produto.nome || '') + '">' +
-                '</div>';
-        }
-
-        if (produto.descricao || produto.especificacoes) {
-            specsHTML += '<div class="orc-specs">' +
-                '<h4>' + escapeHtml(produto.nome || 'Produto') + '</h4>' +
-                (produto.descricao ? '<p>' + escapeHtml(produto.descricao) + '</p>' : '') +
-                (produto.especificacoes ? '<p>' + escapeHtml(produto.especificacoes) + '</p>' : '') +
-                '</div>';
-        }
-
-        if (produto.altura_cm || produto.largura_cm || produto.profundidade_cm || produto.peso_kg) {
-            dimensoesHTML += '<div class="orc-dimensoes">' +
-                (produto.altura_cm ? '<div class="orc-dim-item"><div class="dim-label">Altura</div><div class="dim-value">' + produto.altura_cm + '</div><div class="dim-unit">CM</div></div>' : '') +
-                (produto.largura_cm ? '<div class="orc-dim-item"><div class="dim-label">Largura</div><div class="dim-value">' + produto.largura_cm + '</div><div class="dim-unit">CM</div></div>' : '') +
-                (produto.profundidade_cm ? '<div class="orc-dim-item"><div class="dim-label">Profundidade</div><div class="dim-value">' + produto.profundidade_cm + '</div><div class="dim-unit">CM</div></div>' : '') +
-                (produto.peso_kg ? '<div class="orc-dim-item"><div class="dim-label">Peso</div><div class="dim-value">' + produto.peso_kg + '</div><div class="dim-unit">KG</div></div>' : '') +
-                '</div>';
-        }
-    });
-
-    var obsHtml = '';
+    // Seções opcionais
+    var observacoesHTML = '';
     if (orc.observacoes) {
-        obsHtml = '<div class="orc-section">' +
-            '<div class="orc-section-title">Observações</div>' +
-            '<p class="orc-obs-text">' + escapeHtml(orc.observacoes) + '</p>' +
+        observacoesHTML =
+            '<div style="margin-top:14px;">' +
+                '<h3 style="font-size:12px;color:#1a1a2e;margin:0 0 6px 0;padding-bottom:4px;border-bottom:2px solid #0066cc;font-weight:700;">OBSERVAÇÕES</h3>' +
+                '<p style="font-size:10px;color:#333;white-space:pre-wrap;line-height:1.5;margin:0;">' + orc.observacoes + '</p>' +
             '</div>';
     }
 
+    var especificacoesHTML = '';
+    if (orc.especificacoes) {
+        especificacoesHTML =
+            '<div style="margin-top:14px;">' +
+                '<h3 style="font-size:12px;color:#1a1a2e;margin:0 0 6px 0;padding-bottom:4px;border-bottom:2px solid #0066cc;font-weight:700;">ESPECIFICAÇÕES TÉCNICAS</h3>' +
+                '<p style="font-size:10px;color:#333;white-space:pre-wrap;line-height:1.5;margin:0;">' + orc.especificacoes + '</p>' +
+            '</div>';
+    }
+
+    var dimensoesHTML = '';
+    if (orc.dimensoes) {
+        dimensoesHTML =
+            '<div style="margin-top:14px;">' +
+                '<h3 style="font-size:12px;color:#1a1a2e;margin:0 0 6px 0;padding-bottom:4px;border-bottom:2px solid #0066cc;font-weight:700;">DIMENSÕES</h3>' +
+                '<p style="font-size:10px;color:#333;white-space:pre-wrap;line-height:1.5;margin:0;">' + orc.dimensoes + '</p>' +
+            '</div>';
+    }
+
+    var imagensHTML = '';
+    if (orc.imagens && orc.imagens.length > 0) {
+        var imgs = '';
+        for (var j = 0; j < orc.imagens.length; j++) {
+            imgs += '<img src="' + orc.imagens[j] + '" style="max-width:160px;max-height:120px;border-radius:4px;border:1px solid #ddd;" crossorigin="anonymous">';
+        }
+        imagensHTML =
+            '<div style="margin-top:14px;">' +
+                '<h3 style="font-size:12px;color:#1a1a2e;margin:0 0 6px 0;padding-bottom:4px;border-bottom:2px solid #0066cc;font-weight:700;">IMAGENS</h3>' +
+                '<div style="display:flex;gap:8px;flex-wrap:wrap;">' + imgs + '</div>' +
+            '</div>';
+    }
+
+    // Condições
+    var condicaoHTML = '';
+    if (orc.condicao_pagamento) {
+        condicaoHTML =
+            '<div style="background:#f8f9fa;border:1px solid #e0e0e0;border-radius:6px;padding:10px;">' +
+                '<h3 style="font-size:11px;color:#0066cc;margin:0 0 4px 0;font-weight:700;">CONDIÇÃO DE PAGAMENTO</h3>' +
+                '<p style="font-size:10px;color:#333;margin:0;">' + orc.condicao_pagamento + '</p>' +
+            '</div>';
+    }
+    var prazoHTML = '';
+    if (orc.prazo_entrega) {
+        prazoHTML =
+            '<div style="background:#f8f9fa;border:1px solid #e0e0e0;border-radius:6px;padding:10px;">' +
+                '<h3 style="font-size:11px;color:#0066cc;margin:0 0 4px 0;font-weight:700;">PRAZO DE ENTREGA</h3>' +
+                '<p style="font-size:10px;color:#333;margin:0;">' + orc.prazo_entrega + '</p>' +
+            '</div>';
+    }
+    var condicoesGridHTML = '';
+    if (condicaoHTML || prazoHTML) {
+        condicoesGridHTML =
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">' +
+                condicaoHTML + prazoHTML +
+            '</div>';
+    }
+
+    // Endereço do cliente
+    var enderecoCliente = '';
+    if (cliente.endereco) {
+        enderecoCliente = cliente.endereco;
+        if (cliente.cidade) enderecoCliente += ', ' + cliente.cidade;
+        if (cliente.estado) enderecoCliente += '/' + cliente.estado;
+        if (cliente.cep) enderecoCliente += ' - CEP: ' + cliente.cep;
+    }
+
+    // MONTAR HTML COMPLETO
     area.innerHTML =
-        '<div class="orc-header">' +
-            '<div class="orc-empresa">' +
-                logoHtml +
-                '<h2>' + escapeHtml(empresa.nome || 'WD MÁQUINAS') + '</h2>' +
-                (empresa.endereco ? '<p>' + escapeHtml(empresa.endereco) + '</p>' : '') +
-                (empresa.cnpj ? '<p>CNPJ: ' + escapeHtml(formatCNPJ(empresa.cnpj)) + '</p>' : '') +
-                (empresa.telefone || empresa.email ? '<p>' + (empresa.telefone ? escapeHtml(formatPhone(empresa.telefone)) : '') + (empresa.telefone && empresa.email ? ' | ' : '') + (empresa.email ? escapeHtml(empresa.email) : '') + '</p>' : '') +
+        '<div class="preview-content" style="font-family:Inter,Arial,Helvetica,sans-serif;color:#1a1a1a;background:#ffffff;padding:28px 32px;max-width:800px;margin:0 auto;">' +
+
+            // Status - NÃO aparece no PDF/impressão
+            '<div class="no-print" style="margin-bottom:12px;">' +
+                '<span style="display:inline-block;padding:4px 12px;border-radius:12px;font-size:11px;font-weight:600;color:#fff;background:' + statusInfo.cor + ';">' + statusInfo.label + '</span>' +
             '</div>' +
-            '<div class="orc-meta">' +
-                '<h3>ORÇAMENTO</h3>' +
-                '<div class="orc-numero">#' + escapeHtml(String(orc.numero_orcamento || '-')) + '</div>' +
-                '<div class="orc-meta-row"><strong>Emissão:</strong> ' + formatDate(orc.data_emissao) + '</div>' +
-                '<div class="orc-meta-row"><strong>Validade:</strong> ' + formatDate(orc.data_validade) + '</div>' +
-                '<div class="orc-status-badge no-print">' +
-                    '<span class="badge badge-' + (orc.status || 'pendente') + '">' + capitalizeFirst(orc.status || 'pendente') + '</span>' +
+
+            // CABEÇALHO EMPRESA
+            '<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #0066cc;padding-bottom:14px;margin-bottom:18px;">' +
+                '<div>' +
+                    '<h1 style="font-size:20px;color:#0066cc;margin:0;font-weight:700;">' + (config.empresa_nome || 'WD Máquinas') + '</h1>' +
+                    (config.empresa_endereco ? '<p style="font-size:10px;color:#555;margin:2px 0 0 0;">' + config.empresa_endereco + '</p>' : '') +
+                    '<p style="font-size:10px;color:#555;margin:2px 0 0 0;">' +
+                        (config.empresa_telefone || '') +
+                        (config.empresa_email ? ' | ' + config.empresa_email : '') +
+                    '</p>' +
+                    (config.empresa_cnpj ? '<p style="font-size:10px;color:#555;margin:2px 0 0 0;">CNPJ: ' + config.empresa_cnpj + '</p>' : '') +
+                '</div>' +
+                (config.empresa_logo ? '<img src="' + config.empresa_logo + '" style="max-height:60px;max-width:140px;" crossorigin="anonymous">' : '') +
+            '</div>' +
+
+            // TÍTULO ORÇAMENTO
+            '<div style="background:#0066cc;color:#ffffff;padding:10px 14px;border-radius:6px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">' +
+                '<h2 style="margin:0;font-size:15px;font-weight:700;">ORÇAMENTO Nº ' + (orc.numero || '-') + '</h2>' +
+                '<div style="text-align:right;font-size:10px;">' +
+                    '<div>Data: ' + dataCriacao + '</div>' +
+                    '<div>Validade: ' + dataValidade + '</div>' +
                 '</div>' +
             '</div>' +
-        '</div>' +
 
-        '<div class="orc-section"><div class="orc-section-title">Dados do Cliente</div>' +
-            '<div class="orc-cliente-box">' +
-                '<div class="nome">' + escapeHtml(cliente.nome || '-') + (cliente.empresa ? ' - ' + escapeHtml(cliente.empresa) : '') + '</div>' +
-                (cliente.cpf_cnpj ? '<div class="info">CPF/CNPJ: ' + escapeHtml(formatCPFCNPJ(cliente.cpf_cnpj)) + '</div>' : '') +
-                (cliente.telefone ? '<div class="info">Tel: ' + escapeHtml(formatPhone(cliente.telefone)) + '</div>' : '') +
-                (cliente.email ? '<div class="info">Email: ' + escapeHtml(cliente.email) + '</div>' : '') +
-                (cliente.endereco ? '<div class="info">Endereço: ' + escapeHtml(cliente.endereco) + (cliente.cidade ? ', ' + escapeHtml(cliente.cidade) : '') + (cliente.estado ? '/' + escapeHtml(cliente.estado) : '') + (cliente.cep ? ' - CEP: ' + escapeHtml(formatCEP(cliente.cep)) : '') + '</div>' : '') +
+            // DADOS DO CLIENTE - Apenas nome, sem empresa duplicada
+            '<div style="background:#f0f4ff;border:1px solid #ccd9f0;border-radius:6px;padding:12px 14px;margin-bottom:16px;">' +
+                '<h3 style="font-size:12px;color:#0066cc;margin:0 0 8px 0;font-weight:700;">DADOS DO CLIENTE</h3>' +
+                '<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;font-size:10px;color:#333;">' +
+                    '<div><strong style="color:#1a1a2e;">Nome:</strong> ' + (cliente.nome || '-') + '</div>' +
+                    '<div><strong style="color:#1a1a2e;">CPF/CNPJ:</strong> ' + (cliente.cpf_cnpj || '-') + '</div>' +
+                    '<div><strong style="color:#1a1a2e;">Telefone:</strong> ' + (cliente.telefone || '-') + '</div>' +
+                    '<div><strong style="color:#1a1a2e;">Email:</strong> ' + (cliente.email || '-') + '</div>' +
+                    (enderecoCliente ? '<div style="grid-column:1/3;"><strong style="color:#1a1a2e;">Endereço:</strong> ' + enderecoCliente + '</div>' : '') +
+                '</div>' +
             '</div>' +
-        '</div>' +
 
-        '<div class="orc-section"><div class="orc-section-title">Itens do Orçamento</div>' +
-            '<table class="orc-tabela"><thead><tr>' +
-                '<th style="width:50px;">#</th><th>Produto</th><th style="width:80px;">Qtd</th><th style="width:130px;">Valor Un.</th><th style="width:130px;">Total</th>' +
-            '</tr></thead><tbody>' + itensHTML + '</tbody></table>' +
-        '</div>' +
+            // TABELA DE ITENS
+            '<table style="width:100%;border-collapse:collapse;margin-bottom:14px;">' +
+                '<thead>' +
+                    '<tr style="background:#0066cc;color:#ffffff;">' +
+                        '<th style="padding:8px 6px;text-align:center;font-size:10px;width:35px;font-weight:600;">#</th>' +
+                        '<th style="padding:8px 6px;text-align:left;font-size:10px;font-weight:600;">Produto / Descrição</th>' +
+                        '<th style="padding:8px 6px;text-align:center;font-size:10px;width:50px;font-weight:600;">Qtd</th>' +
+                        '<th style="padding:8px 6px;text-align:right;font-size:10px;width:90px;font-weight:600;">Valor Unit.</th>' +
+                        '<th style="padding:8px 6px;text-align:right;font-size:10px;width:90px;font-weight:600;">Subtotal</th>' +
+                    '</tr>' +
+                '</thead>' +
+                '<tbody>' +
+                    itensHTML +
+                '</tbody>' +
+            '</table>' +
 
-        '<div class="orc-total-row"><div class="orc-total-box"><span>VALOR TOTAL</span><strong>' + formatCurrency(orc.valor_total) + '</strong></div></div>' +
-
-        '<div class="orc-section"><div class="orc-section-title">Condições Comerciais</div>' +
-            '<div class="orc-info-grid">' +
-                '<div class="orc-info-box"><h5>Forma de Pagamento</h5><p>' + escapeHtml(orc.forma_pagamento || '-') + '</p></div>' +
-                '<div class="orc-info-box"><h5>Prazo de Entrega</h5><p>' + escapeHtml(orc.prazo_entrega || '-') + '</p></div>' +
+            // TOTAL
+            '<div style="text-align:right;margin-bottom:16px;">' +
+                '<div style="display:inline-block;background:#0066cc;color:#ffffff;padding:10px 20px;border-radius:6px;font-size:15px;font-weight:700;">' +
+                    'TOTAL: R$ ' + totalGeral.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) +
+                '</div>' +
             '</div>' +
-        '</div>' +
 
-        obsHtml +
+            // CONDIÇÕES
+            condicoesGridHTML +
 
-        (imagensHTML ? '<div class="orc-section"><div class="orc-section-title">Imagens dos Produtos</div>' + imagensHTML + '</div>' : '') +
-        (specsHTML ? '<div class="orc-section"><div class="orc-section-title">Especificações Técnicas</div>' + specsHTML + '</div>' : '') +
-        (dimensoesHTML ? '<div class="orc-section"><div class="orc-section-title">Dimensões</div>' + dimensoesHTML + '</div>' : '') +
+            // SEÇÕES OPCIONAIS
+            observacoesHTML +
+            especificacoesHTML +
+            dimensoesHTML +
+            imagensHTML +
 
-        '<div class="orc-footer">' +
-            '<p>' + escapeHtml(empresa.nome || 'WD MÁQUINAS') +
-            (empresa.telefone ? ' - ' + escapeHtml(formatPhone(empresa.telefone)) : '') +
-            (empresa.email ? ' - ' + escapeHtml(empresa.email) : '') + '</p>' +
-            '<p>Orçamento válido até ' + formatDate(orc.data_validade) + '</p>' +
+            // RODAPÉ
+            '<div style="margin-top:20px;border-top:2px solid #0066cc;padding-top:10px;text-align:center;">' +
+                '<p style="font-size:9px;color:#777;margin:0;">' + (config.empresa_nome || 'WD Máquinas') + ' - ' + (config.empresa_telefone || '') + ' - ' + (config.empresa_email || '') + '</p>' +
+                '<p style="font-size:8px;color:#999;margin:3px 0 0 0;">Orçamento válido até ' + dataValidade + '</p>' +
+            '</div>' +
+
         '</div>';
 }
 
-/* ============================================================
-   PDF — Preenche a folha A4 inteira, sem bordas
-   ============================================================ */
+// ==========================================
+// GERAR PDF BLOB (reutilizável)
+// ==========================================
+
+async function gerarPDFBlob() {
+    var jsPDFClass = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+    if (!jsPDFClass) throw new Error('Biblioteca jsPDF não carregada');
+
+    var previewArea = document.getElementById('previewArea');
+    if (!previewArea) throw new Error('Área de preview não encontrada');
+
+    // Clonar off-screen com dimensões A4 exatas
+    var clone = previewArea.cloneNode(true);
+    var a4W = 794;  // A4 largura em px @96dpi
+    var a4H = 1123; // A4 altura em px @96dpi
+
+    clone.style.cssText =
+        'position:fixed;left:-9999px;top:0;' +
+        'width:' + a4W + 'px;min-height:auto;' +
+        'background:#ffffff;color:#1a1a1a;' +
+        'font-family:Inter,Arial,Helvetica,sans-serif;' +
+        'padding:0;margin:0;border:none;' +
+        'overflow:visible;box-sizing:border-box;';
+
+    // Remover badges de status (não aparecem no PDF)
+    var noPrintEls = clone.querySelectorAll('.no-print');
+    for (var i = 0; i < noPrintEls.length; i++) {
+        noPrintEls[i].parentNode.removeChild(noPrintEls[i]);
+    }
+
+    document.body.appendChild(clone);
+
+    // Aguardar renderização
+    await new Promise(function(r) { setTimeout(r, 400); });
+
+    // Verificar se conteúdo cabe em A4; se não, escalar proporcionalmente
+    var realH = clone.scrollHeight;
+    var scaleFactor = 1;
+    if (realH > a4H) {
+        scaleFactor = a4H / realH;
+        clone.style.transformOrigin = 'top left';
+        clone.style.transform = 'scale(' + scaleFactor + ')';
+        clone.style.width = a4W + 'px';
+        clone.style.height = a4H + 'px';
+        await new Promise(function(r) { setTimeout(r, 300); });
+    }
+
+    // Capturar com html2canvas
+    var canvas = await html2canvas(clone, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        width: a4W,
+        height: Math.min(realH, a4H),
+        windowWidth: a4W,
+        windowHeight: Math.min(realH, a4H)
+    });
+
+    document.body.removeChild(clone);
+
+    // Criar PDF A4 - imagem ocupa a página inteira
+    var pdf = new jsPDFClass('p', 'mm', 'a4');
+    var imgData = canvas.toDataURL('image/jpeg', 0.95);
+    pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+
+    return {
+        blob: pdf.output('blob'),
+        nome: gerarNomeArquivo() + '.pdf',
+        pdf: pdf
+    };
+}
+
+// ==========================================
+// SALVAR PDF
+// ==========================================
 
 async function salvarPDF() {
     if (!orcamentoAtual) {
-        showToast('Nenhum orçamento carregado', 'warning');
+        showToast('Nenhum orçamento carregado', 'error');
         return;
     }
 
-    var btn = document.getElementById('btnSalvarPDF');
-    if (btn.disabled) return;
-    btn.disabled = true;
-    btn.textContent = 'Gerando PDF...';
-
-    var clone = null;
+    var btnPDF = document.getElementById('btnSalvarPDF');
+    if (btnPDF) {
+        btnPDF.disabled = true;
+        btnPDF.innerHTML = '⏳ Gerando PDF...';
+    }
 
     try {
-        var previewArea = document.getElementById('previewArea');
+        var resultado = await gerarPDFBlob();
 
-        var a4Wpx = 794;
-        var a4Hpx = 1123;
-        var paddingInterno = 40;
+        // Salvar arquivo
+        resultado.pdf.save(resultado.nome);
 
-        /* Clonar conteúdo */
-        clone = previewArea.cloneNode(true);
-        clone.classList.add('pdf-mode');
+        // Guardar referência para WhatsApp/Email
+        window._ultimoPDFBlob = resultado.blob;
+        window._ultimoPDFNome = resultado.nome;
 
-        /* Esconder status */
-        var badgesClone = clone.querySelectorAll('.no-print');
-        badgesClone.forEach(function (el) { el.style.display = 'none'; });
-
-        /* Posicionar offscreen com dimensões exatas de A4 */
-        clone.style.cssText =
-            'position:absolute;left:-9999px;top:0;' +
-            'width:' + a4Wpx + 'px;' +
-            'min-height:' + a4Hpx + 'px;' +
-            'padding:' + paddingInterno + 'px;' +
-            'margin:0;' +
-            'background:#ffffff;color:#1a1a1a;' +
-            "font-family:'Inter',sans-serif;" +
-            'font-size:14px;line-height:1.5;' +
-            'display:block;box-sizing:border-box;' +
-            'overflow:hidden;';
-
-        document.body.appendChild(clone);
-        await new Promise(function (r) { setTimeout(r, 200); });
-
-        /* Medir altura real */
-        var alturaReal = clone.scrollHeight;
-
-        /* Se excede A4, aplicar scale para comprimir */
-        if (alturaReal > a4Hpx) {
-            var escala = a4Hpx / alturaReal;
-            clone.style.transform = 'scale(' + escala + ')';
-            clone.style.transformOrigin = 'top left';
-            clone.style.width = (a4Wpx / escala) + 'px';
-            clone.style.padding = (paddingInterno / escala) + 'px';
-
-            await new Promise(function (r) { setTimeout(r, 200); });
-        }
-
-        /* Capturar */
-        var captureW = Math.ceil(clone.getBoundingClientRect().width) || a4Wpx;
-
-        var canvas = await html2canvas(clone, {
-            scale: 2,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: '#ffffff',
-            logging: false,
-            width: a4Wpx,
-            height: a4Hpx,
-            windowWidth: captureW
-        });
-
-        /* Remover clone */
-        document.body.removeChild(clone);
-        clone = null;
-
-        /* Criar PDF */
-        var jsPDFClass = null;
-        if (typeof window.jspdf !== 'undefined' && typeof window.jspdf.jsPDF === 'function') {
-            jsPDFClass = window.jspdf.jsPDF;
-        } else if (typeof window.jsPDF === 'function') {
-            jsPDFClass = window.jsPDF;
-        } else {
-            throw new Error('Biblioteca jsPDF não foi carregada. Recarregue a página.');
-        }
-
-        var pdf = new jsPDFClass('p', 'mm', 'a4');
-        var pdfW = pdf.internal.pageSize.getWidth();
-        var pdfH = pdf.internal.pageSize.getHeight();
-
-        /* Imagem ocupa a folha INTEIRA — margem 0 */
-        var imgData = canvas.toDataURL('image/jpeg', 0.95);
-        pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH);
-
-        /* Salvar */
-        var nomeArquivo = gerarNomeArquivo() + '.pdf';
-        pdf.save(nomeArquivo);
-        showToast('PDF salvo: ' + nomeArquivo, 'success');
+        showToast('PDF salvo com sucesso!', 'success');
 
     } catch (error) {
-        if (clone && clone.parentNode) {
-            clone.parentNode.removeChild(clone);
-        }
+        console.error('Erro ao gerar PDF:', error);
         showToast('Erro ao gerar PDF: ' + error.message, 'error');
     } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Salvar PDF';
+        if (btnPDF) {
+            btnPDF.disabled = false;
+            btnPDF.innerHTML = '📄 Salvar PDF';
+        }
     }
 }
 
-/* ============================================================
-   Imprimir
-   ============================================================ */
+// ==========================================
+// IMPRIMIR
+// ==========================================
 
 function imprimirOrcamento() {
     if (!orcamentoAtual) {
-        showToast('Nenhum orçamento carregado', 'warning');
+        showToast('Nenhum orçamento carregado', 'error');
         return;
     }
-
-    var tituloOriginal = document.title;
+    var nomeOriginal = document.title;
     document.title = gerarNomeArquivo();
-
-    setTimeout(function () {
-        window.print();
-        setTimeout(function () {
-            document.title = tituloOriginal;
-        }, 1000);
-    }, 100);
+    window.print();
+    setTimeout(function() {
+        document.title = nomeOriginal;
+    }, 1500);
 }
 
-/* ============================================================
-   WhatsApp
-   ============================================================ */
+// ==========================================
+// WHATSAPP - Envia texto + PDF
+// ==========================================
 
-function compartilharWhatsApp() {
+async function compartilharWhatsApp() {
     if (!orcamentoAtual) {
-        showToast('Nenhum orçamento carregado', 'warning');
+        showToast('Nenhum orçamento carregado', 'error');
         return;
     }
 
-    var orc = orcamentoAtual;
-    var cliente = orc.clientes || {};
-    var empresa = orc.empresa || {};
+    var btnWhats = document.getElementById('btnWhatsApp');
+    if (btnWhats) {
+        btnWhats.disabled = true;
+        btnWhats.innerHTML = '⏳ Preparando...';
+    }
 
-    var itensTexto = (orc.itens || []).map(function (item, i) {
-        var prod = item.produtos || {};
-        return (i + 1) + '. ' + (prod.nome || 'Produto') + ' - Qtd: ' + item.quantidade + ' - ' + formatCurrency(item.valor_total);
-    }).join('\n');
+    try {
+        // Gerar PDF
+        var pdfObj = null;
+        try {
+            pdfObj = await gerarPDFBlob();
+        } catch (e) {
+            console.warn('Não foi possível gerar PDF:', e);
+        }
 
-    var texto = '*' + (empresa.nome || 'WD MÁQUINAS') + '*\n' +
-        '*ORÇAMENTO #' + (orc.numero_orcamento || '-') + '*\n\n' +
-        '*Cliente:* ' + (cliente.nome || '-') + (cliente.empresa ? ' - ' + cliente.empresa : '') + '\n' +
-        '*Emissão:* ' + formatDate(orc.data_emissao) + '\n' +
-        '*Validade:* ' + formatDate(orc.data_validade) + '\n\n' +
-        '*Itens:*\n' + itensTexto + '\n\n' +
-        '*TOTAL: ' + formatCurrency(orc.valor_total) + '*\n\n' +
-        '*Pagamento:* ' + (orc.forma_pagamento || '-') + '\n' +
-        '*Entrega:* ' + (orc.prazo_entrega || '-') + '\n\n' +
-        (empresa.telefone ? formatPhone(empresa.telefone) : '') +
-        (empresa.email ? ' | ' + empresa.email : '');
+        var orc = orcamentoAtual;
+        var cliente = orc.cliente || {};
+        var config = orc.configuracoes || {};
+        var itens = orc.itens || [];
 
-    var encoded = encodeURIComponent(texto);
-    var whatsUrl = 'https://wa.me/?text=' + encoded;
+        var totalGeral = 0;
+        for (var i = 0; i < itens.length; i++) {
+            totalGeral += (itens[i].quantidade || 0) * (itens[i].valor_unitario || 0);
+        }
 
-    if (cliente.telefone) {
-        var tel = unmask(cliente.telefone);
-        if (tel.length >= 10) {
-            var telFull = tel.indexOf('55') === 0 ? tel : '55' + tel;
-            whatsUrl = 'https://wa.me/' + telFull + '?text=' + encoded;
+        // Montar mensagem
+        var msg = '*' + (config.empresa_nome || 'WD Máquinas') + '*\n';
+        msg += '━━━━━━━━━━━━━━━\n';
+        msg += '📋 *Orçamento Nº ' + (orc.numero || '-') + '*\n';
+        msg += '👤 Cliente: ' + (cliente.nome || '-') + '\n';
+        msg += '📅 Data: ' + (orc.created_at ? new Date(orc.created_at).toLocaleDateString('pt-BR') : '-') + '\n';
+        msg += '📅 Validade: ' + (orc.validade ? new Date(orc.validade).toLocaleDateString('pt-BR') : '-') + '\n';
+        msg += '━━━━━━━━━━━━━━━\n';
+        msg += '*ITENS:*\n';
+        for (var j = 0; j < itens.length; j++) {
+            var sub = (itens[j].quantidade || 0) * (itens[j].valor_unitario || 0);
+            msg += (j + 1) + '. ' + (itens[j].produto_nome || itens[j].descricao || '-') +
+                ' - ' + itens[j].quantidade + 'x R$ ' +
+                (itens[j].valor_unitario || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) +
+                ' = R$ ' + sub.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '\n';
+        }
+        msg += '━━━━━━━━━━━━━━━\n';
+        msg += '💰 *TOTAL: R$ ' + totalGeral.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '*\n';
+        if (orc.condicao_pagamento) msg += '💳 Pagamento: ' + orc.condicao_pagamento + '\n';
+        if (orc.prazo_entrega) msg += '🚚 Entrega: ' + orc.prazo_entrega + '\n';
+        msg += '━━━━━━━━━━━━━━━\n';
+        msg += (config.empresa_nome || 'WD Máquinas') + ' - ' + (config.empresa_telefone || '');
+
+        // Tentar Web Share API com arquivo PDF (funciona em mobile)
+        if (pdfObj && navigator.canShare) {
+            try {
+                var file = new File([pdfObj.blob], pdfObj.nome, { type: 'application/pdf' });
+                var shareData = { text: msg, files: [file] };
+
+                if (navigator.canShare(shareData)) {
+                    await navigator.share(shareData);
+                    showToast('Orçamento compartilhado!', 'success');
+                    return;
+                }
+            } catch (shareErr) {
+                if (shareErr.name === 'AbortError') return;
+                console.warn('Web Share API falhou, usando fallback:', shareErr);
+            }
+        }
+
+        // Fallback: baixar PDF + abrir WhatsApp com texto
+        if (pdfObj) {
+            var url = URL.createObjectURL(pdfObj.blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = pdfObj.nome;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('PDF baixado! Anexe manualmente no WhatsApp.', 'info');
+        }
+
+        // Abrir WhatsApp
+        var telefone = '';
+        if (cliente.telefone) {
+            telefone = cliente.telefone.replace(/\D/g, '');
+            if (telefone.length === 11 || telefone.length === 10) {
+                telefone = '55' + telefone;
+            }
+        }
+
+        var whatsUrl = telefone
+            ? 'https://wa.me/' + telefone + '?text=' + encodeURIComponent(msg)
+            : 'https://wa.me/?text=' + encodeURIComponent(msg);
+
+        window.open(whatsUrl, '_blank');
+
+    } catch (error) {
+        console.error('Erro WhatsApp:', error);
+        showToast('Erro ao compartilhar: ' + error.message, 'error');
+    } finally {
+        if (btnWhats) {
+            btnWhats.disabled = false;
+            btnWhats.innerHTML = '📱 WhatsApp';
         }
     }
-
-    window.open(whatsUrl, '_blank');
 }
 
-/* ============================================================
-   Email
-   ============================================================ */
+// ==========================================
+// EMAIL - Modal + gera PDF + mailto
+// ==========================================
 
 function abrirModalEmail() {
     if (!orcamentoAtual) {
-        showToast('Nenhum orçamento carregado', 'warning');
+        showToast('Nenhum orçamento carregado', 'error');
         return;
     }
 
-    var orc = orcamentoAtual;
-    var cliente = orc.clientes || {};
-    var empresa = orc.empresa || {};
+    var cliente = orcamentoAtual.cliente || {};
+    var config = orcamentoAtual.configuracoes || {};
+    var nomeArq = gerarNomeArquivo();
 
-    var emailInput = document.getElementById('emailDestinatario');
-    if (emailInput) emailInput.value = cliente.email || '';
+    var emailDest = document.getElementById('emailDestinatario');
+    var emailAssunto = document.getElementById('emailAssunto');
+    var emailMensagem = document.getElementById('emailMensagem');
 
-    var assuntoInput = document.getElementById('emailAssunto');
-    if (assuntoInput) {
-        assuntoInput.value = 'Orçamento #' + (orc.numero_orcamento || '') + ' - ' + (empresa.nome || 'WD Máquinas');
-    }
-
-    var msgInput = document.getElementById('emailMensagem');
-    if (msgInput) {
-        msgInput.value = 'Prezado(a) ' + (cliente.nome || 'Cliente') + ',\n\n' +
-            'Segue o orçamento #' + (orc.numero_orcamento || '') + ' conforme solicitado.\n' +
-            'Valor total: ' + formatCurrency(orc.valor_total) + '\n' +
-            'Validade: ' + formatDate(orc.data_validade) + '\n\n' +
-            'Qualquer dúvida, estamos à disposição.\n\n' +
+    if (emailDest) emailDest.value = cliente.email || '';
+    if (emailAssunto) emailAssunto.value = 'Orçamento Nº ' + (orcamentoAtual.numero || '') + ' - ' + (config.empresa_nome || 'WD Máquinas');
+    if (emailMensagem) {
+        emailMensagem.value =
+            'Prezado(a) ' + (cliente.nome || 'Cliente') + ',\n\n' +
+            'Segue em anexo o orçamento Nº ' + (orcamentoAtual.numero || '') + ' conforme solicitado.\n\n' +
+            'O arquivo PDF "' + nomeArq + '.pdf" será baixado automaticamente ao clicar em Enviar.\n' +
+            'Por favor, anexe-o ao email.\n\n' +
+            'Qualquer dúvida estamos à disposição.\n\n' +
             'Atenciosamente,\n' +
-            (empresa.nome || 'WD Máquinas') + '\n' +
-            (empresa.telefone ? formatPhone(empresa.telefone) : '');
+            (config.empresa_nome || 'WD Máquinas') + '\n' +
+            (config.empresa_telefone || '');
     }
 
-    document.getElementById('modalEmail').classList.add('active');
+    var modal = document.getElementById('modalEmail');
+    if (modal) modal.classList.add('active');
 }
 
 function fecharModalEmail() {
-    document.getElementById('modalEmail').classList.remove('active');
+    var modal = document.getElementById('modalEmail');
+    if (modal) modal.classList.remove('active');
 }
 
-function enviarEmail() {
-    var email = document.getElementById('emailDestinatario').value.trim();
-    var assunto = document.getElementById('emailAssunto').value.trim();
-    var mensagem = document.getElementById('emailMensagem').value.trim();
+async function enviarEmail() {
+    var emailDest = document.getElementById('emailDestinatario');
+    var emailAssunto = document.getElementById('emailAssunto');
+    var emailMensagem = document.getElementById('emailMensagem');
 
-    if (!email) {
-        showToast('Informe o email do destinatário', 'warning');
+    var dest = emailDest ? emailDest.value.trim() : '';
+    var assunto = emailAssunto ? emailAssunto.value.trim() : '';
+    var corpo = emailMensagem ? emailMensagem.value.trim() : '';
+
+    if (!dest) {
+        showToast('Informe o email do destinatário', 'error');
         return;
     }
 
-    if (email.indexOf('@') === -1 || email.indexOf('.') === -1) {
-        showToast('Email inválido', 'warning');
-        return;
+    var btnEnviar = document.getElementById('btnEnviarEmailConfirm');
+    if (btnEnviar) {
+        btnEnviar.disabled = true;
+        btnEnviar.innerHTML = '⏳ Gerando PDF...';
     }
 
-    var mailtoUrl = 'mailto:' + encodeURIComponent(email) +
-        '?subject=' + encodeURIComponent(assunto) +
-        '&body=' + encodeURIComponent(mensagem);
+    try {
+        // Gerar e baixar PDF automaticamente
+        var pdfObj = await gerarPDFBlob();
+        var url = URL.createObjectURL(pdfObj.blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = pdfObj.nome;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
 
-    window.open(mailtoUrl, '_blank');
-    fecharModalEmail();
-    showToast('Abrindo cliente de email...', 'info');
+        // Abrir cliente de email via mailto
+        var mailtoUrl = 'mailto:' + encodeURIComponent(dest) +
+            '?subject=' + encodeURIComponent(assunto) +
+            '&body=' + encodeURIComponent(corpo);
+        window.location.href = mailtoUrl;
+
+        showToast('PDF baixado! Anexe ao email que será aberto.', 'success');
+        fecharModalEmail();
+
+    } catch (error) {
+        console.error('Erro email:', error);
+        showToast('Erro ao preparar email: ' + error.message, 'error');
+    } finally {
+        if (btnEnviar) {
+            btnEnviar.disabled = false;
+            btnEnviar.innerHTML = '📧 Enviar';
+        }
+    }
 }
