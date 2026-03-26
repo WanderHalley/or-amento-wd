@@ -1,12 +1,11 @@
-// ==========================================
+// ==========================================================
 // CLIENTES - Gerenciamento de Clientes
-// Campo "Empresa" removido - apenas "Nome"
-// ==========================================
+// ==========================================================
 
 let clientesData = [];
 let deleteClienteId = null;
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function() {
     initTheme();
     initSidebar();
     aplicarMascaras();
@@ -14,15 +13,15 @@ document.addEventListener('DOMContentLoaded', () => {
     bindEvents();
 });
 
-// ==========================================
+// ==========================================================
 // MÁSCARAS DE INPUT
-// ==========================================
+// ==========================================================
 
 function aplicarMascaras() {
-    const telefoneInput = document.getElementById('clienteTelefone');
+    var telefoneInput = document.getElementById('clienteTelefone');
     if (telefoneInput) {
-        telefoneInput.addEventListener('input', (e) => {
-            let v = e.target.value.replace(/\D/g, '');
+        telefoneInput.addEventListener('input', function(e) {
+            var v = e.target.value.replace(/\D/g, '');
             if (v.length <= 10) {
                 v = v.replace(/^(\d{2})(\d)/, '($1) $2');
                 v = v.replace(/(\d{4})(\d)/, '$1-$2');
@@ -34,19 +33,19 @@ function aplicarMascaras() {
         });
     }
 
-    const cepInput = document.getElementById('clienteCep');
+    var cepInput = document.getElementById('clienteCep');
     if (cepInput) {
-        cepInput.addEventListener('input', (e) => {
-            let v = e.target.value.replace(/\D/g, '');
+        cepInput.addEventListener('input', function(e) {
+            var v = e.target.value.replace(/\D/g, '');
             v = v.replace(/^(\d{5})(\d)/, '$1-$2');
             e.target.value = v;
         });
     }
 
-    const cpfCnpjInput = document.getElementById('clienteCpfCnpj');
+    var cpfCnpjInput = document.getElementById('clienteCpfCnpj');
     if (cpfCnpjInput) {
-        cpfCnpjInput.addEventListener('input', (e) => {
-            let v = e.target.value.replace(/\D/g, '');
+        cpfCnpjInput.addEventListener('input', function(e) {
+            var v = e.target.value.replace(/\D/g, '');
             if (v.length <= 11) {
                 v = v.replace(/(\d{3})(\d)/, '$1.$2');
                 v = v.replace(/(\d{3})(\d)/, '$1.$2');
@@ -62,44 +61,44 @@ function aplicarMascaras() {
     }
 }
 
-// ==========================================
+// ==========================================================
 // EVENTOS
-// ==========================================
+// ==========================================================
 
 function bindEvents() {
-    const btnNovo = document.getElementById('btnNovoCliente');
+    var btnNovo = document.getElementById('btnNovoCliente');
     if (btnNovo) btnNovo.addEventListener('click', novoCliente);
 
-    const btnFechar = document.getElementById('btnFecharModalCliente');
+    var btnFechar = document.getElementById('btnFecharModalCliente');
     if (btnFechar) btnFechar.addEventListener('click', fecharModalCliente);
 
-    const btnCancelar = document.getElementById('btnCancelarCliente');
+    var btnCancelar = document.getElementById('btnCancelarCliente');
     if (btnCancelar) btnCancelar.addEventListener('click', fecharModalCliente);
 
-    const form = document.getElementById('formCliente');
+    var form = document.getElementById('formCliente');
     if (form) form.addEventListener('submit', salvarCliente);
 
-    const btnFecharDel = document.getElementById('btnFecharModalDelete');
+    var btnFecharDel = document.getElementById('btnFecharModalDelete');
     if (btnFecharDel) btnFecharDel.addEventListener('click', fecharModalDelete);
 
-    const btnCancelarDel = document.getElementById('btnCancelarDelete');
+    var btnCancelarDel = document.getElementById('btnCancelarDelete');
     if (btnCancelarDel) btnCancelarDel.addEventListener('click', fecharModalDelete);
 
-    const btnConfirmarDel = document.getElementById('btnConfirmarDelete');
+    var btnConfirmarDel = document.getElementById('btnConfirmarDelete');
     if (btnConfirmarDel) btnConfirmarDel.addEventListener('click', confirmarDeleteCliente);
 
-    const searchInput = document.getElementById('searchCliente');
+    var searchInput = document.getElementById('searchCliente');
     if (searchInput) {
-        let debounceTimer;
-        searchInput.addEventListener('input', (e) => {
+        var debounceTimer;
+        searchInput.addEventListener('input', function(e) {
             clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(() => {
+            debounceTimer = setTimeout(function() {
                 carregarClientes(e.target.value);
             }, 300);
         });
     }
 
-    document.addEventListener('keydown', (e) => {
+    document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             fecharModalCliente();
             fecharModalDelete();
@@ -107,16 +106,17 @@ function bindEvents() {
     });
 }
 
-// ==========================================
+// ==========================================================
 // CARREGAR CLIENTES
-// ==========================================
+// ==========================================================
 
-async function carregarClientes(busca = '') {
+async function carregarClientes(busca) {
+    if (!busca) busca = '';
     try {
-        let url = '/api/clientes';
+        var url = '/api/clientes';
         if (busca) url += '?search=' + encodeURIComponent(busca);
 
-        const response = await apiGet(url);
+        var response = await apiGet(url);
         if (response.success) {
             clientesData = response.data || [];
             renderizarTabela();
@@ -127,53 +127,47 @@ async function carregarClientes(busca = '') {
     }
 }
 
-// ==========================================
-// RENDERIZAR TABELA - SEM coluna Empresa
-// ==========================================
+// ==========================================================
+// RENDERIZAR TABELA — sem coluna Empresa
+// ==========================================================
 
 function renderizarTabela() {
-    const tbody = document.getElementById('clientesTableBody');
+    var tbody = document.getElementById('clientesTableBody');
     if (!tbody) return;
 
     if (clientesData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="empty-cell">Nenhum cliente encontrado</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;" class="empty-state"><h4>Nenhum cliente encontrado</h4></td></tr>';
         return;
     }
 
-    tbody.innerHTML = clientesData.map(cliente => {
-        const cidade = cliente.cidade && cliente.estado
-            ? cliente.cidade + '/' + cliente.estado
-            : cliente.cidade || cliente.estado || '-';
+    var html = '';
+    for (var i = 0; i < clientesData.length; i++) {
+        var cliente = clientesData[i];
+        var cidade = '';
+        if (cliente.cidade && cliente.estado) {
+            cidade = cliente.cidade + '/' + cliente.estado;
+        } else {
+            cidade = cliente.cidade || cliente.estado || '-';
+        }
 
-        return '<tr>' +
-            '<td><strong>' + (cliente.nome || '-') + '</strong></td>' +
-            '<td>' + (formatarTelefone(cliente.telefone) || '-') + '</td>' +
-            '<td>' + (cliente.email || '-') + '</td>' +
-            '<td>' + cidade + '</td>' +
-            '<td>' +
-                '<div class="action-buttons">' +
-                    '<button class="btn btn-sm btn-secondary" onclick="editarCliente(\'' + cliente.id + '\')">✏️</button>' +
-                    '<button class="btn btn-sm btn-danger" onclick="deletarCliente(\'' + cliente.id + '\')">🗑️</button>' +
-                '</div>' +
-            '</td>' +
-        '</tr>';
-    }).join('');
-}
-
-function formatarTelefone(tel) {
-    if (!tel) return '';
-    const nums = tel.replace(/\D/g, '');
-    if (nums.length === 11) {
-        return '(' + nums.slice(0, 2) + ') ' + nums.slice(2, 7) + '-' + nums.slice(7);
-    } else if (nums.length === 10) {
-        return '(' + nums.slice(0, 2) + ') ' + nums.slice(2, 6) + '-' + nums.slice(6);
+        html += '<tr>';
+        html += '<td><strong>' + escapeHtml(cliente.nome || '-') + '</strong></td>';
+        html += '<td>' + escapeHtml(formatPhone(cliente.telefone) || '-') + '</td>';
+        html += '<td>' + escapeHtml(cliente.email || '-') + '</td>';
+        html += '<td>' + escapeHtml(cidade) + '</td>';
+        html += '<td>';
+        html += '<button class="btn-icon edit" onclick="editarCliente(\'' + cliente.id + '\')" title="Editar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>';
+        html += '<button class="btn-icon delete" onclick="deletarCliente(\'' + cliente.id + '\')" title="Excluir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>';
+        html += '</td>';
+        html += '</tr>';
     }
-    return tel;
+
+    tbody.innerHTML = html;
 }
 
-// ==========================================
+// ==========================================================
 // MODAL CLIENTE
-// ==========================================
+// ==========================================================
 
 function novoCliente() {
     document.getElementById('modalClienteTitulo').textContent = 'Novo Cliente';
@@ -188,9 +182,9 @@ function fecharModalCliente() {
 
 async function editarCliente(id) {
     try {
-        const response = await apiGet('/api/clientes/' + id);
+        var response = await apiGet('/api/clientes/' + id);
         if (response.success) {
-            const c = response.data;
+            var c = response.data;
             document.getElementById('modalClienteTitulo').textContent = 'Editar Cliente';
             document.getElementById('clienteId').value = c.id;
             document.getElementById('clienteNome').value = c.nome || '';
@@ -212,15 +206,15 @@ async function editarCliente(id) {
 async function salvarCliente(e) {
     e.preventDefault();
 
-    const id = document.getElementById('clienteId').value;
-    const nome = document.getElementById('clienteNome').value.trim();
+    var id = document.getElementById('clienteId').value;
+    var nome = document.getElementById('clienteNome').value.trim();
 
     if (!nome) {
         showToast('Nome é obrigatório', 'error');
         return;
     }
 
-    const dados = {
+    var dados = {
         nome: nome,
         empresa: nome,
         cpf_cnpj: document.getElementById('clienteCpfCnpj').value.trim(),
@@ -233,7 +227,7 @@ async function salvarCliente(e) {
     };
 
     try {
-        let response;
+        var response;
         if (id) {
             response = await apiPut('/api/clientes/' + id, dados);
         } else {
@@ -253,9 +247,9 @@ async function salvarCliente(e) {
     }
 }
 
-// ==========================================
+// ==========================================================
 // DELETAR CLIENTE
-// ==========================================
+// ==========================================================
 
 function deletarCliente(id) {
     deleteClienteId = id;
@@ -271,7 +265,7 @@ async function confirmarDeleteCliente() {
     if (!deleteClienteId) return;
 
     try {
-        const response = await apiDelete('/api/clientes/' + deleteClienteId);
+        var response = await apiDelete('/api/clientes/' + deleteClienteId);
         if (response.success) {
             showToast('Cliente excluído!', 'success');
             fecharModalDelete();
