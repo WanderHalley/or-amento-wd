@@ -4,15 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Configurações | WD Máquinas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div class="app-layout">
 
-        <!-- Sidebar Overlay (mobile) -->
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-        <!-- ========== SIDEBAR ========== -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-logo">
@@ -22,218 +23,141 @@
                         <span>Sistema de Orçamentos</span>
                     </div>
                 </div>
-                <button class="sidebar-toggle" id="sidebarCollapse">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M15 18l-6-6 6-6"/>
-                    </svg>
+                <button class="sidebar-toggle" id="sidebarCollapse" aria-label="Recolher menu">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
                 </button>
             </div>
             <nav class="sidebar-nav">
                 <div class="sidebar-nav-label">Menu</div>
                 <a href="index.html" class="sidebar-link" title="Dashboard">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-                        <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
-                    </svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
                     <span class="sidebar-link-text">Dashboard</span>
                 </a>
                 <a href="orcamentos.html" class="sidebar-link" title="Orçamentos">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                        <polyline points="14 2 14 8 20 8"/>
-                        <line x1="16" y1="13" x2="8" y2="13"/>
-                        <line x1="16" y1="17" x2="8" y2="17"/>
-                        <polyline points="10 9 9 9 8 9"/>
-                    </svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                     <span class="sidebar-link-text">Orçamentos</span>
                 </a>
                 <a href="clientes.html" class="sidebar-link" title="Clientes">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                        <circle cx="9" cy="7" r="4"/>
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                    </svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                     <span class="sidebar-link-text">Clientes</span>
                 </a>
                 <a href="produtos.html" class="sidebar-link" title="Produtos">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
-                        <line x1="12" y1="22.08" x2="12" y2="12"/>
-                    </svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
                     <span class="sidebar-link-text">Produtos</span>
                 </a>
                 <a href="configuracoes.html" class="sidebar-link active" title="Configurações">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="3"/>
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-                    </svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
                     <span class="sidebar-link-text">Configurações</span>
                 </a>
             </nav>
         </aside>
 
-        <!-- ========== MAIN ========== -->
         <main class="main-content">
-            <!-- Header -->
-            <header class="main-header">
+            <header class="main-header" id="mainHeader">
                 <div class="header-left">
-                    <button class="menu-toggle" id="menuToggle">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="3" y1="12" x2="21" y2="12"/>
-                            <line x1="3" y1="6" x2="21" y2="6"/>
-                            <line x1="3" y1="18" x2="21" y2="18"/>
-                        </svg>
+                    <button class="menu-toggle" id="menuToggle" aria-label="Abrir menu">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
                     </button>
                     <h2>Configurações</h2>
                 </div>
                 <div class="header-right">
                     <button class="theme-toggle" id="themeToggle" title="Alternar tema">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/>
-                            <line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/>
-                            <line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-                        </svg>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/></svg>
                     </button>
                 </div>
             </header>
 
-            <!-- Content -->
-            <div class="content-area">
-
-                <!-- ========== DADOS DA EMPRESA ========== -->
+            <div class="content-body">
                 <div class="card">
                     <div class="card-header">
                         <h3>Dados da Empresa</h3>
                     </div>
                     <div class="card-body">
-                        <form id="formConfigEmpresa" onsubmit="salvarConfiguracoes(event)">
-
-                            <!-- Logo Upload -->
+                        <form id="formConfigEmpresa">
                             <div class="form-group" style="margin-bottom:20px;">
                                 <label for="cfgLogo">Logo da Empresa</label>
-                                <div style="margin-top:8px;">
-                                    <!-- Preview do logo -->
-                                    <div id="cfgLogoPreview" style="margin-bottom:10px;">
-                                        <img id="cfgLogoImg" src="" alt="Logo" style="max-width:200px; max-height:100px; border-radius:8px; border:1px solid var(--border-color); display:none;">
-                                    </div>
-                                    <!-- Input de arquivo -->
-                                    <input type="file" id="cfgLogo" class="form-input" accept="image/jpeg,image/png,image/webp" onchange="previewLogoConfig(event)">
-                                    <small style="color:var(--text-muted); display:block; margin-top:4px;">JPG, PNG ou WEBP. Máximo 500 KB. Recomendado: 400×120 px.</small>
-                                    <!-- Botão remover -->
-                                    <button type="button" class="btn btn-danger btn-sm" id="btnRemoverLogo" onclick="removerLogoConfig()" style="margin-top:8px; display:none;">Remover logo</button>
-                                </div>
+                                <div id="cfgLogoPreview" class="image-preview-container"></div>
+                                <input type="file" id="cfgLogo" class="form-input" accept="image/jpeg,image/png,image/webp">
+                                <small class="form-hint">JPG, PNG ou WEBP. Máximo 500 KB. Recomendado: 400×120 px.</small>
                             </div>
 
                             <div class="form-grid">
-                                <!-- Nome -->
                                 <div class="form-group full-width">
                                     <label for="cfgNomeEmpresa">Nome da Empresa *</label>
                                     <input type="text" id="cfgNomeEmpresa" class="form-input" required placeholder="WD Máquinas">
                                 </div>
-
-                                <!-- CNPJ -->
                                 <div class="form-group">
                                     <label for="cfgCnpj">CNPJ</label>
                                     <input type="text" id="cfgCnpj" class="form-input" placeholder="00.000.000/0000-00" maxlength="18">
                                 </div>
-
-                                <!-- Telefone -->
                                 <div class="form-group">
                                     <label for="cfgTelefone">Telefone</label>
                                     <input type="text" id="cfgTelefone" class="form-input" placeholder="(00) 00000-0000" maxlength="15">
                                 </div>
-
-                                <!-- Email -->
                                 <div class="form-group">
                                     <label for="cfgEmail">E-mail</label>
                                     <input type="email" id="cfgEmail" class="form-input" placeholder="contato@empresa.com">
                                 </div>
-
-                                <!-- Site -->
                                 <div class="form-group">
                                     <label for="cfgSite">Site / Instagram</label>
                                     <input type="text" id="cfgSite" class="form-input" placeholder="www.empresa.com ou @empresa">
                                 </div>
-
-                                <!-- Endereço -->
                                 <div class="form-group full-width">
                                     <label for="cfgEndereco">Endereço Completo</label>
                                     <input type="text" id="cfgEndereco" class="form-input" placeholder="Rua, número, bairro, cidade - UF, CEP">
                                 </div>
                             </div>
 
-                            <!-- Separador -->
-                            <hr style="margin: 25px 0; border-color: var(--border-color);">
+                            <hr style="margin:25px 0;border-color:var(--border-color);">
 
-                            <!-- ========== PADRÕES DO ORÇAMENTO ========== -->
-                            <h3 style="margin-bottom:15px;">Padrões do Orçamento</h3>
+                            <h3 style="margin-bottom:15px;color:var(--text-primary);">Padrões do Orçamento</h3>
                             <div class="form-grid">
-                                <!-- Condições de pagamento -->
                                 <div class="form-group full-width">
                                     <label for="cfgCondicoesPadrao">Condições de Pagamento Padrão</label>
-                                    <textarea id="cfgCondicoesPadrao" class="form-input" rows="3" placeholder="Ex: 50% de entrada e 50% na entrega do equipamento."></textarea>
+                                    <textarea id="cfgCondicoesPadrao" class="form-input" rows="3" placeholder="Ex: 50% de entrada e 50% na entrega."></textarea>
                                 </div>
-
-                                <!-- Validade -->
                                 <div class="form-group">
                                     <label for="cfgValidadeDias">Validade Padrão (dias)</label>
                                     <input type="number" id="cfgValidadeDias" class="form-input" min="1" max="365" placeholder="15">
                                 </div>
-
-                                <!-- Prazo de entrega -->
                                 <div class="form-group">
                                     <label for="cfgPrazoEntregaPadrao">Prazo de Entrega Padrão</label>
                                     <input type="text" id="cfgPrazoEntregaPadrao" class="form-input" placeholder="Ex: 15 a 20 dias úteis">
                                 </div>
-
-                                <!-- Observações padrão -->
                                 <div class="form-group full-width">
                                     <label for="cfgObservacoesPadrao">Observações Padrão</label>
                                     <textarea id="cfgObservacoesPadrao" class="form-input" rows="3" placeholder="Texto padrão que aparece em todos os orçamentos..."></textarea>
                                 </div>
                             </div>
 
-                            <!-- Botões -->
-                            <div style="margin-top:20px; text-align:right; display:flex; gap:10px; justify-content:flex-end;">
-                                <button type="button" class="btn btn-secondary" onclick="resetarConfiguracoes()">Restaurar Padrões</button>
-                                <button type="submit" class="btn btn-primary">Salvar Configurações</button>
+                            <div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end;">
+                                <button type="button" class="btn btn-secondary" id="btnResetarConfig">Restaurar Padrões</button>
+                                <button type="submit" class="btn btn-primary" id="btnSalvarConfig">Salvar Configurações</button>
                             </div>
-
                         </form>
                     </div>
                 </div>
 
-                <!-- ========== SOBRE O SISTEMA ========== -->
                 <div class="card" style="margin-top:20px;">
                     <div class="card-header">
                         <h3>Sobre o Sistema</h3>
                     </div>
                     <div class="card-body">
-                        <p><strong>Orçamento WD</strong> — Sistema de Orçamentos</p>
-                        <p>Versão: 2.0.0</p>
-                        <p>Desenvolvido para WD Máquinas</p>
-                        <p style="margin-top:10px;">
-                            <small>
-                                Backend:
-                                <a href="https://wanderhalleylee-orcamento-wd.hf.space/docs" target="_blank" rel="noopener">API Docs</a>
-                                | Status: <span id="cfgApiStatus">Verificando...</span>
-                            </small>
+                        <p style="color:var(--text-secondary);"><strong>Orçamento WD</strong> — Sistema de Orçamentos</p>
+                        <p style="color:var(--text-muted);">Versão: 2.0.0</p>
+                        <p style="color:var(--text-muted);">Desenvolvido para WD Máquinas</p>
+                        <p style="margin-top:10px;color:var(--text-muted);">
+                            Backend: <a href="" id="cfgApiDocsLink" target="_blank" rel="noopener" style="color:var(--color-primary);">API Docs</a>
+                            | Status: <span id="cfgApiStatus">Verificando...</span>
                         </p>
                     </div>
                 </div>
-
-            </div><!-- .content-area -->
+            </div>
         </main>
-    </div><!-- .app-layout -->
+    </div>
 
-    <!-- Toast -->
     <div id="toastContainer" class="toast-container"></div>
 
-    <!-- Scripts -->
     <script src="js/app.js"></script>
     <script src="js/configuracoes.js"></script>
 </body>
