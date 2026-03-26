@@ -1525,12 +1525,187 @@ textarea.form-input {
 }
 
 /* ============================================================
-   22. PRINT
+   22. PRINT & PDF
+   ============================================================ */
+
+/* Classe utilitária para esconder no print/pdf */
+.no-print {
+    /* visível normalmente */
+}
+
+/* Texto de observações */
+.orc-obs-text {
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* Botão info (email) */
+.btn-info {
+    background: var(--color-info);
+    color: #ffffff;
+}
+
+.btn-info:hover:not(:disabled) {
+    filter: brightness(1.1);
+}
+
+/* ============================================================
+   23. PDF-MODE — Cores forçadas para captura html2canvas
+   ============================================================ */
+
+.pdf-mode {
+    background: #ffffff !important;
+    color: #1a1a1a !important;
+    border-radius: 0 !important;
+    border: none !important;
+}
+
+.pdf-mode .orc-header {
+    border-bottom-color: #7c5bf5 !important;
+}
+
+.pdf-mode .orc-empresa h2 {
+    color: #5a3acc !important;
+}
+
+.pdf-mode .orc-empresa p {
+    color: #555555 !important;
+}
+
+.pdf-mode .orc-meta h3 {
+    color: #1a1a1a !important;
+}
+
+.pdf-mode .orc-numero {
+    color: #5a3acc !important;
+}
+
+.pdf-mode .orc-meta-row {
+    color: #555555 !important;
+}
+
+.pdf-mode .orc-meta-row strong {
+    color: #333333 !important;
+}
+
+.pdf-mode .orc-section-title {
+    color: #1a1a1a !important;
+    border-bottom-color: #cccccc !important;
+}
+
+.pdf-mode .orc-cliente-box {
+    background: #f2f2f7 !important;
+    border: 1px solid #ddd !important;
+}
+
+.pdf-mode .orc-cliente-box .nome {
+    color: #1a1a1a !important;
+}
+
+.pdf-mode .orc-cliente-box .info {
+    color: #444444 !important;
+}
+
+.pdf-mode .orc-tabela thead {
+    background: #5a3acc !important;
+}
+
+.pdf-mode .orc-tabela th {
+    color: #ffffff !important;
+}
+
+.pdf-mode .orc-tabela td {
+    color: #333333 !important;
+    border-bottom-color: #e0e0e0 !important;
+}
+
+.pdf-mode .orc-tabela td.nome-produto {
+    color: #1a1a1a !important;
+    font-weight: 700 !important;
+}
+
+.pdf-mode .orc-total-box {
+    background: #5a3acc !important;
+    color: #ffffff !important;
+}
+
+.pdf-mode .orc-total-box span {
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.pdf-mode .orc-total-box strong {
+    color: #ffffff !important;
+}
+
+.pdf-mode .orc-info-box {
+    border-color: #cccccc !important;
+    background: #fafafa !important;
+}
+
+.pdf-mode .orc-info-box h5 {
+    color: #666666 !important;
+}
+
+.pdf-mode .orc-info-box p {
+    color: #333333 !important;
+}
+
+.pdf-mode .orc-obs-text {
+    color: #444444 !important;
+}
+
+.pdf-mode .orc-specs h4 {
+    color: #1a1a1a !important;
+    border-bottom-color: rgba(90, 58, 204, 0.2) !important;
+}
+
+.pdf-mode .orc-specs p {
+    color: #444444 !important;
+}
+
+.pdf-mode .orc-dim-item {
+    background: #f2f2f7 !important;
+}
+
+.pdf-mode .orc-dim-item .dim-label {
+    color: #666666 !important;
+}
+
+.pdf-mode .orc-dim-item .dim-value {
+    color: #5a3acc !important;
+}
+
+.pdf-mode .orc-dim-item .dim-unit {
+    color: #888888 !important;
+}
+
+.pdf-mode .orc-produto-imagem img {
+    border-color: #ddd !important;
+}
+
+.pdf-mode .orc-footer {
+    border-top-color: #cccccc !important;
+}
+
+.pdf-mode .orc-footer p {
+    color: #666666 !important;
+}
+
+/* ============================================================
+   24. @MEDIA PRINT — Impressão real (Ctrl+P)
    ============================================================ */
 @media print {
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+    }
+
     body {
         background: #ffffff !important;
-        color: #000000 !important;
+        color: #1a1a1a !important;
+        font-size: 12pt !important;
     }
 
     .sidebar,
@@ -1540,7 +1715,8 @@ textarea.form-input {
     .toast-container,
     .modal-overlay,
     .menu-toggle,
-    .theme-toggle {
+    .theme-toggle,
+    .no-print {
         display: none !important;
     }
 
@@ -1553,6 +1729,7 @@ textarea.form-input {
     }
 
     .preview-page {
+        max-width: 100% !important;
         box-shadow: none !important;
         margin: 0 !important;
     }
@@ -1560,53 +1737,165 @@ textarea.form-input {
     .preview-content {
         border: none !important;
         box-shadow: none !important;
-        padding: 24px !important;
+        padding: 10mm !important;
         background: #ffffff !important;
+        border-radius: 0 !important;
     }
 
+    /* HEADER do orçamento */
     .orc-header {
-        border-bottom-color: #000000 !important;
+        border-bottom: 3px solid #5a3acc !important;
     }
 
     .orc-empresa h2 {
-        color: #000000 !important;
+        color: #5a3acc !important;
+        font-size: 22pt !important;
     }
 
+    .orc-empresa p {
+        color: #555555 !important;
+    }
+
+    .orc-meta h3 {
+        color: #1a1a1a !important;
+    }
+
+    .orc-numero {
+        color: #5a3acc !important;
+    }
+
+    .orc-meta-row {
+        color: #555555 !important;
+    }
+
+    .orc-meta-row strong {
+        color: #333333 !important;
+    }
+
+    /* CLIENTE */
+    .orc-section-title {
+        color: #1a1a1a !important;
+        border-bottom-color: #cccccc !important;
+        font-size: 11pt !important;
+    }
+
+    .orc-cliente-box {
+        background: #f2f2f7 !important;
+        border: 1px solid #dddddd !important;
+    }
+
+    .orc-cliente-box .nome {
+        color: #1a1a1a !important;
+        font-size: 13pt !important;
+    }
+
+    .orc-cliente-box .info {
+        color: #444444 !important;
+    }
+
+    /* TABELA DE ITENS */
     .orc-tabela thead {
-        background: #333333 !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
+        background: #5a3acc !important;
     }
 
     .orc-tabela th {
         color: #ffffff !important;
+        font-size: 9pt !important;
     }
 
     .orc-tabela td {
         color: #333333 !important;
-        border-bottom-color: #cccccc !important;
+        border-bottom: 1px solid #e0e0e0 !important;
+        font-size: 10pt !important;
     }
 
+    .orc-tabela td.nome-produto {
+        color: #1a1a1a !important;
+        font-weight: 700 !important;
+    }
+
+    /* TOTAL */
     .orc-total-box {
-        background: #333333 !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
+        background: #5a3acc !important;
+        color: #ffffff !important;
     }
 
-    .orc-cliente-box {
-        background: #f5f5f5 !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
+    .orc-total-box span {
+        color: rgba(255, 255, 255, 0.85) !important;
     }
 
-    .badge {
-        border: 1px solid #999 !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
+    .orc-total-box strong {
+        color: #ffffff !important;
+        font-size: 18pt !important;
     }
 
-    .card {
-        border: 1px solid #cccccc !important;
-        box-shadow: none !important;
+    /* CONDIÇÕES */
+    .orc-info-box {
+        border-color: #cccccc !important;
+        background: #fafafa !important;
+    }
+
+    .orc-info-box h5 {
+        color: #666666 !important;
+    }
+
+    .orc-info-box p {
+        color: #333333 !important;
+    }
+
+    /* OBSERVAÇÕES */
+    .orc-obs-text {
+        color: #444444 !important;
+    }
+
+    /* SPECS */
+    .orc-specs h4 {
+        color: #1a1a1a !important;
+    }
+
+    .orc-specs p {
+        color: #444444 !important;
+    }
+
+    /* DIMENSÕES */
+    .orc-dim-item {
+        background: #f2f2f7 !important;
+    }
+
+    .orc-dim-item .dim-label {
+        color: #666666 !important;
+    }
+
+    .orc-dim-item .dim-value {
+        color: #5a3acc !important;
+    }
+
+    .orc-dim-item .dim-unit {
+        color: #888888 !important;
+    }
+
+    /* IMAGENS */
+    .orc-produto-imagem img {
+        border-color: #ddd !important;
+        max-height: 200px !important;
+    }
+
+    /* FOOTER */
+    .orc-footer {
+        border-top: 2px solid #cccccc !important;
+    }
+
+    .orc-footer p {
+        color: #666666 !important;
+    }
+
+    /* Forçar quebra de página se necessário */
+    .orc-section {
+        page-break-inside: avoid;
+    }
+
+    .orc-produto-imagem {
+        page-break-inside: avoid;
     }
 }
+
