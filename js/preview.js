@@ -15,8 +15,8 @@ document.addEventListener('DOMContentLoaded', function () {
     initSidebar();
     bindEventosPreview();
 
-    const params = new URLSearchParams(window.location.search);
-    const orcId = params.get('id');
+    var params = new URLSearchParams(window.location.search);
+    var orcId = params.get('id');
 
     if (!orcId) {
         document.getElementById('previewLoading').style.display = 'none';
@@ -63,6 +63,47 @@ function bindEventosPreview() {
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') fecharModalEmail();
     });
+}
+
+/* ============================================================
+   Helper — Gerar nome do arquivo (produto + data)
+   Ex: "Boia de Inox 1/2" + 26/03/2026 → "boia.de.inox.1.2.26.03.26"
+   ============================================================ */
+
+function gerarNomeArquivo() {
+    var orc = orcamentoAtual;
+    if (!orc) return 'orcamento';
+
+    /* Pegar nome do primeiro produto */
+    var nomeProduto = '';
+    var itens = orc.itens || [];
+    if (itens.length > 0) {
+        var primeiroProduto = itens[0].produtos || {};
+        nomeProduto = primeiroProduto.nome || '';
+    }
+
+    /* Se não tem produto, usar "orcamento" + numero */
+    if (!nomeProduto) {
+        nomeProduto = 'orcamento ' + (orc.numero_orcamento || '');
+    }
+
+    /* Formatar nome: lowercase, trocar espaços e caracteres especiais por ponto */
+    var nomeFormatado = nomeProduto
+        .toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '') /* remove acentos */
+        .replace(/[^a-z0-9\s]/g, ' ')   /* remove caracteres especiais, mantém espaços */
+        .replace(/\s+/g, '.')            /* espaços viram pontos */
+        .replace(/\.+/g, '.')            /* pontos duplicados viram um */
+        .replace(/^\.+|\.+$/g, '');      /* remove pontos no início/fim */
+
+    /* Data atual no formato DD.MM.AA */
+    var hoje = new Date();
+    var dia = String(hoje.getDate()).padStart(2, '0');
+    var mes = String(hoje.getMonth() + 1).padStart(2, '0');
+    var ano = String(hoje.getFullYear()).slice(-2);
+    var dataFormatada = dia + '.' + mes + '.' + ano;
+
+    return nomeFormatado + '.' + dataFormatada;
 }
 
 /* ============================================================
@@ -259,7 +300,7 @@ async function salvarPDF() {
         statusBadges.forEach(function (el) { el.style.display = 'none'; });
 
         /* Aguardar repaint */
-        await new Promise(function (resolve) { setTimeout(resolve, 100); });
+        await new Promise(function (resolve) { setTimeout(resolve, 150); });
 
         var canvas = await html2canvas(previewArea, {
             scale: 2,
@@ -276,17 +317,17 @@ async function salvarPDF() {
         previewArea.classList.remove('pdf-mode');
         statusBadges.forEach(function (el) { el.style.display = ''; });
 
-        /* Verificar se jsPDF está disponível */
-        var jsPDFConstructor = null;
-        if (typeof window.jspdf !== 'undefined' && window.jspdf.jsPDF) {
-            jsPDFConstructor = window.jspdf.jsPDF;
-        } else if (typeof window.jsPDF !== 'undefined') {
-            jsPDFConstructor = window.jsPDF;
+        /* Acessar jsPDF — o UMD expõe window.jspdf.jsPDF */
+        var jsPDFClass = null;
+        if (typeof window.jspdf !== 'undefined' && typeof window.jspdf.jsPDF === 'function') {
+            jsPDFClass = window.jspdf.jsPDF;
+        } else if (typeof window.jsPDF === 'function') {
+            jsPDFClass = window.jsPDF;
         } else {
-            throw new Error('Biblioteca jsPDF não carregada. Verifique sua conexão.');
+            throw new Error('Biblioteca jsPDF não foi carregada. Recarregue a página.');
         }
 
-        var pdf = new jsPDFConstructor('p', 'mm', 'a4');
+        var pdf = new jsPDFClass('p', 'mm', 'a4');
         var imgData = canvas.toDataURL('image/jpeg', 0.92);
 
         var pdfWidth = pdf.internal.pageSize.getWidth();
@@ -312,9 +353,10 @@ async function salvarPDF() {
             heightLeft -= pageContentHeight;
         }
 
-        var nomeArquivo = 'Orcamento_' + (orcamentoAtual.numero_orcamento || '') + '_' + formatFileDate() + '.pdf';
+        /* Nome do arquivo: produto + data atual */
+        var nomeArquivo = gerarNomeArquivo() + '.pdf';
         pdf.save(nomeArquivo);
-        showToast('PDF gerado com sucesso!', 'success');
+        showToast('PDF salvo como: ' + nomeArquivo, 'success');
     } catch (error) {
         /* Restaurar em caso de erro */
         var previewAreaRestore = document.getElementById('previewArea');
@@ -330,7 +372,7 @@ async function salvarPDF() {
 }
 
 /* ============================================================
-   Imprimir — com cores forçadas
+   Imprimir — título da página muda para nome do produto + data
    ============================================================ */
 
 function imprimirOrcamento() {
@@ -338,7 +380,20 @@ function imprimirOrcamento() {
         showToast('Nenhum orçamento carregado', 'warning');
         return;
     }
-    window.print();
+
+    /* Trocar título da página temporariamente para que o
+       "Salvar como PDF" do navegador use esse nome */
+    var tituloOriginal = document.title;
+    document.title = gerarNomeArquivo();
+
+    /* Pequeno delay para o título ser aplicado antes do diálogo */
+    setTimeout(function () {
+        window.print();
+        /* Restaurar título após impressão */
+        setTimeout(function () {
+            document.title = tituloOriginal;
+        }, 1000);
+    }, 100);
 }
 
 /* ============================================================
@@ -400,7 +455,6 @@ function abrirModalEmail() {
     var cliente = orc.clientes || {};
     var empresa = orc.empresa || {};
 
-    /* Preencher campos com dados do cliente */
     var emailInput = document.getElementById('emailDestinatario');
     if (emailInput && cliente.email) {
         emailInput.value = cliente.email;
@@ -442,7 +496,6 @@ function enviarEmail() {
         return;
     }
 
-    /* Validação simples de email */
     if (email.indexOf('@') === -1 || email.indexOf('.') === -1) {
         showToast('Email inválido', 'warning');
         return;
