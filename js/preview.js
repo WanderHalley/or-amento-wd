@@ -66,44 +66,62 @@ function bindEventosPreview() {
 }
 
 /* ============================================================
-   Helper — Gerar nome do arquivo (produto + data)
-   Ex: "Boia de Inox 1/2" + 26/03/2026 → "boia.de.inox.1.2.26.03.26"
+   Helper — Limpar texto para nome de arquivo
+   "Boia de Inox 1/2" → "boia.de.inox.1.2"
+   ============================================================ */
+
+function limparParaNome(texto) {
+    if (!texto) return '';
+    return texto
+        .toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .replace(/\s+/g, '.')
+        .replace(/\.+/g, '.')
+        .replace(/^\.+|\.+$/g, '');
+}
+
+/* ============================================================
+   Helper — Gerar nome do arquivo
+   produto + cliente + data atual
+   Ex: "boia.de.inox.1.2.calcados.primavera.26.03.26"
    ============================================================ */
 
 function gerarNomeArquivo() {
     var orc = orcamentoAtual;
     if (!orc) return 'orcamento';
 
-    /* Pegar nome do primeiro produto */
+    /* Nome do primeiro produto */
     var nomeProduto = '';
     var itens = orc.itens || [];
     if (itens.length > 0) {
         var primeiroProduto = itens[0].produtos || {};
         nomeProduto = primeiroProduto.nome || '';
     }
-
-    /* Se não tem produto, usar "orcamento" + numero */
     if (!nomeProduto) {
-        nomeProduto = 'orcamento ' + (orc.numero_orcamento || '');
+        nomeProduto = 'orcamento';
     }
 
-    /* Formatar nome: lowercase, trocar espaços e caracteres especiais por ponto */
-    var nomeFormatado = nomeProduto
-        .toLowerCase()
-        .normalize('NFD').replace(/[\u0300-\u036f]/g, '') /* remove acentos */
-        .replace(/[^a-z0-9\s]/g, ' ')   /* remove caracteres especiais, mantém espaços */
-        .replace(/\s+/g, '.')            /* espaços viram pontos */
-        .replace(/\.+/g, '.')            /* pontos duplicados viram um */
-        .replace(/^\.+|\.+$/g, '');      /* remove pontos no início/fim */
+    /* Nome do cliente */
+    var cliente = orc.clientes || {};
+    var nomeCliente = cliente.nome || '';
 
-    /* Data atual no formato DD.MM.AA */
+    /* Data atual DD.MM.AA */
     var hoje = new Date();
     var dia = String(hoje.getDate()).padStart(2, '0');
     var mes = String(hoje.getMonth() + 1).padStart(2, '0');
     var ano = String(hoje.getFullYear()).slice(-2);
     var dataFormatada = dia + '.' + mes + '.' + ano;
 
-    return nomeFormatado + '.' + dataFormatada;
+    /* Montar: produto.cliente.data */
+    var partes = [];
+    partes.push(limparParaNome(nomeProduto));
+    if (nomeCliente) {
+        partes.push(limparParaNome(nomeCliente));
+    }
+    partes.push(dataFormatada);
+
+    return partes.join('.');
 }
 
 /* ============================================================
@@ -275,7 +293,7 @@ function renderizarPreview(orc) {
 }
 
 /* ============================================================
-   PDF — Salvar via html2canvas + jsPDF
+   PDF — Gerar com clone offscreen ajustado ao A4
    ============================================================ */
 
 async function salvarPDF() {
@@ -292,32 +310,56 @@ async function salvarPDF() {
     try {
         var previewArea = document.getElementById('previewArea');
 
-        /* Aplicar classe de modo PDF para forçar cores claras */
-        previewArea.classList.add('pdf-mode');
+        /* -------------------------------------------------------
+           Criar clone offscreen com largura fixa de A4
+           A4 em px a 96dpi = 794px (210mm)
+           Usamos 760px para margem interna
+           ------------------------------------------------------- */
+        var a4WidthPx = 760;
+        var clone = previewArea.cloneNode(true);
 
-        /* Esconder badge de status para o PDF */
-        var statusBadges = previewArea.querySelectorAll('.no-print');
-        statusBadges.forEach(function (el) { el.style.display = 'none'; });
+        /* Aplicar estilos de PDF mode diretamente no clone */
+        clone.classList.add('pdf-mode');
 
-        /* Aguardar repaint */
-        await new Promise(function (resolve) { setTimeout(resolve, 150); });
+        /* Esconder status badge no clone */
+        var badgesClone = clone.querySelectorAll('.no-print');
+        badgesClone.forEach(function (el) { el.style.display = 'none'; });
 
-        var canvas = await html2canvas(previewArea, {
+        /* Estilo do container offscreen */
+        clone.style.position = 'absolute';
+        clone.style.left = '-9999px';
+        clone.style.top = '0';
+        clone.style.width = a4WidthPx + 'px';
+        clone.style.maxWidth = a4WidthPx + 'px';
+        clone.style.padding = '32px';
+        clone.style.background = '#ffffff';
+        clone.style.color = '#1a1a1a';
+        clone.style.fontFamily = "'Inter', sans-serif";
+        clone.style.fontSize = '13px';
+        clone.style.lineHeight = '1.5';
+        clone.style.display = 'block';
+        clone.style.boxSizing = 'border-box';
+
+        document.body.appendChild(clone);
+
+        /* Aguardar renderização */
+        await new Promise(function (resolve) { setTimeout(resolve, 300); });
+
+        /* Capturar com html2canvas */
+        var canvas = await html2canvas(clone, {
             scale: 2,
             useCORS: true,
             allowTaint: true,
             backgroundColor: '#ffffff',
             logging: false,
-            width: previewArea.scrollWidth,
-            height: previewArea.scrollHeight,
-            windowWidth: previewArea.scrollWidth
+            width: a4WidthPx,
+            windowWidth: a4WidthPx
         });
 
-        /* Restaurar aparência */
-        previewArea.classList.remove('pdf-mode');
-        statusBadges.forEach(function (el) { el.style.display = ''; });
+        /* Remover clone */
+        document.body.removeChild(clone);
 
-        /* Acessar jsPDF — o UMD expõe window.jspdf.jsPDF */
+        /* Acessar jsPDF */
         var jsPDFClass = null;
         if (typeof window.jspdf !== 'undefined' && typeof window.jspdf.jsPDF === 'function') {
             jsPDFClass = window.jspdf.jsPDF;
@@ -328,41 +370,69 @@ async function salvarPDF() {
         }
 
         var pdf = new jsPDFClass('p', 'mm', 'a4');
-        var imgData = canvas.toDataURL('image/jpeg', 0.92);
+        var pdfWidth = pdf.internal.pageSize.getWidth();   /* 210 mm */
+        var pdfHeight = pdf.internal.pageSize.getHeight();  /* 297 mm */
 
-        var pdfWidth = pdf.internal.pageSize.getWidth();
-        var pdfHeight = pdf.internal.pageSize.getHeight();
-        var marginX = 5;
-        var marginY = 5;
-        var imgWidth = pdfWidth - (marginX * 2);
+        var marginX = 10;
+        var marginY = 10;
+        var contentWidth = pdfWidth - (marginX * 2);        /* 190 mm */
+        var contentHeight = pdfHeight - (marginY * 2);      /* 277 mm */
+
+        /* Calcular proporção da imagem */
+        var imgWidth = contentWidth;
         var imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-        var heightLeft = imgHeight;
-        var position = marginY;
-        var pageContentHeight = pdfHeight - (marginY * 2);
+        var imgData = canvas.toDataURL('image/jpeg', 0.95);
 
-        /* Primeira página */
-        pdf.addImage(imgData, 'JPEG', marginX, position, imgWidth, imgHeight);
-        heightLeft -= pageContentHeight;
+        /* Se cabe em uma página */
+        if (imgHeight <= contentHeight) {
+            pdf.addImage(imgData, 'JPEG', marginX, marginY, imgWidth, imgHeight);
+        } else {
+            /* Multi-página: recortar o canvas em fatias */
+            var totalPages = Math.ceil(imgHeight / contentHeight);
+            var sourceSliceHeight = canvas.height / totalPages;
 
-        /* Páginas adicionais */
-        while (heightLeft > 0) {
-            pdf.addPage();
-            position = marginY - (imgHeight - heightLeft);
-            pdf.addImage(imgData, 'JPEG', marginX, position, imgWidth, imgHeight);
-            heightLeft -= pageContentHeight;
+            for (var i = 0; i < totalPages; i++) {
+                if (i > 0) pdf.addPage();
+
+                /* Criar canvas da fatia */
+                var sliceCanvas = document.createElement('canvas');
+                sliceCanvas.width = canvas.width;
+
+                /* Última fatia pode ser menor */
+                var remainingHeight = canvas.height - (i * sourceSliceHeight);
+                var currentSliceHeight = Math.min(sourceSliceHeight, remainingHeight);
+                sliceCanvas.height = currentSliceHeight;
+
+                var sliceCtx = sliceCanvas.getContext('2d');
+                sliceCtx.fillStyle = '#ffffff';
+                sliceCtx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
+                sliceCtx.drawImage(
+                    canvas,
+                    0, i * sourceSliceHeight,          /* source x, y */
+                    canvas.width, currentSliceHeight,   /* source w, h */
+                    0, 0,                               /* dest x, y */
+                    canvas.width, currentSliceHeight    /* dest w, h */
+                );
+
+                var sliceData = sliceCanvas.toDataURL('image/jpeg', 0.95);
+                var sliceImgHeight = (currentSliceHeight * imgWidth) / canvas.width;
+
+                pdf.addImage(sliceData, 'JPEG', marginX, marginY, imgWidth, sliceImgHeight);
+            }
         }
 
-        /* Nome do arquivo: produto + data atual */
+        /* Salvar com nome: produto + cliente + data */
         var nomeArquivo = gerarNomeArquivo() + '.pdf';
         pdf.save(nomeArquivo);
-        showToast('PDF salvo como: ' + nomeArquivo, 'success');
+        showToast('PDF salvo: ' + nomeArquivo, 'success');
+
     } catch (error) {
-        /* Restaurar em caso de erro */
-        var previewAreaRestore = document.getElementById('previewArea');
-        previewAreaRestore.classList.remove('pdf-mode');
-        var badges = previewAreaRestore.querySelectorAll('.no-print');
-        badges.forEach(function (el) { el.style.display = ''; });
+        /* Limpar clone se ficou no DOM */
+        var cloneOrfao = document.querySelector('.pdf-mode[style*="-9999"]');
+        if (cloneOrfao && cloneOrfao.parentNode) {
+            cloneOrfao.parentNode.removeChild(cloneOrfao);
+        }
 
         showToast('Erro ao gerar PDF: ' + error.message, 'error');
     } finally {
@@ -372,7 +442,7 @@ async function salvarPDF() {
 }
 
 /* ============================================================
-   Imprimir — título da página muda para nome do produto + data
+   Imprimir — título muda para nome do arquivo
    ============================================================ */
 
 function imprimirOrcamento() {
@@ -381,15 +451,11 @@ function imprimirOrcamento() {
         return;
     }
 
-    /* Trocar título da página temporariamente para que o
-       "Salvar como PDF" do navegador use esse nome */
     var tituloOriginal = document.title;
     document.title = gerarNomeArquivo();
 
-    /* Pequeno delay para o título ser aplicado antes do diálogo */
     setTimeout(function () {
         window.print();
-        /* Restaurar título após impressão */
         setTimeout(function () {
             document.title = tituloOriginal;
         }, 1000);
