@@ -4,15 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Produtos | WD Máquinas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div class="app-layout">
 
-        <!-- Sidebar Overlay (mobile) -->
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-        <!-- ========== SIDEBAR ========== -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-logo">
@@ -22,98 +23,59 @@
                         <span>Sistema de Orçamentos</span>
                     </div>
                 </div>
-                <button class="sidebar-toggle" id="sidebarCollapse">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M15 18l-6-6 6-6"/>
-                    </svg>
+                <button class="sidebar-toggle" id="sidebarCollapse" aria-label="Recolher menu">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
                 </button>
             </div>
             <nav class="sidebar-nav">
                 <div class="sidebar-nav-label">Menu</div>
                 <a href="index.html" class="sidebar-link" title="Dashboard">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-                        <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
-                    </svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
                     <span class="sidebar-link-text">Dashboard</span>
                 </a>
                 <a href="orcamentos.html" class="sidebar-link" title="Orçamentos">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                        <polyline points="14 2 14 8 20 8"/>
-                        <line x1="16" y1="13" x2="8" y2="13"/>
-                        <line x1="16" y1="17" x2="8" y2="17"/>
-                        <polyline points="10 9 9 9 8 9"/>
-                    </svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                     <span class="sidebar-link-text">Orçamentos</span>
                 </a>
                 <a href="clientes.html" class="sidebar-link" title="Clientes">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                        <circle cx="9" cy="7" r="4"/>
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                    </svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                     <span class="sidebar-link-text">Clientes</span>
                 </a>
                 <a href="produtos.html" class="sidebar-link active" title="Produtos">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
-                        <line x1="12" y1="22.08" x2="12" y2="12"/>
-                    </svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
                     <span class="sidebar-link-text">Produtos</span>
                 </a>
                 <a href="configuracoes.html" class="sidebar-link" title="Configurações">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="3"/>
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-                    </svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
                     <span class="sidebar-link-text">Configurações</span>
                 </a>
             </nav>
         </aside>
 
-        <!-- ========== MAIN ========== -->
         <main class="main-content">
-            <!-- Header -->
-            <header class="main-header">
+            <header class="main-header" id="mainHeader">
                 <div class="header-left">
-                    <button class="menu-toggle" id="menuToggle">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="3" y1="12" x2="21" y2="12"/>
-                            <line x1="3" y1="6" x2="21" y2="6"/>
-                            <line x1="3" y1="18" x2="21" y2="18"/>
-                        </svg>
+                    <button class="menu-toggle" id="menuToggle" aria-label="Abrir menu">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
                     </button>
                     <h2>Produtos</h2>
                 </div>
                 <div class="header-right">
-                    <button class="btn btn-primary btn-sm" onclick="abrirModalProduto()">+ Novo Produto</button>
+                    <button class="btn btn-primary btn-sm" id="btnNovoProduto">+ Novo Produto</button>
                     <button class="theme-toggle" id="themeToggle" title="Alternar tema">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/>
-                            <line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/>
-                            <line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-                        </svg>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/></svg>
                     </button>
                 </div>
             </header>
 
-            <!-- Content -->
-            <div class="content-area">
-
-                <!-- Busca -->
-                <div class="card" style="margin-bottom: 20px;">
-                    <div class="card-body" style="padding: 15px;">
-                        <input type="text" id="buscaProduto" class="form-input" placeholder="Buscar por nome ou descrição..." oninput="buscarProdutosDebounced()">
+            <div class="content-body">
+                <div class="card">
+                    <div class="card-body">
+                        <input type="text" id="buscaProduto" class="form-input" placeholder="Buscar por nome ou descrição...">
                     </div>
                 </div>
 
-                <!-- Tabela de produtos -->
-                <div class="card">
+                <div class="card" style="margin-top: 20px;">
                     <div class="card-body">
                         <div class="table-container">
                             <table>
@@ -130,65 +92,50 @@
                                 </thead>
                                 <tbody id="tabelaProdutos">
                                     <tr>
-                                        <td colspan="7" style="text-align:center; padding:40px;">
-                                            <div class="spinner"></div>
-                                            <p>Carregando produtos...</p>
-                                        </td>
+                                        <td colspan="7"><div class="spinner"></div></td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
-
-            </div><!-- .content-area -->
+            </div>
         </main>
-    </div><!-- .app-layout -->
+    </div>
 
-    <!-- ========== MODAL: Criar/Editar Produto ========== -->
+    <!-- Modal: Criar/Editar Produto -->
     <div class="modal-overlay" id="modalProduto">
         <div class="modal modal-lg">
             <div class="modal-header">
                 <h3 id="modalProdutoTitulo">Novo Produto</h3>
-                <button class="modal-close" onclick="fecharModalProduto()">&times;</button>
+                <button class="modal-close" id="btnFecharModalProduto">&times;</button>
             </div>
-            <form id="formProduto" onsubmit="salvarProduto(event)">
+            <form id="formProduto">
                 <div class="modal-body">
-                    <!-- ID oculto para edição -->
                     <input type="hidden" id="produtoId">
-                    <!-- Base64 oculto -->
                     <input type="hidden" id="produtoImagemBase64">
 
                     <div class="form-grid">
-                        <!-- Nome -->
                         <div class="form-group full-width">
                             <label for="produtoNome">Nome do Produto *</label>
                             <input type="text" id="produtoNome" class="form-input" required placeholder="Ex: Marmiteiro Elétrico 50 Marmitas">
                         </div>
-
-                        <!-- Descrição -->
                         <div class="form-group full-width">
                             <label for="produtoDescricao">Descrição</label>
                             <textarea id="produtoDescricao" class="form-input" rows="3" placeholder="Descrição detalhada do produto..."></textarea>
                         </div>
-
-                        <!-- Especificações -->
                         <div class="form-group full-width">
                             <label for="produtoEspecificacoes">Especificações Técnicas</label>
                             <textarea id="produtoEspecificacoes" class="form-input" rows="3" placeholder="Especificações técnicas, materiais, etc."></textarea>
                         </div>
-
-                        <!-- Preço e Peso -->
                         <div class="form-group">
                             <label for="produtoValor">Preço (R$) *</label>
-                            <input type="number" id="produtoValor" class="form-input" required min="0.01" step="0.01" placeholder="0,00">
+                            <input type="text" id="produtoValor" class="form-input" required placeholder="0,00">
                         </div>
                         <div class="form-group">
                             <label for="produtoPeso">Peso (kg)</label>
                             <input type="number" id="produtoPeso" class="form-input" min="0" step="0.1" placeholder="0,0">
                         </div>
-
-                        <!-- Dimensões -->
                         <div class="form-group">
                             <label for="produtoAltura">Altura (cm)</label>
                             <input type="number" id="produtoAltura" class="form-input" min="0" step="0.1" placeholder="0">
@@ -201,8 +148,6 @@
                             <label for="produtoProfundidade">Profundidade (cm)</label>
                             <input type="number" id="produtoProfundidade" class="form-input" min="0" step="0.1" placeholder="0">
                         </div>
-
-                        <!-- Status -->
                         <div class="form-group">
                             <label for="produtoAtivo">Status</label>
                             <select id="produtoAtivo" class="form-input">
@@ -210,58 +155,46 @@
                                 <option value="false">Inativo</option>
                             </select>
                         </div>
-
-                        <!-- Upload de Imagem -->
                         <div class="form-group full-width">
-                            <label for="produtoImagem">Imagem do Produto</label>
-                            <input type="file" id="produtoImagem" class="form-input" accept="image/jpeg,image/png,image/webp" onchange="previewImagemProduto(event)">
-                            <small style="color: var(--text-muted); display:block; margin-top:4px;">JPG, PNG ou WEBP. Máximo 2 MB.</small>
-
-                            <!-- Preview da imagem -->
-                            <div id="produtoImagemPreview" style="display:none; margin-top:10px;">
-                                <img id="produtoImagemTag" src="" alt="Preview" style="max-width:200px; max-height:200px; border-radius:8px; border:1px solid var(--border-color);">
-                                <br>
-                                <button type="button" class="btn btn-danger btn-sm" onclick="removerImagemProduto()" style="margin-top:8px;">Remover imagem</button>
-                            </div>
+                            <label for="produtoImagem">Imagem do Produto (upload)</label>
+                            <input type="file" id="produtoImagem" class="form-input" accept="image/jpeg,image/png,image/webp">
+                            <small class="form-hint">JPG, PNG ou WEBP. Máximo 2 MB.</small>
+                            <div id="produtoImagemPreview" class="image-preview-container"></div>
                         </div>
-
-                        <!-- URL de imagem alternativa -->
                         <div class="form-group full-width">
                             <label for="produtoImagemUrl">URL da Imagem (alternativa)</label>
                             <input type="url" id="produtoImagemUrl" class="form-input" placeholder="https://exemplo.com/imagem.jpg">
-                            <small style="color: var(--text-muted); display:block; margin-top:4px;">Se não fizer upload, pode colar uma URL de imagem externa.</small>
+                            <small class="form-hint">Se não fizer upload, pode colar uma URL de imagem externa.</small>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="fecharModalProduto()">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar Produto</button>
+                    <button type="button" class="btn btn-secondary" id="btnCancelarProduto">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btnSalvarProduto">Salvar Produto</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- ========== MODAL: Confirmar exclusão ========== -->
-    <div class="modal-overlay" id="confirmDeleteProduto">
+    <!-- Modal: Confirmar Exclusão -->
+    <div class="modal-overlay" id="modalConfirmDeleteProduto">
         <div class="modal">
             <div class="modal-header">
                 <h3>Confirmar Exclusão</h3>
-                <button class="modal-close" onclick="fecharConfirmDeleteProduto()">&times;</button>
+                <button class="modal-close" id="btnFecharDeleteProduto">&times;</button>
             </div>
             <div class="modal-body">
                 <p>Tem certeza que deseja excluir este produto? Esta ação não pode ser desfeita.</p>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="fecharConfirmDeleteProduto()">Cancelar</button>
-                <button class="btn btn-danger" onclick="deletarProduto()">Excluir</button>
+                <button class="btn btn-secondary" id="btnCancelarDeleteProduto">Cancelar</button>
+                <button class="btn btn-danger" id="btnConfirmarDeleteProduto">Excluir</button>
             </div>
         </div>
     </div>
 
-    <!-- Toast -->
     <div id="toastContainer" class="toast-container"></div>
 
-    <!-- Scripts -->
     <script src="js/app.js"></script>
     <script src="js/produtos.js"></script>
 </body>
