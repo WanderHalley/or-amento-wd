@@ -67,7 +67,6 @@ function bindEventosPreview() {
 
 /* ============================================================
    Helper — Limpar texto para nome de arquivo
-   "Boia de Inox 1/2" → "boia.de.inox.1.2"
    ============================================================ */
 
 function limparParaNome(texto) {
@@ -84,41 +83,32 @@ function limparParaNome(texto) {
 /* ============================================================
    Helper — Gerar nome do arquivo
    produto + cliente + data atual
-   Ex: "boia.de.inox.1.2.calcados.primavera.26.03.26"
    ============================================================ */
 
 function gerarNomeArquivo() {
     var orc = orcamentoAtual;
     if (!orc) return 'orcamento';
 
-    /* Nome do primeiro produto */
     var nomeProduto = '';
     var itens = orc.itens || [];
     if (itens.length > 0) {
         var primeiroProduto = itens[0].produtos || {};
         nomeProduto = primeiroProduto.nome || '';
     }
-    if (!nomeProduto) {
-        nomeProduto = 'orcamento';
-    }
+    if (!nomeProduto) nomeProduto = 'orcamento';
 
-    /* Nome do cliente */
     var cliente = orc.clientes || {};
     var nomeCliente = cliente.nome || '';
 
-    /* Data atual DD.MM.AA */
     var hoje = new Date();
     var dia = String(hoje.getDate()).padStart(2, '0');
     var mes = String(hoje.getMonth() + 1).padStart(2, '0');
     var ano = String(hoje.getFullYear()).slice(-2);
     var dataFormatada = dia + '.' + mes + '.' + ano;
 
-    /* Montar: produto.cliente.data */
     var partes = [];
     partes.push(limparParaNome(nomeProduto));
-    if (nomeCliente) {
-        partes.push(limparParaNome(nomeCliente));
-    }
+    if (nomeCliente) partes.push(limparParaNome(nomeCliente));
     partes.push(dataFormatada);
 
     return partes.join('.');
@@ -160,13 +150,11 @@ function renderizarPreview(orc) {
     var cliente = orc.clientes || {};
     var itens = orc.itens || [];
 
-    /* Logo */
     var logoHtml = '';
     if (empresa.logo_base64) {
         logoHtml = '<img src="' + empresa.logo_base64 + '" alt="Logo" class="orc-empresa-logo">';
     }
 
-    /* Itens tabela */
     var itensHTML = '';
     itens.forEach(function (item, index) {
         var produto = item.produtos || {};
@@ -179,7 +167,6 @@ function renderizarPreview(orc) {
             '</tr>';
     });
 
-    /* Especificações, dimensões e imagens */
     var specsHTML = '';
     var dimensoesHTML = '';
     var imagensHTML = '';
@@ -212,7 +199,6 @@ function renderizarPreview(orc) {
         }
     });
 
-    /* Observações */
     var obsHtml = '';
     if (orc.observacoes) {
         obsHtml = '<div class="orc-section">' +
@@ -221,9 +207,7 @@ function renderizarPreview(orc) {
             '</div>';
     }
 
-    /* Montar preview completo */
     area.innerHTML =
-        '<!-- HEADER -->' +
         '<div class="orc-header">' +
             '<div class="orc-empresa">' +
                 logoHtml +
@@ -243,7 +227,6 @@ function renderizarPreview(orc) {
             '</div>' +
         '</div>' +
 
-        '<!-- CLIENTE -->' +
         '<div class="orc-section"><div class="orc-section-title">Dados do Cliente</div>' +
             '<div class="orc-cliente-box">' +
                 '<div class="nome">' + escapeHtml(cliente.nome || '-') + (cliente.empresa ? ' - ' + escapeHtml(cliente.empresa) : '') + '</div>' +
@@ -254,17 +237,14 @@ function renderizarPreview(orc) {
             '</div>' +
         '</div>' +
 
-        '<!-- ITENS -->' +
         '<div class="orc-section"><div class="orc-section-title">Itens do Orçamento</div>' +
             '<table class="orc-tabela"><thead><tr>' +
                 '<th style="width:50px;">#</th><th>Produto</th><th style="width:80px;">Qtd</th><th style="width:130px;">Valor Un.</th><th style="width:130px;">Total</th>' +
             '</tr></thead><tbody>' + itensHTML + '</tbody></table>' +
         '</div>' +
 
-        '<!-- TOTAL -->' +
         '<div class="orc-total-row"><div class="orc-total-box"><span>VALOR TOTAL</span><strong>' + formatCurrency(orc.valor_total) + '</strong></div></div>' +
 
-        '<!-- CONDIÇÕES -->' +
         '<div class="orc-section"><div class="orc-section-title">Condições Comerciais</div>' +
             '<div class="orc-info-grid">' +
                 '<div class="orc-info-box"><h5>Forma de Pagamento</h5><p>' + escapeHtml(orc.forma_pagamento || '-') + '</p></div>' +
@@ -274,16 +254,10 @@ function renderizarPreview(orc) {
 
         obsHtml +
 
-        '<!-- IMAGENS -->' +
         (imagensHTML ? '<div class="orc-section"><div class="orc-section-title">Imagens dos Produtos</div>' + imagensHTML + '</div>' : '') +
-
-        '<!-- ESPECIFICAÇÕES -->' +
         (specsHTML ? '<div class="orc-section"><div class="orc-section-title">Especificações Técnicas</div>' + specsHTML + '</div>' : '') +
-
-        '<!-- DIMENSÕES -->' +
         (dimensoesHTML ? '<div class="orc-section"><div class="orc-section-title">Dimensões</div>' + dimensoesHTML + '</div>' : '') +
 
-        '<!-- FOOTER -->' +
         '<div class="orc-footer">' +
             '<p>' + escapeHtml(empresa.nome || 'WD MÁQUINAS') +
             (empresa.telefone ? ' - ' + escapeHtml(formatPhone(empresa.telefone)) : '') +
@@ -293,7 +267,8 @@ function renderizarPreview(orc) {
 }
 
 /* ============================================================
-   PDF — Gerar com clone offscreen ajustado ao A4
+   PDF — Sempre cabe em UMA folha A4
+   Cria clone offscreen → html2canvas → escala para caber
    ============================================================ */
 
 async function salvarPDF() {
@@ -307,59 +282,104 @@ async function salvarPDF() {
     btn.disabled = true;
     btn.textContent = 'Gerando PDF...';
 
+    var clone = null;
+
     try {
         var previewArea = document.getElementById('previewArea');
 
-        /* -------------------------------------------------------
-           Criar clone offscreen com largura fixa de A4
-           A4 em px a 96dpi = 794px (210mm)
-           Usamos 760px para margem interna
-           ------------------------------------------------------- */
-        var a4WidthPx = 760;
-        var clone = previewArea.cloneNode(true);
+        /*
+         * A4 em pixels (96 dpi):
+         *   largura = 210mm = 794px
+         *   altura  = 297mm = 1123px
+         *
+         * Usamos largura interna de 720px (margem de ~37px cada lado)
+         * e altura máxima de 1040px (margem top/bottom de ~41px)
+         *
+         * Se o conteúdo for maior que 1040px de altura,
+         * reduzimos a fonte proporcionalmente para caber.
+         */
 
-        /* Aplicar estilos de PDF mode diretamente no clone */
+        var a4W = 720;
+        var a4H = 1040;
+
+        /* Clonar conteúdo */
+        clone = previewArea.cloneNode(true);
         clone.classList.add('pdf-mode');
 
-        /* Esconder status badge no clone */
+        /* Esconder status */
         var badgesClone = clone.querySelectorAll('.no-print');
         badgesClone.forEach(function (el) { el.style.display = 'none'; });
 
-        /* Estilo do container offscreen */
-        clone.style.position = 'absolute';
-        clone.style.left = '-9999px';
-        clone.style.top = '0';
-        clone.style.width = a4WidthPx + 'px';
-        clone.style.maxWidth = a4WidthPx + 'px';
-        clone.style.padding = '32px';
-        clone.style.background = '#ffffff';
-        clone.style.color = '#1a1a1a';
-        clone.style.fontFamily = "'Inter', sans-serif";
-        clone.style.fontSize = '13px';
-        clone.style.lineHeight = '1.5';
-        clone.style.display = 'block';
-        clone.style.boxSizing = 'border-box';
+        /* Posicionar offscreen com largura fixa */
+        clone.style.cssText = 'position:absolute;left:-9999px;top:0;' +
+            'width:' + a4W + 'px;max-width:' + a4W + 'px;' +
+            'padding:0;margin:0;' +
+            'background:#ffffff;color:#1a1a1a;' +
+            "font-family:'Inter',sans-serif;" +
+            'font-size:13px;line-height:1.5;' +
+            'display:block;box-sizing:border-box;';
 
         document.body.appendChild(clone);
 
-        /* Aguardar renderização */
-        await new Promise(function (resolve) { setTimeout(resolve, 300); });
+        /* Esperar render */
+        await new Promise(function (r) { setTimeout(r, 200); });
+
+        /* Medir altura real do conteúdo */
+        var alturaReal = clone.scrollHeight;
+
+        /*
+         * Se o conteúdo é mais alto que a4H, reduzir a fonte
+         * para que caiba. Calculamos o fator de escala.
+         */
+        if (alturaReal > a4H) {
+            var fator = a4H / alturaReal;
+            /* Limite mínimo: não reduzir abaixo de 60% (8px font) */
+            if (fator < 0.6) fator = 0.6;
+
+            var novaFonte = Math.floor(13 * fator);
+            if (novaFonte < 8) novaFonte = 8;
+            clone.style.fontSize = novaFonte + 'px';
+
+            /* Reduzir paddings/margins proporcionalmente via transform */
+            clone.style.transformOrigin = 'top left';
+
+            /* Esperar re-render com fonte menor */
+            await new Promise(function (r) { setTimeout(r, 200); });
+            alturaReal = clone.scrollHeight;
+        }
+
+        /*
+         * Se AINDA não cabe (muito conteúdo), usar CSS transform scale
+         * para forçar caber na altura desejada
+         */
+        var scaleForCapture = 1;
+        if (alturaReal > a4H) {
+            scaleForCapture = a4H / alturaReal;
+            clone.style.transform = 'scale(' + scaleForCapture + ')';
+            clone.style.transformOrigin = 'top left';
+            clone.style.width = (a4W / scaleForCapture) + 'px';
+            clone.style.maxWidth = (a4W / scaleForCapture) + 'px';
+
+            await new Promise(function (r) { setTimeout(r, 200); });
+        }
 
         /* Capturar com html2canvas */
+        var captureWidth = scaleForCapture < 1 ? Math.ceil(a4W / scaleForCapture) : a4W;
         var canvas = await html2canvas(clone, {
             scale: 2,
             useCORS: true,
             allowTaint: true,
             backgroundColor: '#ffffff',
             logging: false,
-            width: a4WidthPx,
-            windowWidth: a4WidthPx
+            width: captureWidth,
+            windowWidth: captureWidth
         });
 
         /* Remover clone */
         document.body.removeChild(clone);
+        clone = null;
 
-        /* Acessar jsPDF */
+        /* Criar PDF */
         var jsPDFClass = null;
         if (typeof window.jspdf !== 'undefined' && typeof window.jspdf.jsPDF === 'function') {
             jsPDFClass = window.jspdf.jsPDF;
@@ -370,70 +390,45 @@ async function salvarPDF() {
         }
 
         var pdf = new jsPDFClass('p', 'mm', 'a4');
-        var pdfWidth = pdf.internal.pageSize.getWidth();   /* 210 mm */
-        var pdfHeight = pdf.internal.pageSize.getHeight();  /* 297 mm */
+        var pdfW = pdf.internal.pageSize.getWidth();   /* 210 */
+        var pdfH = pdf.internal.pageSize.getHeight();   /* 297 */
 
         var marginX = 10;
         var marginY = 10;
-        var contentWidth = pdfWidth - (marginX * 2);        /* 190 mm */
-        var contentHeight = pdfHeight - (marginY * 2);      /* 277 mm */
+        var areaW = pdfW - (marginX * 2);   /* 190mm */
+        var areaH = pdfH - (marginY * 2);   /* 277mm */
 
-        /* Calcular proporção da imagem */
-        var imgWidth = contentWidth;
-        var imgHeight = (canvas.height * imgWidth) / canvas.width;
+        /* Calcular tamanho da imagem proporcional */
+        var imgW = areaW;
+        var imgH = (canvas.height * imgW) / canvas.width;
 
-        var imgData = canvas.toDataURL('image/jpeg', 0.95);
-
-        /* Se cabe em uma página */
-        if (imgHeight <= contentHeight) {
-            pdf.addImage(imgData, 'JPEG', marginX, marginY, imgWidth, imgHeight);
-        } else {
-            /* Multi-página: recortar o canvas em fatias */
-            var totalPages = Math.ceil(imgHeight / contentHeight);
-            var sourceSliceHeight = canvas.height / totalPages;
-
-            for (var i = 0; i < totalPages; i++) {
-                if (i > 0) pdf.addPage();
-
-                /* Criar canvas da fatia */
-                var sliceCanvas = document.createElement('canvas');
-                sliceCanvas.width = canvas.width;
-
-                /* Última fatia pode ser menor */
-                var remainingHeight = canvas.height - (i * sourceSliceHeight);
-                var currentSliceHeight = Math.min(sourceSliceHeight, remainingHeight);
-                sliceCanvas.height = currentSliceHeight;
-
-                var sliceCtx = sliceCanvas.getContext('2d');
-                sliceCtx.fillStyle = '#ffffff';
-                sliceCtx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
-                sliceCtx.drawImage(
-                    canvas,
-                    0, i * sourceSliceHeight,          /* source x, y */
-                    canvas.width, currentSliceHeight,   /* source w, h */
-                    0, 0,                               /* dest x, y */
-                    canvas.width, currentSliceHeight    /* dest w, h */
-                );
-
-                var sliceData = sliceCanvas.toDataURL('image/jpeg', 0.95);
-                var sliceImgHeight = (currentSliceHeight * imgWidth) / canvas.width;
-
-                pdf.addImage(sliceData, 'JPEG', marginX, marginY, imgWidth, sliceImgHeight);
-            }
+        /* Se a imagem é mais alta que a área, reduzir para caber */
+        if (imgH > areaH) {
+            var ratio = areaH / imgH;
+            imgH = areaH;
+            imgW = imgW * ratio;
+            /* Centralizar horizontalmente */
+            marginX = (pdfW - imgW) / 2;
         }
 
-        /* Salvar com nome: produto + cliente + data */
+        /* Centralizar verticalmente se sobrar espaço */
+        var offsetY = marginY;
+        if (imgH < areaH) {
+            offsetY = marginY + ((areaH - imgH) / 2) * 0.3; /* leve deslocamento para cima */
+        }
+
+        var imgData = canvas.toDataURL('image/jpeg', 0.95);
+        pdf.addImage(imgData, 'JPEG', marginX, offsetY, imgW, imgH);
+
+        /* Salvar */
         var nomeArquivo = gerarNomeArquivo() + '.pdf';
         pdf.save(nomeArquivo);
         showToast('PDF salvo: ' + nomeArquivo, 'success');
 
     } catch (error) {
-        /* Limpar clone se ficou no DOM */
-        var cloneOrfao = document.querySelector('.pdf-mode[style*="-9999"]');
-        if (cloneOrfao && cloneOrfao.parentNode) {
-            cloneOrfao.parentNode.removeChild(cloneOrfao);
+        if (clone && clone.parentNode) {
+            clone.parentNode.removeChild(clone);
         }
-
         showToast('Erro ao gerar PDF: ' + error.message, 'error');
     } finally {
         btn.disabled = false;
@@ -442,7 +437,7 @@ async function salvarPDF() {
 }
 
 /* ============================================================
-   Imprimir — título muda para nome do arquivo
+   Imprimir
    ============================================================ */
 
 function imprimirOrcamento() {
@@ -508,7 +503,7 @@ function compartilharWhatsApp() {
 }
 
 /* ============================================================
-   Email — Modal e envio via mailto
+   Email
    ============================================================ */
 
 function abrirModalEmail() {
@@ -522,11 +517,7 @@ function abrirModalEmail() {
     var empresa = orc.empresa || {};
 
     var emailInput = document.getElementById('emailDestinatario');
-    if (emailInput && cliente.email) {
-        emailInput.value = cliente.email;
-    } else if (emailInput) {
-        emailInput.value = '';
-    }
+    if (emailInput) emailInput.value = cliente.email || '';
 
     var assuntoInput = document.getElementById('emailAssunto');
     if (assuntoInput) {
