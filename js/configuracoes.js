@@ -1,192 +1,216 @@
+// ═══════════════════════════════════════════
+// 📌 ABA: CONFIGURAÇÕES
+// Toda lógica EXCLUSIVA de Configurações
+// Gerencia dados da empresa via localStorage
+// ═══════════════════════════════════════════
+
 /**
- * ============================================================
- * configuracoes.js — Configurações da Empresa
- * ============================================================
+ * IDs esperados no HTML (dentro de #aba-configuracoes):
+ *   formConfigEmpresa, cfgLogo, cfgLogoImg, cfgLogoPreview, btnRemoverLogo,
+ *   cfgNomeEmpresa, cfgCnpj, cfgTelefone, cfgEmail, cfgSite, cfgEndereco,
+ *   cfgCondicoesPadrao, cfgValidadeDias, cfgPrazoEntregaPadrao,
+ *   cfgObservacoesPadrao, cfgApiStatus
  */
 
-/* Estado local */
-let logoBase64Atual = '';
+// ========== ESTADO LOCAL ==========
+let configuracoes_mascarasAplicadas = false;
 
-/* ============================================================
-   Inicialização
-   ============================================================ */
-document.addEventListener('DOMContentLoaded', function () {
-    initTheme();
-    initSidebar();
-    aplicarMascarasConfig();
+// ========== INIT (chamado pelo sistema de abas) ==========
+function init_configuracoes() {
+    if (!configuracoes_mascarasAplicadas) {
+        configuracoes_aplicarMascaras();
+        configuracoes_mascarasAplicadas = true;
+    }
     carregarConfiguracoes();
-    verificarApiStatus();
-    bindEventosConfig();
-});
-
-function aplicarMascarasConfig() {
-    maskInput(document.getElementById('cfgCnpj'), 'cnpj');
-    maskInput(document.getElementById('cfgTelefone'), 'phone');
+    verificarStatusAPI();
 }
 
-function bindEventosConfig() {
-    const form = document.getElementById('formConfigEmpresa');
-    if (form) form.addEventListener('submit', salvarConfiguracoes);
+// ========== MÁSCARAS ==========
+function configuracoes_aplicarMascaras() {
+    const cnpjInput = document.getElementById('cfgCnpj');
+    const telInput = document.getElementById('cfgTelefone');
 
-    const btnResetar = document.getElementById('btnResetarConfig');
-    if (btnResetar) btnResetar.addEventListener('click', resetarConfiguracoes);
-
-    const inputLogo = document.getElementById('cfgLogo');
-    if (inputLogo) inputLogo.addEventListener('change', handleLogoUpload);
-
-    /* Link da API Docs */
-    const apiDocsLink = document.getElementById('cfgApiDocsLink');
-    if (apiDocsLink) apiDocsLink.href = API_BASE_URL + '/docs';
+    if (cnpjInput && typeof formatCNPJ === 'function') {
+        cnpjInput.addEventListener('input', function () { this.value = formatCNPJ(this.value); });
+    }
+    if (telInput && typeof formatPhone === 'function') {
+        telInput.addEventListener('input', function () { this.value = formatPhone(this.value); });
+    }
 }
 
-/* ============================================================
-   Logo Upload
-   ============================================================ */
+// ========== CARREGAR CONFIGURAÇÕES ==========
+function carregarConfiguracoes() {
+    const config = typeof getConfig === 'function' ? getConfig() : {};
+    console.log('[Config] Carregando:', config);
 
-async function handleLogoUpload(event) {
+    const logoImg = document.getElementById('cfgLogoImg');
+    const btnRemover = document.getElementById('btnRemoverLogo');
+
+    if (config.logo && logoImg) {
+        logoImg.src = config.logo;
+        logoImg.style.display = 'block';
+        if (btnRemover) btnRemover.style.display = 'inline-block';
+    } else if (logoImg) {
+        logoImg.style.display = 'none';
+        if (btnRemover) btnRemover.style.display = 'none';
+    }
+
+    const campos = {
+        'cfgNomeEmpresa': config.nomeEmpresa || '',
+        'cfgEmail': config.email || '',
+        'cfgSite': config.site || '',
+        'cfgEndereco': config.endereco || '',
+        'cfgCondicoesPadrao': config.condicoesPadrao || '',
+        'cfgValidadeDias': config.validadeDias || 15,
+        'cfgPrazoEntregaPadrao': config.prazoEntregaPadrao || '',
+        'cfgObservacoesPadrao': config.observacoesPadrao || '',
+    };
+
+    for (const [id, valor] of Object.entries(campos)) {
+        const el = document.getElementById(id);
+        if (el) el.value = valor;
+    }
+
+    const cnpjInput = document.getElementById('cfgCnpj');
+    if (cnpjInput) {
+        cnpjInput.value = config.cnpj
+            ? (typeof formatCNPJ === 'function' ? formatCNPJ(config.cnpj) : config.cnpj)
+            : '';
+    }
+
+    const telInput = document.getElementById('cfgTelefone');
+    if (telInput) {
+        telInput.value = config.telefone
+            ? (typeof formatPhone === 'function' ? formatPhone(config.telefone) : config.telefone)
+            : '';
+    }
+}
+
+// ========== PREVIEW LOGO ==========
+async function previewLogoConfig(event) {
     const file = event.target.files[0];
-    const previewContainer = document.getElementById('cfgLogoPreview');
-
     if (!file) return;
 
     try {
-        const base64 = await readImageAsBase64(file, 0.5);
-        logoBase64Atual = base64;
-        renderizarLogoPreview(base64);
+        const maxBytes = 500 * 1024;
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        const base64 = await readFileAsBase64(file, maxBytes, allowedTypes);
+
+        const logoImg = document.getElementById('cfgLogoImg');
+        const btnRemover = document.getElementById('btnRemoverLogo');
+
+        if (logoImg) {
+            logoImg.src = base64;
+            logoImg.style.display = 'block';
+            logoImg.dataset.newLogo = base64;
+        }
+        if (btnRemover) btnRemover.style.display = 'inline-block';
+
+        console.log('[Config] Logo carregado, tamanho:', base64.length);
+
     } catch (error) {
-        showToast(error.message, 'error');
+        console.error('[Config] Erro no upload do logo:', error);
+        showToast(error.message || 'Erro ao carregar logo', 'error');
         event.target.value = '';
     }
 }
 
-function renderizarLogoPreview(base64) {
-    const previewContainer = document.getElementById('cfgLogoPreview');
-    if (!base64) {
-        previewContainer.innerHTML = '';
-        return;
-    }
-    previewContainer.innerHTML = '<img src="' + base64 + '" alt="Logo" style="max-width:200px;max-height:100px;border-radius:8px;border:1px solid var(--border-color);">' +
-        '<br><button type="button" class="btn btn-danger btn-sm" id="btnRemoverLogoConfig" style="margin-top:8px;">Remover logo</button>';
-    const btnRemover = document.getElementById('btnRemoverLogoConfig');
-    if (btnRemover) {
-        btnRemover.addEventListener('click', function () {
-            logoBase64Atual = '';
-            previewContainer.innerHTML = '';
-            document.getElementById('cfgLogo').value = '';
-        });
-    }
+// ========== REMOVER LOGO ==========
+function removerLogoConfig() {
+    const logoImg = document.getElementById('cfgLogoImg');
+    const fileInput = document.getElementById('cfgLogo');
+    const btnRemover = document.getElementById('btnRemoverLogo');
+
+    if (logoImg) { logoImg.src = ''; logoImg.style.display = 'none'; logoImg.dataset.newLogo = ''; }
+    if (fileInput) fileInput.value = '';
+    if (btnRemover) btnRemover.style.display = 'none';
 }
 
-/* ============================================================
-   Carregar Configurações
-   ============================================================ */
-
-async function carregarConfiguracoes() {
-    try {
-        const result = await apiGet('/api/configuracoes');
-        if (result.success && result.data) {
-            const d = result.data;
-            document.getElementById('cfgNomeEmpresa').value = d.empresa_nome || '';
-            document.getElementById('cfgCnpj').value = d.empresa_cnpj ? formatCNPJ(d.empresa_cnpj) : '';
-            document.getElementById('cfgTelefone').value = d.empresa_telefone ? formatPhone(d.empresa_telefone) : '';
-            document.getElementById('cfgEmail').value = d.empresa_email || '';
-            document.getElementById('cfgSite').value = d.empresa_site || '';
-            document.getElementById('cfgEndereco').value = d.empresa_endereco || '';
-            document.getElementById('cfgValidadeDias').value = d.orcamento_validade_dias || '';
-            document.getElementById('cfgPrazoEntregaPadrao').value = d.orcamento_prazo_entrega_padrao || '';
-            document.getElementById('cfgCondicoesPadrao').value = d.orcamento_condicoes_padrao || '';
-            document.getElementById('cfgObservacoesPadrao').value = d.orcamento_observacoes_padrao || '';
-
-            /* Logo */
-            logoBase64Atual = d.empresa_logo_base64 || '';
-            if (logoBase64Atual) {
-                renderizarLogoPreview(logoBase64Atual);
-            }
-        }
-    } catch (error) {
-        showToast('Erro ao carregar configurações', 'error');
-    }
-}
-
-/* ============================================================
-   Salvar Configurações
-   ============================================================ */
-
-async function salvarConfiguracoes(event) {
+// ========== SALVAR CONFIGURAÇÕES ==========
+function salvarConfiguracoes(event) {
     event.preventDefault();
 
-    const btnSalvar = document.getElementById('btnSalvarConfig');
+    const nomeInput = document.getElementById('cfgNomeEmpresa');
+    const nomeEmpresa = nomeInput ? nomeInput.value.trim() : '';
 
-    const dados = {
-        empresa_nome: document.getElementById('cfgNomeEmpresa').value.trim(),
-        empresa_cnpj: unmask(document.getElementById('cfgCnpj').value) || '',
-        empresa_telefone: unmask(document.getElementById('cfgTelefone').value) || '',
-        empresa_email: document.getElementById('cfgEmail').value.trim() || '',
-        empresa_site: document.getElementById('cfgSite').value.trim() || '',
-        empresa_endereco: document.getElementById('cfgEndereco').value.trim() || '',
-        empresa_logo_base64: logoBase64Atual || '',
-        orcamento_validade_dias: document.getElementById('cfgValidadeDias').value || '15',
-        orcamento_prazo_entrega_padrao: document.getElementById('cfgPrazoEntregaPadrao').value.trim() || '',
-        orcamento_condicoes_padrao: document.getElementById('cfgCondicoesPadrao').value.trim() || '',
-        orcamento_observacoes_padrao: document.getElementById('cfgObservacoesPadrao').value.trim() || '',
-    };
-
-    if (!dados.empresa_nome) {
+    if (!nomeEmpresa) {
         showToast('O nome da empresa é obrigatório', 'warning');
         return;
     }
 
-    btnSalvar.disabled = true;
-    btnSalvar.textContent = 'Salvando...';
+    const configAtual = typeof getConfig === 'function' ? getConfig() : {};
+    const logoImg = document.getElementById('cfgLogoImg');
+    const newLogo = logoImg ? logoImg.dataset.newLogo : undefined;
+    let logo = configAtual.logo || '';
 
-    try {
-        await apiPut('/api/configuracoes', dados);
-        showToast('Configurações salvas com sucesso!', 'success');
-    } catch (error) {
-        showToast('Erro ao salvar: ' + error.message, 'error');
-    } finally {
-        btnSalvar.disabled = false;
-        btnSalvar.textContent = 'Salvar Configurações';
+    if (newLogo !== undefined && newLogo !== '') {
+        logo = newLogo;
+    } else if (logoImg && logoImg.style.display === 'none') {
+        logo = '';
     }
+
+    const unmask = typeof unmaskValue === 'function'
+        ? unmaskValue
+        : function (v) { return v ? v.replace(/\D/g, '') : ''; };
+
+    const el = (id) => document.getElementById(id);
+
+    const novaConfig = {
+        logo: logo,
+        nomeEmpresa: nomeEmpresa,
+        cnpj: unmask(el('cfgCnpj') ? el('cfgCnpj').value : ''),
+        telefone: unmask(el('cfgTelefone') ? el('cfgTelefone').value : ''),
+        email: el('cfgEmail') ? el('cfgEmail').value.trim() : '',
+        site: el('cfgSite') ? el('cfgSite').value.trim() : '',
+        endereco: el('cfgEndereco') ? el('cfgEndereco').value.trim() : '',
+        condicoesPadrao: el('cfgCondicoesPadrao') ? el('cfgCondicoesPadrao').value.trim() : '',
+        validadeDias: el('cfgValidadeDias') ? parseInt(el('cfgValidadeDias').value) || 15 : 15,
+        prazoEntregaPadrao: el('cfgPrazoEntregaPadrao') ? el('cfgPrazoEntregaPadrao').value.trim() : '',
+        observacoesPadrao: el('cfgObservacoesPadrao') ? el('cfgObservacoesPadrao').value.trim() : '',
+    };
+
+    console.log('[Config] Salvando:', { ...novaConfig, logo: novaConfig.logo ? `[${novaConfig.logo.length} chars]` : '' });
+
+    if (typeof saveConfig === 'function') {
+        saveConfig(novaConfig);
+    } else {
+        localStorage.setItem('wd_config', JSON.stringify(novaConfig));
+    }
+
+    showToast('Configurações salvas com sucesso!', 'success');
+
+    if (logoImg) logoImg.dataset.newLogo = '';
 }
 
-/* ============================================================
-   Resetar para Padrões
-   ============================================================ */
-
+// ========== RESETAR CONFIGURAÇÕES ==========
 function resetarConfiguracoes() {
-    document.getElementById('cfgNomeEmpresa').value = 'WD Máquinas';
-    document.getElementById('cfgCnpj').value = '';
-    document.getElementById('cfgTelefone').value = '';
-    document.getElementById('cfgEmail').value = '';
-    document.getElementById('cfgSite').value = '';
-    document.getElementById('cfgEndereco').value = '';
-    document.getElementById('cfgValidadeDias').value = '15';
-    document.getElementById('cfgPrazoEntregaPadrao').value = '15 a 20 dias úteis';
-    document.getElementById('cfgCondicoesPadrao').value = '50% de entrada e 50% na entrega do equipamento.';
-    document.getElementById('cfgObservacoesPadrao').value = '';
-    logoBase64Atual = '';
-    document.getElementById('cfgLogoPreview').innerHTML = '';
-    document.getElementById('cfgLogo').value = '';
-    showToast('Valores restaurados. Clique em Salvar para confirmar.', 'info');
+    if (!confirm('Tem certeza que deseja restaurar as configurações padrão? Isso apagará todas as personalizações.')) {
+        return;
+    }
+
+    localStorage.removeItem('wd_config');
+    showToast('Configurações restauradas para o padrão', 'info');
+
+    // Recarregar a aba sem recarregar a página
+    setTimeout(() => {
+        carregarConfiguracoes();
+    }, 500);
 }
 
-/* ============================================================
-   Verificar Status da API
-   ============================================================ */
-
-async function verificarApiStatus() {
-    const el = document.getElementById('cfgApiStatus');
-    if (!el) return;
+// ========== VERIFICAR STATUS API ==========
+async function verificarStatusAPI() {
+    const statusEl = document.getElementById('cfgApiStatus');
+    if (!statusEl) return;
 
     try {
-        const result = await apiGet('/api/health');
-        if (result.success) {
-            el.innerHTML = '<span style="color:var(--color-success);">Online</span>';
+        const data = await apiGet('/health');
+        if (data && data.status === 'healthy') {
+            statusEl.innerHTML = '<span style="color: var(--success-color, #22c55e);">Online (banco conectado)</span>';
         } else {
-            el.innerHTML = '<span style="color:var(--color-danger);">Erro</span>';
+            statusEl.innerHTML = '<span style="color: var(--warning-color, #f59e0b);">Instável</span>';
         }
-    } catch {
-        el.innerHTML = '<span style="color:var(--color-danger);">Offline</span>';
+    } catch (error) {
+        console.error('[Config] Erro ao verificar API:', error);
+        statusEl.innerHTML = '<span style="color: var(--danger-color, #ef4444);">Offline</span>';
     }
 }
