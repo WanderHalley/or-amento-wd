@@ -1,335 +1,286 @@
+// ═══════════════════════════════════════════
+// 📌 ABA: PRODUTOS
+// Toda lógica EXCLUSIVA de Produtos
+// CRUD com upload de imagem Base64
+// ═══════════════════════════════════════════
+
 /**
- * ============================================================
- * produtos.js — CRUD de Produtos
- * ============================================================
+ * IDs esperados no HTML (dentro de #aba-produtos + modais globais):
+ *   tabelaProdutos, buscaProduto,
+ *   modalProduto, modalProdutoTitulo, formProduto,
+ *   produtoId, produtoImagemBase64, produtoNome, produtoDescricao,
+ *   produtoEspecificacoes, produtoValor, produtoPeso,
+ *   produtoAltura, produtoLargura, produtoProfundidade,
+ *   produtoAtivo, produtoImagem, produtoImagemPreview,
+ *   produtoImagemTag, produtoImagemUrl,
+ *   confirmDeleteProduto
  */
 
-/* Estado local */
+// ========== ESTADO LOCAL ==========
 let produtosData = [];
 let deleteProdutoId = null;
 
-/* ============================================================
-   Inicialização
-   ============================================================ */
-document.addEventListener('DOMContentLoaded', function () {
-    initTheme();
-    initSidebar();
-    aplicarMascarasProduto();
+// ========== INIT (chamado pelo sistema de abas) ==========
+function init_produtos() {
     carregarProdutos();
-    bindEventosProduto();
-});
-
-function aplicarMascarasProduto() {
-    maskInput(document.getElementById('produtoValor'), 'currency');
 }
 
-function bindEventosProduto() {
-    const btnNovo = document.getElementById('btnNovoProduto');
-    if (btnNovo) btnNovo.addEventListener('click', abrirModalProduto);
-
-    const btnFechar = document.getElementById('btnFecharModalProduto');
-    if (btnFechar) btnFechar.addEventListener('click', fecharModalProduto);
-
-    const btnCancelar = document.getElementById('btnCancelarProduto');
-    if (btnCancelar) btnCancelar.addEventListener('click', fecharModalProduto);
-
-    const form = document.getElementById('formProduto');
-    if (form) form.addEventListener('submit', salvarProduto);
-
-    const btnFecharDel = document.getElementById('btnFecharDeleteProduto');
-    if (btnFecharDel) btnFecharDel.addEventListener('click', fecharConfirmDeleteProduto);
-
-    const btnCancelarDel = document.getElementById('btnCancelarDeleteProduto');
-    if (btnCancelarDel) btnCancelarDel.addEventListener('click', fecharConfirmDeleteProduto);
-
-    const btnConfirmarDel = document.getElementById('btnConfirmarDeleteProduto');
-    if (btnConfirmarDel) btnConfirmarDel.addEventListener('click', executarDeleteProduto);
-
-    const inputBusca = document.getElementById('buscaProduto');
-    if (inputBusca) {
-        const buscaDebounced = debounce(function () {
-            carregarProdutos(inputBusca.value.trim());
-        }, 400);
-        inputBusca.addEventListener('input', buscaDebounced);
-    }
-
-    const inputImagem = document.getElementById('produtoImagem');
-    if (inputImagem) inputImagem.addEventListener('change', handleImagemProduto);
-
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') {
-            fecharModalProduto();
-            fecharConfirmDeleteProduto();
-        }
-    });
-}
-
-/* ============================================================
-   Imagem — Upload preview
-   ============================================================ */
-
-async function handleImagemProduto(event) {
-    const file = event.target.files[0];
-    const previewContainer = document.getElementById('produtoImagemPreview');
-    const hiddenBase64 = document.getElementById('produtoImagemBase64');
-
-    if (!file) {
-        previewContainer.innerHTML = '';
-        hiddenBase64.value = '';
-        return;
-    }
-
-    try {
-        const base64 = await readImageAsBase64(file, 2);
-        hiddenBase64.value = base64;
-        previewContainer.innerHTML = '<img src="' + base64 + '" alt="Preview">' +
-            '<br><button type="button" class="btn btn-danger btn-sm" id="btnRemoverImagemProduto">Remover imagem</button>';
-        const btnRemover = document.getElementById('btnRemoverImagemProduto');
-        if (btnRemover) {
-            btnRemover.addEventListener('click', function () {
-                previewContainer.innerHTML = '';
-                hiddenBase64.value = '';
-                document.getElementById('produtoImagem').value = '';
-            });
-        }
-    } catch (error) {
-        showToast(error.message, 'error');
-        event.target.value = '';
-    }
-}
-
-/* ============================================================
-   Carregar / Renderizar
-   ============================================================ */
-
-async function carregarProdutos(busca) {
+// ========== CARREGAR PRODUTOS ==========
+async function carregarProdutos(busca = '') {
     const tbody = document.getElementById('tabelaProdutos');
     if (!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="7"><div class="spinner"></div></td></tr>';
+
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="7" class="empty-state">
+                <div class="loading-spinner"></div>
+                <p>Carregando...</p>
+            </td>
+        </tr>`;
 
     try {
-        let endpoint = '/api/produtos?limit=200';
-        if (busca) endpoint += '&busca=' + encodeURIComponent(busca);
+        let url = '/api/produtos?limit=200';
+        if (busca) url += `&busca=${encodeURIComponent(busca)}`;
 
-        const result = await apiGet(endpoint);
+        const data = await apiGet(url);
+        produtosData = data.produtos || data || [];
 
-        if (result.success) {
-            produtosData = result.data || [];
-            renderizarProdutos(produtosData);
-        }
+        console.log('[Produtos] Carregados:', produtosData.length);
+        renderizarProdutos(produtosData);
+
     } catch (error) {
-        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state">' +
-            '<h4>Erro ao carregar produtos</h4>' +
-            '<p>' + escapeHtml(error.message) + '</p>' +
-            '</div></td></tr>';
+        console.error('[Produtos] Erro ao carregar:', error);
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="empty-state">
+                    <p>Erro ao carregar produtos.</p>
+                </td>
+            </tr>`;
         showToast('Erro ao carregar produtos', 'error');
     }
 }
 
+// ========== RENDERIZAR TABELA ==========
 function renderizarProdutos(produtos) {
     const tbody = document.getElementById('tabelaProdutos');
     if (!tbody) return;
 
     if (!produtos || produtos.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state">' +
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>' +
-            '<h4>Nenhum produto cadastrado</h4>' +
-            '<p>Adicione seu primeiro produto para começar</p>' +
-            '</div></td></tr>';
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="empty-state">
+                    <p>Nenhum produto encontrado.</p>
+                    <button class="btn btn-primary btn-sm" onclick="abrirModalProduto()" style="margin-top:10px;">+ Adicionar produto</button>
+                </td>
+            </tr>`;
         return;
     }
 
-    tbody.innerHTML = produtos.map(function (p) {
+    tbody.innerHTML = produtos.map(p => {
+        const nome = escapeHtml(p.nome || '-');
+
+        let imgHtml = '<span style="color:var(--text-muted);">Sem imagem</span>';
+        if (p.imagem_base64) {
+            imgHtml = `<img src="${p.imagem_base64}" alt="${nome}" style="width:50px; height:50px; object-fit:cover; border-radius:6px;">`;
+        } else if (p.imagem_url) {
+            imgHtml = `<img src="${escapeHtml(p.imagem_url)}" alt="${nome}" style="width:50px; height:50px; object-fit:cover; border-radius:6px;" onerror="this.outerHTML='<span>Sem imagem</span>'">`;
+        }
+
         const dims = [];
-        if (p.altura_cm) dims.push('A: ' + p.altura_cm + 'cm');
-        if (p.largura_cm) dims.push('L: ' + p.largura_cm + 'cm');
-        if (p.profundidade_cm) dims.push('P: ' + p.profundidade_cm + 'cm');
-        const dimStr = dims.length > 0 ? dims.join(' × ') : '-';
+        if (p.altura) dims.push(`A: ${p.altura}cm`);
+        if (p.largura) dims.push(`L: ${p.largura}cm`);
+        if (p.profundidade) dims.push(`P: ${p.profundidade}cm`);
+        const dimensoes = dims.length > 0 ? dims.join(' × ') : '-';
 
-        const imgSrc = p.imagem_base64 || p.imagem_url || '';
-        const imgHtml = imgSrc
-            ? '<img src="' + escapeHtml(imgSrc) + '" alt="' + escapeHtml(p.nome) + '" style="width:48px;height:48px;object-fit:cover;border-radius:6px;">'
-            : '<div style="width:48px;height:48px;background:var(--bg-hover);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:11px;">SEM</div>';
+        const peso = p.peso ? `${p.peso} kg` : '-';
+        const preco = formatCurrency(p.valor || 0);
+        const statusClass = p.ativo ? 'badge-success' : 'badge-secondary';
+        const statusLabel = p.ativo ? 'Ativo' : 'Inativo';
 
-        return '<tr>' +
-            '<td>' + imgHtml + '</td>' +
-            '<td><strong>' + escapeHtml(p.nome) + '</strong>' +
-            (p.descricao ? '<br><small style="color:var(--text-muted);">' + escapeHtml(p.descricao.substring(0, 80)) + (p.descricao.length > 80 ? '...' : '') + '</small>' : '') +
-            '</td>' +
-            '<td>' + dimStr + '</td>' +
-            '<td>' + (p.peso_kg ? p.peso_kg + ' kg' : '-') + '</td>' +
-            '<td><strong style="color:var(--color-primary);">' + formatCurrency(p.valor) + '</strong></td>' +
-            '<td><span class="badge ' + (p.ativo ? 'badge-aprovado' : 'badge-expirado') + '">' + (p.ativo ? 'Ativo' : 'Inativo') + '</span></td>' +
-            '<td>' +
-            '<button class="btn-icon edit" title="Editar" data-id="' + p.id + '" data-action="editar-produto">' +
-            '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
-            '</button>' +
-            '<button class="btn-icon delete" title="Excluir" data-id="' + p.id + '" data-action="deletar-produto">' +
-            '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>' +
-            '</button>' +
-            '</td>' +
-            '</tr>';
+        return `
+            <tr>
+                <td>${imgHtml}</td>
+                <td><strong>${nome}</strong></td>
+                <td><small>${dimensoes}</small></td>
+                <td>${peso}</td>
+                <td><strong>${preco}</strong></td>
+                <td><span class="badge ${statusClass}">${statusLabel}</span></td>
+                <td>
+                    <div style="display:flex; gap:5px;">
+                        <button class="btn btn-outline btn-sm" onclick="editarProduto('${p.id}')" title="Editar">✏️</button>
+                        <button class="btn btn-danger btn-sm" onclick="confirmarDeleteProduto('${p.id}')" title="Excluir">🗑️</button>
+                    </div>
+                </td>
+            </tr>`;
     }).join('');
-
-    tbody.addEventListener('click', function (e) {
-        const btn = e.target.closest('[data-action]');
-        if (!btn) return;
-        const id = btn.getAttribute('data-id');
-        const action = btn.getAttribute('data-action');
-        if (action === 'editar-produto') editarProduto(id);
-        if (action === 'deletar-produto') confirmarDeleteProduto(id);
-    });
 }
 
-/* ============================================================
-   Modal — Abrir / Fechar
-   ============================================================ */
+// ========== BUSCA COM DEBOUNCE ==========
+const buscarProdutosDebounced = debounce(() => {
+    const busca = document.getElementById('buscaProduto')?.value || '';
+    carregarProdutos(busca);
+}, 400);
 
+// ========== MODAL: ABRIR/FECHAR ==========
 function abrirModalProduto() {
     document.getElementById('modalProdutoTitulo').textContent = 'Novo Produto';
     document.getElementById('formProduto').reset();
     document.getElementById('produtoId').value = '';
     document.getElementById('produtoImagemBase64').value = '';
-    document.getElementById('produtoImagemPreview').innerHTML = '';
+    document.getElementById('produtoImagemPreview').style.display = 'none';
     document.getElementById('produtoAtivo').value = 'true';
     document.getElementById('modalProduto').classList.add('active');
 }
 
 function fecharModalProduto() {
     document.getElementById('modalProduto').classList.remove('active');
+    document.getElementById('formProduto').reset();
+    document.getElementById('produtoId').value = '';
+    document.getElementById('produtoImagemBase64').value = '';
+    document.getElementById('produtoImagemPreview').style.display = 'none';
 }
 
+// ========== EDITAR PRODUTO ==========
 async function editarProduto(id) {
     try {
-        const result = await apiGet('/api/produtos/' + id);
-        if (result.success && result.data) {
-            const p = result.data;
-            document.getElementById('modalProdutoTitulo').textContent = 'Editar Produto';
-            document.getElementById('produtoId').value = p.id;
-            document.getElementById('produtoNome').value = p.nome || '';
-            document.getElementById('produtoDescricao').value = p.descricao || '';
-            document.getElementById('produtoEspecificacoes').value = p.especificacoes || '';
-            document.getElementById('produtoValor').value = p.valor ? Number(p.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '';
-            document.getElementById('produtoAltura').value = p.altura_cm || '';
-            document.getElementById('produtoLargura').value = p.largura_cm || '';
-            document.getElementById('produtoProfundidade').value = p.profundidade_cm || '';
-            document.getElementById('produtoPeso').value = p.peso_kg || '';
-            document.getElementById('produtoAtivo').value = p.ativo ? 'true' : 'false';
-            document.getElementById('produtoImagemUrl').value = p.imagem_url || '';
+        const produto = await apiGet(`/api/produtos/${id}`);
+        console.log('[Produtos] Editando:', produto);
 
-            /* Preview de imagem existente */
-            const previewContainer = document.getElementById('produtoImagemPreview');
-            const hiddenBase64 = document.getElementById('produtoImagemBase64');
-            hiddenBase64.value = p.imagem_base64 || '';
+        document.getElementById('modalProdutoTitulo').textContent = 'Editar Produto';
+        document.getElementById('produtoId').value = produto.id;
+        document.getElementById('produtoNome').value = produto.nome || '';
+        document.getElementById('produtoDescricao').value = produto.descricao || '';
+        document.getElementById('produtoEspecificacoes').value = produto.especificacoes || '';
+        document.getElementById('produtoValor').value = produto.valor || '';
+        document.getElementById('produtoPeso').value = produto.peso || '';
+        document.getElementById('produtoAltura').value = produto.altura || '';
+        document.getElementById('produtoLargura').value = produto.largura || '';
+        document.getElementById('produtoProfundidade').value = produto.profundidade || '';
+        document.getElementById('produtoAtivo').value = produto.ativo ? 'true' : 'false';
+        document.getElementById('produtoImagemUrl').value = produto.imagem_url || '';
 
-            const imgSrc = p.imagem_base64 || p.imagem_url || '';
-            if (imgSrc) {
-                previewContainer.innerHTML = '<img src="' + escapeHtml(imgSrc) + '" alt="Preview">' +
-                    '<br><button type="button" class="btn btn-danger btn-sm" id="btnRemoverImagemProdutoEdit">Remover imagem</button>';
-                const btnRemover = document.getElementById('btnRemoverImagemProdutoEdit');
-                if (btnRemover) {
-                    btnRemover.addEventListener('click', function () {
-                        previewContainer.innerHTML = '';
-                        hiddenBase64.value = '';
-                        document.getElementById('produtoImagem').value = '';
-                        document.getElementById('produtoImagemUrl').value = '';
-                    });
-                }
-            } else {
-                previewContainer.innerHTML = '';
-            }
-
-            document.getElementById('modalProduto').classList.add('active');
+        const base64 = produto.imagem_base64 || '';
+        document.getElementById('produtoImagemBase64').value = base64;
+        if (base64) {
+            document.getElementById('produtoImagemTag').src = base64;
+            document.getElementById('produtoImagemPreview').style.display = 'block';
+        } else if (produto.imagem_url) {
+            document.getElementById('produtoImagemTag').src = produto.imagem_url;
+            document.getElementById('produtoImagemPreview').style.display = 'block';
+        } else {
+            document.getElementById('produtoImagemPreview').style.display = 'none';
         }
+
+        document.getElementById('modalProduto').classList.add('active');
+
     } catch (error) {
-        showToast('Erro ao carregar produto', 'error');
+        console.error('[Produtos] Erro ao carregar produto:', error);
+        showToast('Erro ao carregar dados do produto', 'error');
     }
 }
 
-/* ============================================================
-   Salvar (Criar / Atualizar)
-   ============================================================ */
+// ========== PREVIEW DE IMAGEM ==========
+async function previewImagemProduto(event) {
+    const file = event.target.files[0];
+    if (!file) return;
 
+    try {
+        const base64 = await readFileAsBase64(file, 2 * 1024 * 1024, ['image/jpeg', 'image/png', 'image/webp']);
+
+        document.getElementById('produtoImagemBase64').value = base64;
+        document.getElementById('produtoImagemTag').src = base64;
+        document.getElementById('produtoImagemPreview').style.display = 'block';
+
+        console.log('[Produtos] Imagem carregada, tamanho base64:', base64.length);
+
+    } catch (error) {
+        console.error('[Produtos] Erro no upload de imagem:', error);
+        showToast(error.message || 'Erro ao carregar imagem', 'error');
+        event.target.value = '';
+    }
+}
+
+function removerImagemProduto() {
+    document.getElementById('produtoImagemBase64').value = '';
+    document.getElementById('produtoImagem').value = '';
+    document.getElementById('produtoImagemPreview').style.display = 'none';
+    document.getElementById('produtoImagemTag').src = '';
+}
+
+// ========== SALVAR PRODUTO ==========
 async function salvarProduto(event) {
     event.preventDefault();
 
-    const btnSalvar = document.getElementById('btnSalvarProduto');
     const id = document.getElementById('produtoId').value;
+    const nome = document.getElementById('produtoNome').value.trim();
+    const valor = parseFloat(document.getElementById('produtoValor').value);
 
-    const dados = {
-        nome: document.getElementById('produtoNome').value.trim(),
-        descricao: document.getElementById('produtoDescricao').value.trim() || null,
-        especificacoes: document.getElementById('produtoEspecificacoes').value.trim() || null,
-        valor: parseCurrency(document.getElementById('produtoValor').value),
-        altura_cm: parseFloat(document.getElementById('produtoAltura').value) || null,
-        largura_cm: parseFloat(document.getElementById('produtoLargura').value) || null,
-        profundidade_cm: parseFloat(document.getElementById('produtoProfundidade').value) || null,
-        peso_kg: parseFloat(document.getElementById('produtoPeso').value) || null,
-        imagem_url: document.getElementById('produtoImagemUrl').value.trim() || null,
-        imagem_base64: document.getElementById('produtoImagemBase64').value || null,
-        ativo: document.getElementById('produtoAtivo').value === 'true',
-    };
-
-    if (!dados.nome) {
+    if (!nome) {
         showToast('O nome do produto é obrigatório', 'warning');
         return;
     }
-    if (!dados.valor || dados.valor <= 0) {
-        showToast('Informe um valor válido para o produto', 'warning');
+    if (!valor || valor <= 0) {
+        showToast('O preço deve ser maior que zero', 'warning');
         return;
     }
 
-    btnSalvar.disabled = true;
-    btnSalvar.textContent = 'Salvando...';
+    const dados = {
+        nome: nome,
+        descricao: document.getElementById('produtoDescricao').value.trim() || null,
+        especificacoes: document.getElementById('produtoEspecificacoes').value.trim() || null,
+        valor: valor,
+        peso: parseFloat(document.getElementById('produtoPeso').value) || null,
+        altura: parseFloat(document.getElementById('produtoAltura').value) || null,
+        largura: parseFloat(document.getElementById('produtoLargura').value) || null,
+        profundidade: parseFloat(document.getElementById('produtoProfundidade').value) || null,
+        ativo: document.getElementById('produtoAtivo').value === 'true',
+        imagem_url: document.getElementById('produtoImagemUrl').value.trim() || null,
+        imagem_base64: document.getElementById('produtoImagemBase64').value || null,
+    };
+
+    console.log('[Produtos] Salvando:', { ...dados, imagem_base64: dados.imagem_base64 ? `[${dados.imagem_base64.length} chars]` : null });
 
     try {
         if (id) {
-            await apiPut('/api/produtos/' + id, dados);
+            await apiPut(`/api/produtos/${id}`, dados);
             showToast('Produto atualizado com sucesso!', 'success');
         } else {
             await apiPost('/api/produtos', dados);
             showToast('Produto criado com sucesso!', 'success');
         }
+
         fecharModalProduto();
         carregarProdutos();
+
     } catch (error) {
-        showToast('Erro ao salvar: ' + error.message, 'error');
-    } finally {
-        btnSalvar.disabled = false;
-        btnSalvar.textContent = 'Salvar Produto';
+        console.error('[Produtos] Erro ao salvar:', error);
+        showToast(`Erro ao salvar produto: ${error.message}`, 'error');
     }
 }
 
-/* ============================================================
-   Excluir
-   ============================================================ */
-
+// ========== DELETAR PRODUTO ==========
 function confirmarDeleteProduto(id) {
     deleteProdutoId = id;
-    document.getElementById('modalConfirmDeleteProduto').classList.add('active');
+    document.getElementById('confirmDeleteProduto').classList.add('active');
 }
 
 function fecharConfirmDeleteProduto() {
-    document.getElementById('modalConfirmDeleteProduto').classList.remove('active');
     deleteProdutoId = null;
+    document.getElementById('confirmDeleteProduto').classList.remove('active');
 }
 
-async function executarDeleteProduto() {
+async function deletarProduto() {
     if (!deleteProdutoId) return;
 
-    const btnDel = document.getElementById('btnConfirmarDeleteProduto');
-    btnDel.disabled = true;
-    btnDel.textContent = 'Excluindo...';
-
     try {
-        await apiDelete('/api/produtos/' + deleteProdutoId);
+        await apiDelete(`/api/produtos/${deleteProdutoId}`);
         showToast('Produto excluído com sucesso!', 'success');
         fecharConfirmDeleteProduto();
         carregarProdutos();
+
     } catch (error) {
-        showToast('Erro ao excluir: ' + error.message, 'error');
-    } finally {
-        btnDel.disabled = false;
-        btnDel.textContent = 'Excluir';
+        console.error('[Produtos] Erro ao excluir:', error);
+        showToast(`Erro ao excluir produto: ${error.message}`, 'error');
+        fecharConfirmDeleteProduto();
     }
 }
