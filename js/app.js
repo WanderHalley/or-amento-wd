@@ -1,35 +1,251 @@
 /**
- * ============================================================
- * app.js — Módulo Global
- * Config, API, Theme, Sidebar, Toast, Formatadores, Máscaras
- * ============================================================
+ * app.js — Módulo global do frontend
+ * WD Máquinas — Sistema de Orçamentos (SPA por Abas)
+ *
+ * Provê:
+ *   - API_BASE_URL e wrappers fetch
+ *   - Formatação: moeda, data, telefone, CEP, CPF, CNPJ, CPF/CNPJ
+ *   - Máscaras de input
+ *   - unmaskValue (e alias unmask)
+ *   - readFileAsBase64 (e alias readImageAsBase64)
+ *   - Toast notifications
+ *   - Sidebar toggle
+ *   - Theme dark/light toggle
+ *   - getConfig / saveConfig (localStorage)
+ *   - debounce, escapeHtml, getToday, getDatePlusDays, formatFileName
+ *   - 🧭 SISTEMA DE NAVEGAÇÃO ENTRE ABAS
  */
 
-/* ============================================================
-   1. CONFIGURAÇÃO DA API
-   ============================================================ */
+// ═══════════════════════════════════════════
+// ⚙️ API BASE URL
+// ═══════════════════════════════════════════
 const API_BASE_URL = 'https://wanderhalleylee-orcamento-wd.hf.space';
+
+// ═══════════════════════════════════════════
+// ⚙️ CONFIGURAÇÕES PADRÃO DA EMPRESA
+// ═══════════════════════════════════════════
+const DEFAULT_CONFIG = {
+    logo: '',
+    nomeEmpresa: 'WD Máquinas',
+    cnpj: '29595239000133',
+    endereco: 'Avenida Dom Pedro I, 733 - Franca/SP',
+    telefone: '16991966519',
+    email: 'wdmaquinas@outlook.com',
+    site: '',
+    condicoesPadrao: 'Dividimos em Até 10x Sem Juros no Cartão de Crédito ou 10% de Desconto no Boleto ou Pix à Vista',
+    validadeDias: 30,
+    prazoEntregaPadrao: 'Em Até 5 Dias Úteis',
+    observacoesPadrao: '',
+};
 
 function getConfig() {
     try {
-        const raw = localStorage.getItem('wd_config');
-        return raw ? JSON.parse(raw) : {};
-    } catch {
-        return {};
-    }
+        const saved = localStorage.getItem('wd_config');
+        if (saved) return { ...DEFAULT_CONFIG, ...JSON.parse(saved) };
+    } catch (e) { console.warn('[Config] Erro ao ler localStorage:', e); }
+    return { ...DEFAULT_CONFIG };
 }
 
 function saveConfig(config) {
     try {
         localStorage.setItem('wd_config', JSON.stringify(config));
-    } catch {
-        /* silencioso */
-    }
+        console.log('[Config] Salvo com sucesso');
+    } catch (e) { console.error('[Config] Erro ao salvar:', e); }
 }
 
-/* ============================================================
-   2. TEMA — Dark padrão, Light alternativo
-   ============================================================ */
+// ═══════════════════════════════════════════
+// ⚙️ API WRAPPERS
+// ═══════════════════════════════════════════
+async function apiGet(path) {
+    const url = API_BASE_URL + path;
+    console.log('[API GET]', url);
+    const response = await fetch(url, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
+    if (!response.ok) { const e = await response.text().catch(() => response.statusText); throw new Error(`GET ${path} failed (${response.status}): ${e}`); }
+    return await response.json();
+}
+
+async function apiPost(path, body) {
+    const url = API_BASE_URL + path;
+    console.log('[API POST]', url, body);
+    const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (!response.ok) { const e = await response.text().catch(() => response.statusText); throw new Error(`POST ${path} failed (${response.status}): ${e}`); }
+    return await response.json();
+}
+
+async function apiPut(path, body) {
+    const url = API_BASE_URL + path;
+    console.log('[API PUT]', url, body);
+    const response = await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (!response.ok) { const e = await response.text().catch(() => response.statusText); throw new Error(`PUT ${path} failed (${response.status}): ${e}`); }
+    return await response.json();
+}
+
+async function apiDelete(path) {
+    const url = API_BASE_URL + path;
+    console.log('[API DELETE]', url);
+    const response = await fetch(url, { method: 'DELETE', headers: { 'Content-Type': 'application/json' } });
+    if (!response.ok) { const e = await response.text().catch(() => response.statusText); throw new Error(`DELETE ${path} failed (${response.status}): ${e}`); }
+    return await response.json();
+}
+
+// ═══════════════════════════════════════════
+// ⚙️ FORMATAÇÃO
+// ═══════════════════════════════════════════
+function formatCurrency(value) {
+    return (Number(value) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+function formatDate(dateStr) {
+    if (!dateStr) return '-';
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) return dateStr;
+    const parts = dateStr.split('T')[0].split('-');
+    if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    return dateStr;
+}
+
+function getToday() { return new Date().toISOString().split('T')[0]; }
+
+function getDatePlusDays(days) {
+    const d = new Date();
+    d.setDate(d.getDate() + (days || 0));
+    return d.toISOString().split('T')[0];
+}
+
+function capitalizeFirst(str) { if (!str) return ''; return str.charAt(0).toUpperCase() + str.slice(1); }
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = String(text);
+    return div.innerHTML;
+}
+
+function formatFileName(name, dateStr) {
+    const cleanName = (name || 'Orcamento').replace(/[^a-zA-Z0-9À-ú\s\-#]/g, '').trim();
+    let dateFormatted = '';
+    if (dateStr) { const p = dateStr.split('T')[0].split('-'); if (p.length === 3) dateFormatted = `${p[2]}-${p[1]}-${p[0]}`; }
+    if (!dateFormatted) { const n = new Date(); dateFormatted = `${String(n.getDate()).padStart(2,'0')}-${String(n.getMonth()+1).padStart(2,'0')}-${n.getFullYear()}`; }
+    return `${cleanName} - ${dateFormatted}`;
+}
+
+// ═══════════════════════════════════════════
+// ⚙️ MÁSCARAS DE FORMATAÇÃO
+// ═══════════════════════════════════════════
+function formatPhone(value) {
+    if (!value) return '';
+    const d = String(value).replace(/\D/g, '');
+    if (d.length <= 2) return `(${d}`;
+    if (d.length <= 6) return `(${d.slice(0,2)}) ${d.slice(2)}`;
+    if (d.length <= 10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6,10)}`;
+    return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7,11)}`;
+}
+
+function formatCEP(value) {
+    if (!value) return '';
+    const d = String(value).replace(/\D/g, '');
+    if (d.length <= 5) return d;
+    return `${d.slice(0,5)}-${d.slice(5,8)}`;
+}
+
+function formatCPF(value) {
+    if (!value) return '';
+    const d = String(value).replace(/\D/g, '');
+    if (d.length <= 3) return d;
+    if (d.length <= 6) return `${d.slice(0,3)}.${d.slice(3)}`;
+    if (d.length <= 9) return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6)}`;
+    return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6,9)}-${d.slice(9,11)}`;
+}
+
+function formatCNPJ(value) {
+    if (!value) return '';
+    const d = String(value).replace(/\D/g, '');
+    if (d.length <= 2) return d;
+    if (d.length <= 5) return `${d.slice(0,2)}.${d.slice(2)}`;
+    if (d.length <= 8) return `${d.slice(0,2)}.${d.slice(2,5)}.${d.slice(5)}`;
+    if (d.length <= 12) return `${d.slice(0,2)}.${d.slice(2,5)}.${d.slice(5,8)}/${d.slice(8)}`;
+    return `${d.slice(0,2)}.${d.slice(2,5)}.${d.slice(5,8)}/${d.slice(8,12)}-${d.slice(12,14)}`;
+}
+
+function formatCPFCNPJ(value) {
+    if (!value) return '';
+    const d = String(value).replace(/\D/g, '');
+    return d.length <= 11 ? formatCPF(d) : formatCNPJ(d);
+}
+
+function unmaskValue(value) { if (!value) return ''; return String(value).replace(/\D/g, ''); }
+window.unmask = unmaskValue;
+window.unmaskValue = unmaskValue;
+
+function maskInput(input, formatFn) {
+    if (!input || !formatFn) return;
+    input.addEventListener('input', function () {
+        const pos = this.selectionStart;
+        const oldLen = this.value.length;
+        this.value = formatFn(this.value);
+        const newPos = pos + (this.value.length - oldLen);
+        this.setSelectionRange(newPos, newPos);
+    });
+}
+
+// ═══════════════════════════════════════════
+// ⚙️ LEITURA DE ARQUIVO COMO BASE64
+// ═══════════════════════════════════════════
+function readFileAsBase64(file, maxBytes, allowedTypes) {
+    return new Promise((resolve, reject) => {
+        if (!file) { reject(new Error('Nenhum arquivo selecionado')); return; }
+        if (maxBytes && file.size > maxBytes) { reject(new Error(`Arquivo muito grande. Máximo: ${(maxBytes/(1024*1024)).toFixed(1)} MB`)); return; }
+        if (allowedTypes && Array.isArray(allowedTypes) && allowedTypes.length > 0 && !allowedTypes.includes(file.type)) { reject(new Error(`Tipo não permitido: ${file.type}. Aceitos: ${allowedTypes.join(', ')}`)); return; }
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
+        reader.readAsDataURL(file);
+    });
+}
+
+function readImageAsBase64(file, maxSizeMB) {
+    return readFileAsBase64(file, (maxSizeMB || 2) * 1024 * 1024, ['image/jpeg','image/png','image/webp']);
+}
+
+window.readFileAsBase64 = readFileAsBase64;
+window.readImageAsBase64 = readImageAsBase64;
+
+// ═══════════════════════════════════════════
+// ⚙️ TOAST NOTIFICATIONS
+// ═══════════════════════════════════════════
+function showToast(message, type = 'info', duration = 4000) {
+    const container = document.getElementById('toastContainer');
+    if (!container) { console.warn('[Toast] Container não encontrado:', message); return; }
+    const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `<span class="toast-icon">${icons[type]||icons.info}</span><span class="toast-message">${escapeHtml(message)}</span><button class="toast-close" onclick="this.parentElement.remove()">&times;</button>`;
+    container.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add('toast-show'));
+    setTimeout(() => { toast.classList.remove('toast-show'); toast.classList.add('toast-hide'); setTimeout(() => { if (toast.parentElement) toast.remove(); }, 300); }, duration);
+}
+
+// ═══════════════════════════════════════════
+// ⚙️ DEBOUNCE
+// ═══════════════════════════════════════════
+function debounce(fn, delay = 300) {
+    let timer;
+    return function (...args) { clearTimeout(timer); timer = setTimeout(() => fn.apply(this, args), delay); };
+}
+
+// ═══════════════════════════════════════════
+// ⚙️ HELPER: extrair array da resposta da API
+// ═══════════════════════════════════════════
+function extrairArray(data, chave) {
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    if (chave && data[chave] && Array.isArray(data[chave])) return data[chave];
+    if (data.data && Array.isArray(data.data)) return data.data;
+    return [];
+}
+
+// ═══════════════════════════════════════════
+// 🎨 THEME (Dark / Light)
+// ═══════════════════════════════════════════
 function initTheme() {
     const saved = localStorage.getItem('wd_theme') || 'dark';
     document.documentElement.setAttribute('data-theme', saved);
@@ -37,585 +253,168 @@ function initTheme() {
 }
 
 function toggleTheme() {
-    const current = document.documentElement.getAttribute('data-theme');
+    const current = document.documentElement.getAttribute('data-theme') || 'dark';
     const next = current === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', next);
     localStorage.setItem('wd_theme', next);
     updateThemeIcon();
+    console.log('[Theme] Alternado para:', next);
 }
 
 function updateThemeIcon() {
-    const btn = document.getElementById('themeToggle');
-    if (!btn) return;
-    const theme = document.documentElement.getAttribute('data-theme');
-    if (theme === 'light') {
-        btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
-        btn.title = 'Mudar para tema escuro';
-    } else {
-        btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
-        btn.title = 'Mudar para tema claro';
-    }
+    const iconEl = document.getElementById('themeIcon');
+    if (iconEl) iconEl.textContent = (document.documentElement.getAttribute('data-theme') || 'dark') === 'dark' ? '🌙' : '☀️';
 }
 
-/* ============================================================
-   3. SIDEBAR — Recolhível com chevron, mobile overlay
-   ============================================================ */
+// ═══════════════════════════════════════════
+// 📂 SIDEBAR
+// ═══════════════════════════════════════════
 function initSidebar() {
     const sidebar = document.getElementById('sidebar');
-    const collapse = document.getElementById('sidebarCollapse');
-    const menuToggle = document.getElementById('menuToggle');
-    const overlay = document.getElementById('sidebarOverlay');
-    const themeBtn = document.getElementById('themeToggle');
+    if (!sidebar) return;
 
-    /* Chevron desktop — colapsa/expande */
-    if (collapse && sidebar) {
-        const savedState = localStorage.getItem('wd_sidebar_collapsed');
-        if (savedState === 'true' && window.innerWidth > 768) {
-            sidebar.classList.add('collapsed');
-        }
+    const collapsed = localStorage.getItem('wd_sidebar_collapsed') === 'true';
+    if (collapsed) sidebar.classList.add('collapsed');
 
-        collapse.addEventListener('click', function () {
+    const collapseBtn = document.getElementById('sidebarCollapse') || document.getElementById('sidebarCollapseBtn');
+    if (collapseBtn) {
+        collapseBtn.addEventListener('click', () => {
             sidebar.classList.toggle('collapsed');
             localStorage.setItem('wd_sidebar_collapsed', sidebar.classList.contains('collapsed'));
         });
     }
 
-    /* Hamburger mobile — abre sidebar como overlay */
-    if (menuToggle && sidebar) {
-        menuToggle.addEventListener('click', function () {
-            sidebar.classList.toggle('open');
-            if (overlay) overlay.classList.toggle('active');
+    const menuToggle = document.getElementById('menuToggle');
+    if (menuToggle) {
+        menuToggle.addEventListener('click', () => sidebar.classList.toggle('mobile-open'));
+    }
+
+    const overlay = document.getElementById('sidebarOverlay');
+    if (overlay) {
+        overlay.addEventListener('click', () => sidebar.classList.remove('mobile-open'));
+    }
+
+    // Fechar sidebar mobile ao clicar em link
+    sidebar.querySelectorAll('.sidebar-link').forEach(link => {
+        link.addEventListener('click', () => {
+            if (window.innerWidth <= 768) sidebar.classList.remove('mobile-open');
         });
-    }
-
-    /* Overlay click — fecha sidebar mobile */
-    if (overlay && sidebar) {
-        overlay.addEventListener('click', function () {
-            sidebar.classList.remove('open');
-            overlay.classList.remove('active');
-        });
-    }
-
-    /* Theme toggle */
-    if (themeBtn) {
-        themeBtn.addEventListener('click', toggleTheme);
-    }
-}
-
-/**
- * Gera o HTML do sidebar com a página ativa destacada.
- * @param {string} activePage - Nome do arquivo (ex: 'index.html')
- * @returns {string} HTML do sidebar
- */
-function generateSidebar(activePage) {
-    const pages = [
-        {
-            href: 'index.html',
-            icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>',
-            label: 'Dashboard'
-        },
-        {
-            href: 'orcamentos.html',
-            icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>',
-            label: 'Orçamentos'
-        },
-        {
-            href: 'clientes.html',
-            icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
-            label: 'Clientes'
-        },
-        {
-            href: 'produtos.html',
-            icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
-            label: 'Produtos'
-        },
-        {
-            href: 'configuracoes.html',
-            icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
-            label: 'Configurações'
-        }
-    ];
-
-    let links = '';
-    pages.forEach(function (p) {
-        const isActive = p.href === activePage ? ' active' : '';
-        links += '<a href="' + p.href + '" class="sidebar-link' + isActive + '" title="' + p.label + '">' +
-            p.icon +
-            '<span class="sidebar-link-text">' + p.label + '</span>' +
-            '</a>';
-    });
-
-    return '<div class="sidebar-header">' +
-        '<div class="sidebar-logo">' +
-        '<div class="sidebar-logo-icon">WD</div>' +
-        '<div class="sidebar-logo-text">' +
-        '<h1>WD Máquinas</h1>' +
-        '<span>Sistema de Orçamentos</span>' +
-        '</div>' +
-        '</div>' +
-        '<button class="sidebar-toggle" id="sidebarCollapse" aria-label="Recolher menu">' +
-        '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>' +
-        '</button>' +
-        '</div>' +
-        '<nav class="sidebar-nav">' +
-        '<div class="sidebar-nav-label">Menu</div>' +
-        links +
-        '</nav>';
-}
-
-/**
- * Gera o HTML do header principal.
- * @param {string} title - Título da página
- * @returns {string} HTML do header
- */
-function generateHeader(title) {
-    return '<div class="header-left">' +
-        '<button class="menu-toggle" id="menuToggle" aria-label="Abrir menu">' +
-        '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
-        '<line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>' +
-        '</svg>' +
-        '</button>' +
-        '<h2>' + escapeHtml(title) + '</h2>' +
-        '</div>' +
-        '<div class="header-right">' +
-        '<button class="theme-toggle" id="themeToggle" title="Alternar tema">' +
-        '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
-        '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/>' +
-        '</svg>' +
-        '</button>' +
-        '</div>';
-}
-
-/* ============================================================
-   4. API — Fetch wrappers com CORS, try/catch, JSON padronizado
-   ============================================================ */
-async function apiGet(endpoint) {
-    try {
-        const url = API_BASE_URL + endpoint;
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-            mode: 'cors'
-        });
-        if (!response.ok) {
-            const errData = await response.json().catch(function () { return {}; });
-            throw new Error(errData.error || errData.detail || 'Erro HTTP ' + response.status);
-        }
-        return await response.json();
-    } catch (error) {
-        console.error('[API GET] ' + endpoint, error);
-        throw error;
-    }
-}
-
-async function apiPost(endpoint, data) {
-    try {
-        const url = API_BASE_URL + endpoint;
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-            mode: 'cors',
-            body: JSON.stringify(data)
-        });
-        if (!response.ok) {
-            const errData = await response.json().catch(function () { return {}; });
-            throw new Error(errData.error || errData.detail || 'Erro HTTP ' + response.status);
-        }
-        return await response.json();
-    } catch (error) {
-        console.error('[API POST] ' + endpoint, error);
-        throw error;
-    }
-}
-
-async function apiPut(endpoint, data) {
-    try {
-        const url = API_BASE_URL + endpoint;
-        const response = await fetch(url, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-            mode: 'cors',
-            body: JSON.stringify(data)
-        });
-        if (!response.ok) {
-            const errData = await response.json().catch(function () { return {}; });
-            throw new Error(errData.error || errData.detail || 'Erro HTTP ' + response.status);
-        }
-        return await response.json();
-    } catch (error) {
-        console.error('[API PUT] ' + endpoint, error);
-        throw error;
-    }
-}
-
-async function apiDelete(endpoint) {
-    try {
-        const url = API_BASE_URL + endpoint;
-        const response = await fetch(url, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-            mode: 'cors'
-        });
-        if (!response.ok) {
-            const errData = await response.json().catch(function () { return {}; });
-            throw new Error(errData.error || errData.detail || 'Erro HTTP ' + response.status);
-        }
-        return await response.json();
-    } catch (error) {
-        console.error('[API DELETE] ' + endpoint, error);
-        throw error;
-    }
-}
-
-/* ============================================================
-   5. FORMATADORES
-   ============================================================ */
-
-/**
- * Formata valor numérico para R$ X.XXX,XX
- * @param {number|string} value
- * @returns {string}
- */
-function formatCurrency(value) {
-    if (value === null || value === undefined || isNaN(Number(value))) return 'R$ 0,00';
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value));
-}
-
-/**
- * Formata data ISO para DD/MM/YYYY
- * @param {string} dateStr
- * @returns {string}
- */
-function formatDate(dateStr) {
-    if (!dateStr) return '-';
-    try {
-        const parts = dateStr.split('T')[0].split('-');
-        if (parts.length === 3) return parts[2] + '/' + parts[1] + '/' + parts[0];
-        return dateStr;
-    } catch {
-        return dateStr;
-    }
-}
-
-/**
- * Formata data para input type="date" (YYYY-MM-DD)
- * @param {string} dateStr
- * @returns {string}
- */
-function formatDateForInput(dateStr) {
-    if (!dateStr) return '';
-    return dateStr.split('T')[0];
-}
-
-/**
- * Formata telefone: (XX) XXXXX-XXXX ou (XX) XXXX-XXXX
- * @param {string} value
- * @returns {string}
- */
-function formatPhone(value) {
-    if (!value) return '';
-    const nums = value.replace(/\D/g, '');
-    if (nums.length <= 2) return '(' + nums;
-    if (nums.length <= 6) return '(' + nums.substring(0, 2) + ') ' + nums.substring(2);
-    if (nums.length <= 10) return '(' + nums.substring(0, 2) + ') ' + nums.substring(2, 6) + '-' + nums.substring(6);
-    return '(' + nums.substring(0, 2) + ') ' + nums.substring(2, 7) + '-' + nums.substring(7, 11);
-}
-
-/**
- * Formata CEP: XXXXX-XXX
- * @param {string} value
- * @returns {string}
- */
-function formatCEP(value) {
-    if (!value) return '';
-    const nums = value.replace(/\D/g, '');
-    if (nums.length <= 5) return nums;
-    return nums.substring(0, 5) + '-' + nums.substring(5, 8);
-}
-
-/**
- * Formata CPF: XXX.XXX.XXX-XX
- * @param {string} value
- * @returns {string}
- */
-function formatCPF(value) {
-    if (!value) return '';
-    const nums = value.replace(/\D/g, '');
-    if (nums.length <= 3) return nums;
-    if (nums.length <= 6) return nums.substring(0, 3) + '.' + nums.substring(3);
-    if (nums.length <= 9) return nums.substring(0, 3) + '.' + nums.substring(3, 6) + '.' + nums.substring(6);
-    return nums.substring(0, 3) + '.' + nums.substring(3, 6) + '.' + nums.substring(6, 9) + '-' + nums.substring(9, 11);
-}
-
-/**
- * Formata CNPJ: XX.XXX.XXX/XXXX-XX
- * @param {string} value
- * @returns {string}
- */
-function formatCNPJ(value) {
-    if (!value) return '';
-    const nums = value.replace(/\D/g, '');
-    if (nums.length <= 2) return nums;
-    if (nums.length <= 5) return nums.substring(0, 2) + '.' + nums.substring(2);
-    if (nums.length <= 8) return nums.substring(0, 2) + '.' + nums.substring(2, 5) + '.' + nums.substring(5);
-    if (nums.length <= 12) return nums.substring(0, 2) + '.' + nums.substring(2, 5) + '.' + nums.substring(5, 8) + '/' + nums.substring(8);
-    return nums.substring(0, 2) + '.' + nums.substring(2, 5) + '.' + nums.substring(5, 8) + '/' + nums.substring(8, 12) + '-' + nums.substring(12, 14);
-}
-
-/**
- * Formata CPF ou CNPJ automaticamente por tamanho
- * @param {string} value
- * @returns {string}
- */
-function formatCPFCNPJ(value) {
-    if (!value) return '';
-    const nums = value.replace(/\D/g, '');
-    if (nums.length <= 11) return formatCPF(value);
-    return formatCNPJ(value);
-}
-
-/**
- * Formata data para nome de arquivo (YYYY-MM-DD)
- * @returns {string}
- */
-function formatFileDate() {
-    const now = new Date();
-    const y = now.getFullYear();
-    const m = String(now.getMonth() + 1).padStart(2, '0');
-    const d = String(now.getDate()).padStart(2, '0');
-    return y + '-' + m + '-' + d;
-}
-
-/* ============================================================
-   6. MÁSCARAS — Aplica em tempo real no input
-   ============================================================ */
-
-/**
- * Aplica máscara em tempo real a um elemento input.
- * @param {HTMLElement} element - O input
- * @param {string} tipo - phone, cep, cpf, cnpj, cpfcnpj, currency
- */
-function maskInput(element, tipo) {
-    if (!element) return;
-
-    element.addEventListener('input', function () {
-        const cursorPos = element.selectionStart;
-        const oldLen = element.value.length;
-        let val = element.value;
-
-        switch (tipo) {
-            case 'phone':
-                element.value = formatPhone(val);
-                break;
-            case 'cep':
-                element.value = formatCEP(val);
-                break;
-            case 'cpf':
-                element.value = formatCPF(val);
-                break;
-            case 'cnpj':
-                element.value = formatCNPJ(val);
-                break;
-            case 'cpfcnpj':
-                element.value = formatCPFCNPJ(val);
-                break;
-            case 'currency':
-                val = val.replace(/\D/g, '');
-                if (val === '') {
-                    element.value = '';
-                    return;
-                }
-                const numVal = parseInt(val, 10) / 100;
-                element.value = numVal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                break;
-        }
-
-        const newLen = element.value.length;
-        const diff = newLen - oldLen;
-        const newPos = cursorPos + diff;
-        if (newPos >= 0 && newPos <= newLen) {
-            element.setSelectionRange(newPos, newPos);
-        }
     });
 }
 
-/* ============================================================
-   7. LIMPEZA — Remove formatação para salvar no banco
-   ============================================================ */
+// ═══════════════════════════════════════════
+// 🧭 SISTEMA DE NAVEGAÇÃO ENTRE ABAS
+// ═══════════════════════════════════════════
 
 /**
- * Remove toda formatação, retorna só números.
- * @param {string} value
- * @returns {string}
+ * Configuração por aba: título do header e botão de ação
  */
-function unmask(value) {
-    if (!value) return '';
-    return String(value).replace(/\D/g, '');
-}
+const ABA_CONFIG = {
+    dashboard:     { titulo: 'Dashboard',     btnTexto: '+ Novo Orçamento', btnAction: () => { navegarAba('orcamentos'); setTimeout(mostrarFormulario, 100); } },
+    orcamentos:    { titulo: 'Orçamentos',    btnTexto: '+ Novo Orçamento', btnAction: () => mostrarFormulario() },
+    clientes:      { titulo: 'Clientes',      btnTexto: '+ Novo Cliente',   btnAction: () => abrirModalCliente() },
+    produtos:      { titulo: 'Produtos',      btnTexto: '+ Novo Produto',   btnAction: () => abrirModalProduto() },
+    configuracoes: { titulo: 'Configurações',  btnTexto: '',                  btnAction: null },
+};
+
+/** Aba ativa atual */
+let abaAtual = 'dashboard';
 
 /**
- * Converte "1.234,56" para 1234.56 (número)
- * @param {string} value
- * @returns {number}
+ * Navega para uma aba específica
+ * @param {string} nomeAba — dashboard | orcamentos | clientes | produtos | configuracoes
  */
-function parseCurrency(value) {
-    if (!value) return 0;
-    const cleaned = String(value).replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.');
-    const num = parseFloat(cleaned);
-    return isNaN(num) ? 0 : num;
-}
+function navegarAba(nomeAba) {
+    // Esconder todas as abas
+    document.querySelectorAll('.aba-content').forEach(aba => aba.classList.remove('aba-ativa'));
 
-/* ============================================================
-   8. TOAST — Notificações
-   ============================================================ */
+    // Mostrar a aba selecionada
+    const secao = document.getElementById('aba-' + nomeAba);
+    if (secao) secao.classList.add('aba-ativa');
 
-/**
- * Exibe notificação toast.
- * @param {string} message
- * @param {string} type - success, error, warning, info
- * @param {number} duration - ms (padrão 4000)
- */
-function showToast(message, type, duration) {
-    if (!type) type = 'info';
-    if (!duration) duration = 4000;
+    // Atualizar sidebar link ativo
+    document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));
+    const linkAtivo = document.querySelector(`.sidebar-link[data-aba="${nomeAba}"]`);
+    if (linkAtivo) linkAtivo.classList.add('active');
 
-    const container = document.getElementById('toastContainer');
-    if (!container) return;
+    // Atualizar header
+    const config = ABA_CONFIG[nomeAba] || {};
+    const headerTitle = document.getElementById('headerTitle');
+    if (headerTitle) headerTitle.textContent = config.titulo || nomeAba;
 
-    const icons = {
-        success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
-        error: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
-        warning: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
-        info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
-    };
-
-    const toast = document.createElement('div');
-    toast.className = 'toast ' + type;
-    toast.innerHTML = (icons[type] || icons.info) +
-        '<span>' + escapeHtml(message) + '</span>' +
-        '<button class="toast-close" aria-label="Fechar">' +
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
-        '</button>';
-
-    const closeBtn = toast.querySelector('.toast-close');
-    if (closeBtn) {
-        closeBtn.addEventListener('click', function () {
-            toast.remove();
-        });
+    // Atualizar botão de ação do header
+    const btnAction = document.getElementById('btnHeaderAction');
+    if (btnAction) {
+        if (config.btnTexto) {
+            btnAction.textContent = config.btnTexto;
+            btnAction.style.display = '';
+            btnAction.onclick = (e) => { e.preventDefault(); config.btnAction(); };
+            // Remover href para não navegar
+            btnAction.removeAttribute('href');
+            btnAction.setAttribute('href', '#');
+        } else {
+            btnAction.style.display = 'none';
+        }
     }
 
-    container.appendChild(toast);
+    // Salvar aba atual
+    abaAtual = nomeAba;
+    history.replaceState(null, '', `#${nomeAba}`);
 
-    setTimeout(function () {
-        if (toast.parentElement) {
-            toast.style.animation = 'toastSlideOut 0.3s ease forwards';
-            setTimeout(function () {
-                toast.remove();
-            }, 300);
-        }
-    }, duration);
-}
+    // Chamar init da aba se existir
+    if (typeof window['init_' + nomeAba] === 'function') {
+        window['init_' + nomeAba]();
+    }
 
-/* ============================================================
-   9. UTILS
-   ============================================================ */
-
-/**
- * Debounce — atrasa execução de função.
- * @param {Function} func
- * @param {number} wait - ms
- * @returns {Function}
- */
-function debounce(func, wait) {
-    if (!wait) wait = 300;
-    let timeout;
-    return function () {
-        const context = this;
-        const args = arguments;
-        clearTimeout(timeout);
-        timeout = setTimeout(function () {
-            func.apply(context, args);
-        }, wait);
-    };
+    console.log('[Nav] Aba:', nomeAba);
 }
 
 /**
- * Escapa HTML para prevenir XSS.
- * @param {string} str
- * @returns {string}
+ * Inicializa os listeners de navegação da sidebar
  */
-function escapeHtml(str) {
-    if (str === null || str === undefined) return '';
-    const div = document.createElement('div');
-    div.textContent = String(str);
-    return div.innerHTML;
-}
-
-/**
- * Lê imagem como base64.
- * @param {File} file
- * @param {number} maxSizeMB - Tamanho máximo em MB
- * @returns {Promise<string>} base64
- */
-function readImageAsBase64(file, maxSizeMB) {
-    if (!maxSizeMB) maxSizeMB = 2;
-    return new Promise(function (resolve, reject) {
-        if (!file) {
-            reject(new Error('Nenhum arquivo selecionado'));
-            return;
-        }
-        if (file.size > maxSizeMB * 1024 * 1024) {
-            reject(new Error('Arquivo excede ' + maxSizeMB + ' MB'));
-            return;
-        }
-        const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
-        if (validTypes.indexOf(file.type) === -1) {
-            reject(new Error('Formato inválido. Use JPG, PNG ou WEBP'));
-            return;
-        }
-        const reader = new FileReader();
-        reader.onload = function () {
-            resolve(reader.result);
-        };
-        reader.onerror = function () {
-            reject(new Error('Erro ao ler arquivo'));
-        };
-        reader.readAsDataURL(file);
+function initNavegacao() {
+    document.querySelectorAll('.sidebar-link[data-aba]').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const aba = link.dataset.aba;
+            if (aba) navegarAba(aba);
+        });
     });
 }
 
-/**
- * Retorna data de hoje no formato YYYY-MM-DD.
- * @returns {string}
- */
-function getToday() {
-    const now = new Date();
-    const y = now.getFullYear();
-    const m = String(now.getMonth() + 1).padStart(2, '0');
-    const d = String(now.getDate()).padStart(2, '0');
-    return y + '-' + m + '-' + d;
-}
+// ═══════════════════════════════════════════
+// 🚀 INICIALIZAÇÃO GLOBAL
+// ═══════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('[App] Inicializando SPA...');
+    console.log('[App] API_BASE_URL:', API_BASE_URL);
 
-/**
- * Retorna data daqui a N dias no formato YYYY-MM-DD.
- * @param {number} days
- * @returns {string}
- */
-function getDatePlusDays(days) {
-    const date = new Date();
-    date.setDate(date.getDate() + days);
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
-    return y + '-' + m + '-' + d;
-}
+    // Tema
+    initTheme();
 
-/**
- * Capitaliza a primeira letra de uma string.
- * @param {string} str
- * @returns {string}
- */
-function capitalizeFirst(str) {
-    if (!str) return '';
-    return str.charAt(0).toUpperCase() + str.slice(1);
-}
+    // Sidebar
+    initSidebar();
+
+    // Theme toggle button
+    const themeBtn = document.getElementById('themeToggle') || document.getElementById('themeToggleBtn');
+    if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
+
+    // Navegação por abas
+    initNavegacao();
+
+    // Determinar aba inicial: hash da URL ou parâmetro ?novo=1
+    const params = new URLSearchParams(window.location.search);
+    const hash = window.location.hash.replace('#', '');
+    const abasValidas = Object.keys(ABA_CONFIG);
+
+    if (hash && abasValidas.includes(hash)) {
+        navegarAba(hash);
+    } else if (params.get('novo') === '1') {
+        navegarAba('orcamentos');
+        setTimeout(mostrarFormulario, 200);
+    } else {
+        navegarAba('dashboard');
+    }
+
+    console.log('[App] SPA inicializado com sucesso');
+});
