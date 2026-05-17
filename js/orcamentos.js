@@ -1,238 +1,196 @@
+// ═══════════════════════════════════════════
+// 📌 ABA: ORÇAMENTOS
+// Toda lógica EXCLUSIVA de Orçamentos
+// CRUD com itens dinâmicos
+// ═══════════════════════════════════════════
+
 /**
- * ============================================================
- * orcamentos.js — Gerenciamento de Orçamentos
- * ============================================================
+ * IDs esperados no HTML (dentro de #aba-orcamentos):
+ *   secaoLista, secaoFormulario,
+ *   tabelaOrcamentos, buscaOrcamento, filtroStatus,
+ *   formOrcamento, orcCliente, orcDataEmissao, orcDataValidade,
+ *   orcFormaPagamento, orcPrazoEntrega, orcObservacoes,
+ *   tabelaItensOrcamento (tbody), orcTotalDisplay,
+ *   modalStatus, statusOrcamentoId, novoStatus,
+ *   confirmDeleteOrcamento
  */
 
-/* Estado local */
+// ========== ESTADO LOCAL ==========
 let orcamentosData = [];
-let produtosDisponiveis = [];
-let clientesDisponiveis = [];
+let orcProdutos = [];
+let orcClientes = [];
 let deleteOrcamentoId = null;
 let itemCounter = 0;
+let orcamentos_inicializado = false;
 
-/* ============================================================
-   Inicialização
-   ============================================================ */
-document.addEventListener('DOMContentLoaded', function () {
-    initTheme();
-    initSidebar();
-    carregarOrcamentos();
-    bindEventosOrcamento();
-
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('novo') === '1') {
-        mostrarFormulario();
-    }
-});
-
-function bindEventosOrcamento() {
-    const btnNovo = document.getElementById('btnNovoOrcamento');
-    if (btnNovo) btnNovo.addEventListener('click', mostrarFormulario);
-
-    const btnVoltar = document.getElementById('btnVoltarLista');
-    if (btnVoltar) btnVoltar.addEventListener('click', mostrarLista);
-
-    const btnCancelar = document.getElementById('btnCancelarOrcamento');
-    if (btnCancelar) btnCancelar.addEventListener('click', mostrarLista);
-
-    const btnAddItem = document.getElementById('btnAdicionarItem');
-    if (btnAddItem) btnAddItem.addEventListener('click', adicionarItem);
-
-    const form = document.getElementById('formOrcamento');
-    if (form) form.addEventListener('submit', salvarOrcamento);
-
-    /* Status modal */
-    const btnFecharStatus = document.getElementById('btnFecharModalStatus');
-    if (btnFecharStatus) btnFecharStatus.addEventListener('click', fecharModalStatus);
-
-    const btnCancelarStatus = document.getElementById('btnCancelarStatus');
-    if (btnCancelarStatus) btnCancelarStatus.addEventListener('click', fecharModalStatus);
-
-    const btnConfirmarStatus = document.getElementById('btnConfirmarStatus');
-    if (btnConfirmarStatus) btnConfirmarStatus.addEventListener('click', confirmarMudarStatus);
-
-    /* Delete modal */
-    const btnFecharDel = document.getElementById('btnFecharDeleteOrcamento');
-    if (btnFecharDel) btnFecharDel.addEventListener('click', fecharConfirmDeleteOrcamento);
-
-    const btnCancelarDel = document.getElementById('btnCancelarDeleteOrcamento');
-    if (btnCancelarDel) btnCancelarDel.addEventListener('click', fecharConfirmDeleteOrcamento);
-
-    const btnConfirmarDel = document.getElementById('btnConfirmarDeleteOrcamento');
-    if (btnConfirmarDel) btnConfirmarDel.addEventListener('click', executarDeleteOrcamento);
-
-    /* Busca e filtro */
-    const inputBusca = document.getElementById('buscaOrcamento');
-    if (inputBusca) {
-        const buscaDebounced = debounce(function () {
-            carregarOrcamentos();
-        }, 400);
-        inputBusca.addEventListener('input', buscaDebounced);
-    }
-
-    const selectFiltro = document.getElementById('filtroStatus');
-    if (selectFiltro) selectFiltro.addEventListener('change', function () { carregarOrcamentos(); });
-
-    /* ESC */
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') {
-            fecharModalStatus();
-            fecharConfirmDeleteOrcamento();
-        }
-    });
+// ========== HELPER: extrair array da resposta da API ==========
+function extrairArrayOrcamentos(data, chave) {
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    if (data[chave] && Array.isArray(data[chave])) return data[chave];
+    if (data.data && Array.isArray(data.data)) return data.data;
+    return [];
 }
 
-/* ============================================================
-   Views: Lista vs Formulário
-   ============================================================ */
+// ========== INIT (chamado pelo sistema de abas) ==========
+function init_orcamentos() {
+    if (!orcamentos_inicializado) {
+        orcamentos_inicializado = true;
+    }
+    // Sempre recarregar lista ao entrar na aba
+    // (só se a seção lista estiver visível)
+    const secaoFormulario = document.getElementById('secaoFormulario');
+    if (!secaoFormulario || secaoFormulario.style.display === 'none') {
+        carregarOrcamentos();
+    }
+}
 
+// ========== ALTERNAR LISTA / FORMULÁRIO ==========
 function mostrarLista() {
-    document.getElementById('secaoLista').style.display = '';
-    document.getElementById('secaoFormulario').style.display = 'none';
-    document.getElementById('orcPageTitle').textContent = 'Orçamentos';
-    document.getElementById('btnNovoOrcamento').style.display = '';
+    const secaoLista = document.getElementById('secaoLista');
+    const secaoFormulario = document.getElementById('secaoFormulario');
+
+    if (secaoLista) secaoLista.style.display = 'block';
+    if (secaoFormulario) secaoFormulario.style.display = 'none';
+
     carregarOrcamentos();
 }
 
 async function mostrarFormulario() {
-    document.getElementById('secaoLista').style.display = 'none';
-    document.getElementById('secaoFormulario').style.display = '';
-    document.getElementById('orcPageTitle').textContent = 'Novo Orçamento';
-    document.getElementById('btnNovoOrcamento').style.display = 'none';
+    const secaoLista = document.getElementById('secaoLista');
+    const secaoFormulario = document.getElementById('secaoFormulario');
 
-    document.getElementById('formOrcamento').reset();
-    document.getElementById('itensContainer').innerHTML = '';
-    document.getElementById('orcTotalDisplay').textContent = 'R$ 0,00';
+    if (secaoLista) secaoLista.style.display = 'none';
+    if (secaoFormulario) secaoFormulario.style.display = 'block';
+
+    // Reset formulário
+    const form = document.getElementById('formOrcamento');
+    if (form) form.reset();
+
+    const tbodyItens = document.getElementById('tabelaItensOrcamento');
+    if (tbodyItens) tbodyItens.innerHTML = '';
+
+    const totalDisplay = document.getElementById('orcTotalDisplay');
+    if (totalDisplay) totalDisplay.textContent = 'R$ 0,00';
+
     itemCounter = 0;
 
-    document.getElementById('orcDataEmissao').value = getToday();
+    // Datas padrão
+    const config = typeof getConfig === 'function' ? getConfig() : {};
+    const validadeDias = config.validadeDias || 15;
 
-    /* Carregar configurações para preencher padrões */
-    try {
-        const cfgResult = await apiGet('/api/configuracoes');
-        if (cfgResult.success && cfgResult.data) {
-            const cfg = cfgResult.data;
-            const validadeDias = parseInt(cfg.orcamento_validade_dias) || 15;
-            document.getElementById('orcDataValidade').value = getDatePlusDays(validadeDias);
-            document.getElementById('orcFormaPagamento').value = cfg.orcamento_condicoes_padrao || '';
-            document.getElementById('orcPrazoEntrega').value = cfg.orcamento_prazo_entrega_padrao || '';
-            document.getElementById('orcObservacoes').value = cfg.orcamento_observacoes_padrao || '';
-        }
-    } catch {
-        document.getElementById('orcDataValidade').value = getDatePlusDays(15);
-    }
+    const dataEmissao = document.getElementById('orcDataEmissao');
+    const dataValidade = document.getElementById('orcDataValidade');
+    if (dataEmissao) dataEmissao.value = typeof getToday === 'function' ? getToday() : new Date().toISOString().split('T')[0];
+    if (dataValidade) dataValidade.value = typeof getDatePlusDays === 'function' ? getDatePlusDays(validadeDias) : '';
 
-    await Promise.all([
-        carregarClientesSelect(),
-        carregarProdutosSelect()
-    ]);
+    // Condições padrão
+    const formaPag = document.getElementById('orcFormaPagamento');
+    const prazoEnt = document.getElementById('orcPrazoEntrega');
+    const obs = document.getElementById('orcObservacoes');
 
+    if (formaPag && config.condicoesPadrao) formaPag.value = config.condicoesPadrao;
+    if (prazoEnt && config.prazoEntregaPadrao) prazoEnt.value = config.prazoEntregaPadrao;
+    if (obs && config.observacoesPadrao) obs.value = config.observacoesPadrao;
+
+    // Carregar selects
+    await carregarClientesParaSelect();
+    await carregarProdutosParaSelect();
+
+    // Adicionar primeiro item
     adicionarItem();
 }
 
-async function carregarClientesSelect() {
+// ========== CARREGAR CLIENTES PARA SELECT ==========
+async function carregarClientesParaSelect() {
+    const select = document.getElementById('orcCliente');
+    if (!select) return;
+
+    select.innerHTML = '<option value="">Carregando...</option>';
+
     try {
-        const result = await apiGet('/api/clientes?limit=500');
-        if (result.success) {
-            clientesDisponiveis = result.data || [];
-            const select = document.getElementById('orcClienteId');
-            select.innerHTML = '<option value="">Selecione o cliente...</option>';
-            clientesDisponiveis.forEach(function (c) {
-                const label = c.empresa ? c.nome + ' - ' + c.empresa : c.nome;
-                select.innerHTML += '<option value="' + c.id + '">' + escapeHtml(label) + '</option>';
-            });
-        }
+        const data = await apiGet('/api/clientes?limit=200');
+        orcClientes = extrairArrayOrcamentos(data, 'clientes');
+
+        console.log('[Orçamentos] Clientes carregados para select:', orcClientes.length);
+
+        select.innerHTML = '<option value="">Selecione um cliente...</option>';
+        orcClientes.forEach(c => {
+            const label = c.empresa ? `${c.nome} (${c.empresa})` : c.nome;
+            select.innerHTML += `<option value="${c.id}">${escapeHtml(label)}</option>`;
+        });
+
     } catch (error) {
-        showToast('Erro ao carregar clientes', 'error');
+        console.error('[Orçamentos] Erro ao carregar clientes:', error);
+        select.innerHTML = '<option value="">Erro ao carregar clientes</option>';
     }
 }
 
-async function carregarProdutosSelect() {
+// ========== CARREGAR PRODUTOS PARA SELECT ==========
+async function carregarProdutosParaSelect() {
     try {
-        const result = await apiGet('/api/produtos?ativo=true&limit=500');
-        if (result.success) {
-            produtosDisponiveis = result.data || [];
-        }
+        const data = await apiGet('/api/produtos?ativo=true&limit=200');
+        orcProdutos = extrairArrayOrcamentos(data, 'produtos');
+        console.log('[Orçamentos] Produtos carregados para select:', orcProdutos.length);
     } catch (error) {
-        showToast('Erro ao carregar produtos', 'error');
+        console.error('[Orçamentos] Erro ao carregar produtos:', error);
+        orcProdutos = [];
     }
 }
 
-/* ============================================================
-   Itens dinâmicos
-   ============================================================ */
-
+// ========== ITENS DINÂMICOS ==========
 function adicionarItem() {
     itemCounter++;
-    const container = document.getElementById('itensContainer');
-    const idx = itemCounter;
+    const tbody = document.getElementById('tabelaItensOrcamento');
+    if (!tbody) {
+        console.error('[Orçamentos] Elemento tabelaItensOrcamento não encontrado');
+        return;
+    }
 
-    let optionsProdutos = '<option value="">Selecione...</option>';
-    produtosDisponiveis.forEach(function (p) {
-        optionsProdutos += '<option value="' + p.id + '" data-valor="' + p.valor + '">' + escapeHtml(p.nome) + ' - ' + formatCurrency(p.valor) + '</option>';
+    let optionsHtml = '<option value="">Selecione...</option>';
+    orcProdutos.forEach(p => {
+        const precoFormatado = typeof formatCurrency === 'function' ? formatCurrency(p.valor) : `R$ ${p.valor}`;
+        optionsHtml += `<option value="${p.id}" data-valor="${p.valor}">${escapeHtml(p.nome)} — ${precoFormatado}</option>`;
     });
 
-    const html = '<div class="item-row" id="itemRow_' + idx + '" data-item-id="' + idx + '">' +
-        '<div class="form-group">' +
-        '<label>Produto *</label>' +
-        '<select id="itemProduto_' + idx + '" class="form-input" required>' + optionsProdutos + '</select>' +
-        '<div class="item-info" id="itemInfo_' + idx + '"></div>' +
-        '</div>' +
-        '<div class="form-group">' +
-        '<label>Qtd *</label>' +
-        '<input type="number" id="itemQtd_' + idx + '" class="form-input" value="1" min="1" required>' +
-        '</div>' +
-        '<div>' +
-        '<button type="button" class="btn-icon delete" title="Remover item" data-remove-item="' + idx + '">' +
-        '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>' +
-        '</button>' +
-        '</div>' +
-        '</div>';
+    const tr = document.createElement('tr');
+    tr.id = `item-row-${itemCounter}`;
+    tr.innerHTML = `
+        <td>
+            <select class="form-input item-produto" data-row="${itemCounter}" onchange="atualizarItemValor(${itemCounter})">
+                ${optionsHtml}
+            </select>
+        </td>
+        <td>
+            <input type="number" class="form-input item-quantidade" data-row="${itemCounter}" value="1" min="1" onchange="recalcularTotal()" oninput="recalcularTotal()">
+        </td>
+        <td>
+            <input type="number" class="form-input item-valor-unit" data-row="${itemCounter}" value="0" min="0" step="0.01" onchange="recalcularTotal()" oninput="recalcularTotal()">
+        </td>
+        <td>
+            <span class="item-subtotal" data-row="${itemCounter}" data-valor="0">R$ 0,00</span>
+        </td>
+        <td>
+            <button type="button" class="btn btn-danger btn-sm" onclick="removerItem(${itemCounter})">🗑️</button>
+        </td>`;
 
-    container.insertAdjacentHTML('beforeend', html);
+    tbody.appendChild(tr);
+}
 
-    /* Bind eventos do novo item */
-    const selectProduto = document.getElementById('itemProduto_' + idx);
-    const inputQtd = document.getElementById('itemQtd_' + idx);
+function atualizarItemValor(rowId) {
+    const select = document.querySelector(`.item-produto[data-row="${rowId}"]`);
+    const valorInput = document.querySelector(`.item-valor-unit[data-row="${rowId}"]`);
 
-    if (selectProduto) {
-        selectProduto.addEventListener('change', function () { atualizarItemValor(idx); });
-    }
-    if (inputQtd) {
-        inputQtd.addEventListener('input', function () { atualizarItemValor(idx); });
-    }
-
-    /* Botão remover */
-    const row = document.getElementById('itemRow_' + idx);
-    const btnRemover = row.querySelector('[data-remove-item]');
-    if (btnRemover) {
-        btnRemover.addEventListener('click', function () { removerItem(idx); });
+    if (select && valorInput) {
+        const selectedOption = select.options[select.selectedIndex];
+        const valor = parseFloat(selectedOption?.dataset?.valor || 0);
+        valorInput.value = valor.toFixed(2);
+        recalcularTotal();
     }
 }
 
-function atualizarItemValor(idx) {
-    const select = document.getElementById('itemProduto_' + idx);
-    const qtdInput = document.getElementById('itemQtd_' + idx);
-    const info = document.getElementById('itemInfo_' + idx);
-    if (!select || !qtdInput || !info) return;
-
-    const selectedOption = select.options[select.selectedIndex];
-    const valor = parseFloat(selectedOption ? selectedOption.getAttribute('data-valor') : 0) || 0;
-    const qtd = parseInt(qtdInput.value) || 1;
-    const subtotal = valor * qtd;
-
-    if (valor > 0) {
-        info.innerHTML = '<span class="item-valor">Subtotal: ' + formatCurrency(subtotal) + '</span>';
-    } else {
-        info.innerHTML = '';
-    }
-
-    recalcularTotal();
-}
-
-function removerItem(idx) {
-    const row = document.getElementById('itemRow_' + idx);
+function removerItem(rowId) {
+    const row = document.getElementById(`item-row-${rowId}`);
     if (row) {
         row.remove();
         recalcularTotal();
@@ -241,217 +199,283 @@ function removerItem(idx) {
 
 function recalcularTotal() {
     let total = 0;
-    const rows = document.querySelectorAll('#itensContainer .item-row');
+    const rows = document.querySelectorAll('#tabelaItensOrcamento tr');
 
-    rows.forEach(function (row) {
-        const idx = row.getAttribute('data-item-id');
-        const select = document.getElementById('itemProduto_' + idx);
-        const qtdInput = document.getElementById('itemQtd_' + idx);
-        if (select && qtdInput) {
-            const selectedOption = select.options[select.selectedIndex];
-            const valor = parseFloat(selectedOption ? selectedOption.getAttribute('data-valor') : 0) || 0;
+    rows.forEach(row => {
+        const qtdInput = row.querySelector('.item-quantidade');
+        const valorInput = row.querySelector('.item-valor-unit');
+        const subtotalSpan = row.querySelector('.item-subtotal');
+
+        if (qtdInput && valorInput && subtotalSpan) {
             const qtd = parseInt(qtdInput.value) || 0;
-            total += valor * qtd;
+            const valorUnit = parseFloat(valorInput.value) || 0;
+            const subtotal = qtd * valorUnit;
+
+            subtotalSpan.textContent = typeof formatCurrency === 'function' ? formatCurrency(subtotal) : `R$ ${subtotal.toFixed(2)}`;
+            subtotalSpan.dataset.valor = subtotal;
+            total += subtotal;
         }
     });
 
-    document.getElementById('orcTotalDisplay').textContent = formatCurrency(total);
+    const totalDisplay = document.getElementById('orcTotalDisplay');
+    if (totalDisplay) {
+        totalDisplay.textContent = typeof formatCurrency === 'function' ? formatCurrency(total) : `R$ ${total.toFixed(2)}`;
+    }
 }
 
-/* ============================================================
-   Salvar Orçamento
-   ============================================================ */
-
+// ========== SALVAR ORÇAMENTO ==========
 async function salvarOrcamento(event) {
     event.preventDefault();
 
-    const btnSalvar = document.getElementById('btnSalvarOrcamento');
-    const clienteId = document.getElementById('orcClienteId').value;
+    const clienteSelect = document.getElementById('orcCliente');
+    const clienteId = clienteSelect ? clienteSelect.value : '';
+
     if (!clienteId) {
         showToast('Selecione um cliente', 'warning');
         return;
     }
 
+    // Coletar itens
     const itens = [];
-    const rows = document.querySelectorAll('#itensContainer .item-row');
-    rows.forEach(function (row) {
-        const idx = row.getAttribute('data-item-id');
-        const select = document.getElementById('itemProduto_' + idx);
-        const qtdInput = document.getElementById('itemQtd_' + idx);
-        if (select && qtdInput && select.value) {
-            itens.push({
-                produto_id: select.value,
-                quantidade: parseInt(qtdInput.value) || 1
-            });
+    const rows = document.querySelectorAll('#tabelaItensOrcamento tr');
+
+    rows.forEach(row => {
+        const produtoSelect = row.querySelector('.item-produto');
+        const qtdInput = row.querySelector('.item-quantidade');
+        const valorInput = row.querySelector('.item-valor-unit');
+
+        if (produtoSelect && qtdInput && valorInput) {
+            const produtoId = produtoSelect.value;
+            const quantidade = parseInt(qtdInput.value) || 0;
+            const valorUnitario = parseFloat(valorInput.value) || 0;
+
+            if (produtoId && quantidade > 0) {
+                itens.push({
+                    produto_id: produtoId,
+                    quantidade: quantidade,
+                    valor_unitario: valorUnitario,
+                });
+            }
         }
     });
 
     if (itens.length === 0) {
-        showToast('Adicione pelo menos um produto ao orçamento', 'warning');
+        showToast('Adicione pelo menos um item ao orçamento', 'warning');
         return;
     }
 
+    // Montar dados
+    const dataEmissao = document.getElementById('orcDataEmissao');
+    const dataValidade = document.getElementById('orcDataValidade');
+    const formaPag = document.getElementById('orcFormaPagamento');
+    const prazoEnt = document.getElementById('orcPrazoEntrega');
+    const obs = document.getElementById('orcObservacoes');
+
     const dados = {
         cliente_id: clienteId,
-        data_emissao: document.getElementById('orcDataEmissao').value || null,
-        data_validade: document.getElementById('orcDataValidade').value || null,
-        forma_pagamento: document.getElementById('orcFormaPagamento').value.trim() || null,
-        prazo_entrega: document.getElementById('orcPrazoEntrega').value.trim() || null,
-        observacoes: document.getElementById('orcObservacoes').value.trim() || null,
-        itens: itens
+        data_emissao: dataEmissao ? dataEmissao.value : null,
+        data_validade: dataValidade ? dataValidade.value : null,
+        forma_pagamento: formaPag ? formaPag.value.trim() || null : null,
+        prazo_entrega: prazoEnt ? prazoEnt.value.trim() || null : null,
+        observacoes: obs ? obs.value.trim() || null : null,
+        itens: itens,
     };
 
-    btnSalvar.disabled = true;
-    btnSalvar.textContent = 'Salvando...';
+    console.log('[Orçamentos] Salvando:', dados);
 
     try {
         const result = await apiPost('/api/orcamentos', dados);
-        if (result.success && result.data) {
-            showToast('Orçamento criado com sucesso!', 'success');
-            window.location.href = 'preview.html?id=' + result.data.id;
+
+        // Extrair ID
+        const orcId = result.id || (result.data && result.data.id) || (result.orcamento && result.orcamento.id);
+
+        showToast('Orçamento criado com sucesso!', 'success');
+
+        if (orcId) {
+            // Abrir preview em nova aba
+            window.open(`preview.html?id=${orcId}`, '_blank');
         }
+
+        // Voltar à lista
+        mostrarLista();
+
     } catch (error) {
-        showToast('Erro ao salvar orçamento: ' + error.message, 'error');
-    } finally {
-        btnSalvar.disabled = false;
-        btnSalvar.textContent = 'Salvar e Visualizar';
+        console.error('[Orçamentos] Erro ao salvar:', error);
+        showToast(`Erro ao salvar orçamento: ${error.message}`, 'error');
     }
 }
 
-/* ============================================================
-   Listar Orçamentos
-   ============================================================ */
-
+// ========== CARREGAR LISTA DE ORÇAMENTOS ==========
 async function carregarOrcamentos() {
     const tbody = document.getElementById('tabelaOrcamentos');
     if (!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="7"><div class="spinner"></div></td></tr>';
+
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="7" class="empty-state">
+                <div class="loading-spinner"></div>
+                <p>Carregando...</p>
+            </td>
+        </tr>`;
 
     try {
-        let endpoint = '/api/orcamentos?limit=100';
-        const busca = document.getElementById('buscaOrcamento');
-        if (busca && busca.value.trim()) endpoint += '&busca=' + encodeURIComponent(busca.value.trim());
-        const filtro = document.getElementById('filtroStatus');
-        if (filtro && filtro.value) endpoint += '&status=' + filtro.value;
+        let url = '/api/orcamentos?limit=100';
 
-        const result = await apiGet(endpoint);
+        const filtroStatus = document.getElementById('filtroStatus');
+        const status = filtroStatus ? filtroStatus.value : '';
+        if (status) url += `&status=${status}`;
 
-        if (result.success) {
-            orcamentosData = result.data || [];
-            renderizarOrcamentos(orcamentosData);
-        }
+        const buscaInput = document.getElementById('buscaOrcamento');
+        const busca = buscaInput ? buscaInput.value : '';
+        if (busca) url += `&busca=${encodeURIComponent(busca)}`;
+
+        const data = await apiGet(url);
+        orcamentosData = extrairArrayOrcamentos(data, 'orcamentos');
+
+        console.log('[Orçamentos] Carregados:', orcamentosData.length);
+        renderizarOrcamentos(orcamentosData);
+
     } catch (error) {
-        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><h4>Erro ao carregar</h4><p>' + escapeHtml(error.message) + '</p></div></td></tr>';
+        console.error('[Orçamentos] Erro ao carregar:', error);
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="empty-state">
+                    <p>Erro ao carregar orçamentos.</p>
+                </td>
+            </tr>`;
+        showToast('Erro ao carregar orçamentos', 'error');
     }
 }
 
+// ========== RENDERIZAR LISTA ==========
 function renderizarOrcamentos(orcamentos) {
     const tbody = document.getElementById('tabelaOrcamentos');
     if (!tbody) return;
 
     if (!orcamentos || orcamentos.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state">' +
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>' +
-            '<h4>Nenhum orçamento encontrado</h4>' +
-            '<p>Crie seu primeiro orçamento</p>' +
-            '</div></td></tr>';
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="empty-state">
+                    <p>Nenhum orçamento encontrado.</p>
+                    <button class="btn btn-primary btn-sm" onclick="mostrarFormulario()" style="margin-top:10px;">+ Criar orçamento</button>
+                </td>
+            </tr>`;
         return;
     }
 
-    tbody.innerHTML = orcamentos.map(function (orc) {
-        const cliente = orc.clientes || {};
-        const clienteNome = cliente.nome || '-';
-        const clienteEmpresa = cliente.empresa ? ' - ' + cliente.empresa : '';
+    tbody.innerHTML = orcamentos.map(orc => {
+        const numero = orc.numero || orc.numero_orcamento || orc.id?.substring(0, 8) || '-';
+        const clienteNome = orc.cliente_nome || orc.cliente?.nome || '-';
+        const clienteEmpresa = orc.cliente_empresa || orc.cliente?.empresa || '';
+        const nomeDisplay = clienteEmpresa
+            ? `${escapeHtml(clienteNome)}<br><small>${escapeHtml(clienteEmpresa)}</small>`
+            : escapeHtml(clienteNome);
 
-        return '<tr>' +
-            '<td><strong>#' + escapeHtml(String(orc.numero_orcamento || '-')) + '</strong></td>' +
-            '<td>' + escapeHtml(clienteNome) + escapeHtml(clienteEmpresa) + '</td>' +
-            '<td>' + formatDate(orc.data_emissao) + '</td>' +
-            '<td>' + formatDate(orc.data_validade) + '</td>' +
-            '<td><strong>' + formatCurrency(orc.valor_total) + '</strong></td>' +
-            '<td><span class="badge badge-' + (orc.status || 'pendente') + '">' + capitalizeFirst(orc.status || 'pendente') + '</span></td>' +
-            '<td>' +
-            '<a href="preview.html?id=' + orc.id + '" class="btn-icon view" title="Visualizar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>' +
-            '<button class="btn-icon edit" title="Alterar Status" data-id="' + orc.id + '" data-status="' + (orc.status || 'pendente') + '" data-action="status-orc"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></button>' +
-            '<button class="btn-icon delete" title="Excluir" data-id="' + orc.id + '" data-action="deletar-orc"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>' +
-            '</td></tr>';
+        const emissao = typeof formatDate === 'function' ? formatDate(orc.data_emissao || orc.created_at) : (orc.data_emissao || '-');
+        const validade = orc.data_validade ? (typeof formatDate === 'function' ? formatDate(orc.data_validade) : orc.data_validade) : '-';
+        const valor = typeof formatCurrency === 'function' ? formatCurrency(orc.valor_total || 0) : `R$ ${(orc.valor_total || 0).toFixed(2)}`;
+        const status = orc.status || 'pendente';
+
+        const badgeClass = {
+            'pendente': 'badge-warning',
+            'aprovado': 'badge-success',
+            'recusado': 'badge-danger',
+            'expirado': 'badge-secondary'
+        }[status] || 'badge-secondary';
+
+        const statusLabel = {
+            'pendente': 'Pendente',
+            'aprovado': 'Aprovado',
+            'recusado': 'Recusado',
+            'expirado': 'Expirado'
+        }[status] || status;
+
+        return `
+            <tr>
+                <td><strong>#${escapeHtml(String(numero))}</strong></td>
+                <td>${nomeDisplay}</td>
+                <td>${emissao}</td>
+                <td>${validade}</td>
+                <td><strong>${valor}</strong></td>
+                <td><span class="badge ${badgeClass}">${statusLabel}</span></td>
+                <td>
+                    <div style="display:flex; gap:5px; flex-wrap:wrap;">
+                        <a href="preview.html?id=${orc.id}" target="_blank" class="btn btn-outline btn-sm" title="Visualizar">👁️</a>
+                        <button class="btn btn-secondary btn-sm" onclick="abrirModalStatus('${orc.id}', '${status}')" title="Status">🔄</button>
+                        <button class="btn btn-danger btn-sm" onclick="confirmarDeleteOrcamento('${orc.id}')" title="Excluir">🗑️</button>
+                    </div>
+                </td>
+            </tr>`;
     }).join('');
-
-    tbody.addEventListener('click', function (e) {
-        const btn = e.target.closest('[data-action]');
-        if (!btn) return;
-        const id = btn.getAttribute('data-id');
-        const action = btn.getAttribute('data-action');
-        if (action === 'status-orc') abrirModalStatus(id, btn.getAttribute('data-status'));
-        if (action === 'deletar-orc') confirmarDeleteOrcamento(id);
-    });
 }
 
-/* ============================================================
-   Status Modal
-   ============================================================ */
+// ========== BUSCA COM DEBOUNCE ==========
+const buscarOrcamentosDebounced = typeof debounce === 'function'
+    ? debounce(() => { carregarOrcamentos(); }, 400)
+    : function () { carregarOrcamentos(); };
 
+// ========== MODAL: MUDAR STATUS ==========
 function abrirModalStatus(id, statusAtual) {
-    document.getElementById('statusOrcamentoId').value = id;
-    document.getElementById('novoStatus').value = statusAtual;
-    document.getElementById('modalStatus').classList.add('active');
+    const idInput = document.getElementById('statusOrcamentoId');
+    const statusSelect = document.getElementById('novoStatus');
+    const modal = document.getElementById('modalStatus');
+
+    if (idInput) idInput.value = id;
+    if (statusSelect) statusSelect.value = statusAtual;
+    if (modal) modal.classList.add('active');
 }
 
 function fecharModalStatus() {
-    document.getElementById('modalStatus').classList.remove('active');
+    const modal = document.getElementById('modalStatus');
+    if (modal) modal.classList.remove('active');
 }
 
 async function confirmarMudarStatus() {
-    const id = document.getElementById('statusOrcamentoId').value;
-    const status = document.getElementById('novoStatus').value;
-    const btn = document.getElementById('btnConfirmarStatus');
+    const idInput = document.getElementById('statusOrcamentoId');
+    const statusSelect = document.getElementById('novoStatus');
 
-    btn.disabled = true;
-    btn.textContent = 'Salvando...';
+    const id = idInput ? idInput.value : '';
+    const novoStatus = statusSelect ? statusSelect.value : '';
+
+    if (!id || !novoStatus) return;
 
     try {
-        await apiPut('/api/orcamentos/' + id + '/status', { status: status });
+        await apiPut(`/api/orcamentos/${id}/status`, { status: novoStatus });
         showToast('Status atualizado com sucesso!', 'success');
         fecharModalStatus();
         carregarOrcamentos();
+
     } catch (error) {
-        showToast('Erro ao atualizar status: ' + error.message, 'error');
-    } finally {
-        btn.disabled = false;
-        btn.textContent = 'Confirmar';
+        console.error('[Orçamentos] Erro ao mudar status:', error);
+        showToast(`Erro ao atualizar status: ${error.message}`, 'error');
     }
 }
 
-/* ============================================================
-   Delete Modal
-   ============================================================ */
-
+// ========== MODAL: DELETAR ORÇAMENTO ==========
 function confirmarDeleteOrcamento(id) {
     deleteOrcamentoId = id;
-    document.getElementById('modalConfirmDeleteOrcamento').classList.add('active');
+    const modal = document.getElementById('confirmDeleteOrcamento');
+    if (modal) modal.classList.add('active');
 }
 
 function fecharConfirmDeleteOrcamento() {
-    document.getElementById('modalConfirmDeleteOrcamento').classList.remove('active');
     deleteOrcamentoId = null;
+    const modal = document.getElementById('confirmDeleteOrcamento');
+    if (modal) modal.classList.remove('active');
 }
 
-async function executarDeleteOrcamento() {
+async function deletarOrcamento() {
     if (!deleteOrcamentoId) return;
-    const btn = document.getElementById('btnConfirmarDeleteOrcamento');
-
-    btn.disabled = true;
-    btn.textContent = 'Excluindo...';
 
     try {
-        await apiDelete('/api/orcamentos/' + deleteOrcamentoId);
+        await apiDelete(`/api/orcamentos/${deleteOrcamentoId}`);
         showToast('Orçamento excluído com sucesso!', 'success');
         fecharConfirmDeleteOrcamento();
         carregarOrcamentos();
+
     } catch (error) {
-        showToast('Erro ao excluir: ' + error.message, 'error');
-    } finally {
-        btn.disabled = false;
-        btn.textContent = 'Excluir';
+        console.error('[Orçamentos] Erro ao excluir:', error);
+        showToast(`Erro ao excluir orçamento: ${error.message}`, 'error');
+        fecharConfirmDeleteOrcamento();
     }
 }
