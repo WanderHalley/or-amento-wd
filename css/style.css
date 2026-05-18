@@ -1,9 +1,110 @@
-/* ═══════════════════════════════════════════ */
-/* 📑 SISTEMA DE ABAS (GERAL)                 */
-/* ═══════════════════════════════════════════ */
+/* ============================================================
+   📑 SISTEMA DE ABAS (SPA)
+   ============================================================ */
 .aba-content {
     display: none;
 }
+
 .aba-content.aba-ativa {
     display: block;
 }
+
+/* Content area padding (usado dentro das abas) */
+.content-area {
+    padding: 24px;
+}
+
+@media (max-width: 768px) {
+    .content-area {
+        padding: 16px;
+    }
+}
+
+/* Form input (classe genérica usada nos formulários inline) */
+.form-input {
+    padding: 10px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-family: inherit;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    transition: var(--transition);
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+}
+
+.form-input::placeholder {
+    color: var(--text-muted);
+}
+
+/* Table container (overflow) */
+.table-container {
+    overflow-x: auto;
+}
+
+.table-container table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.table-container thead {
+    background: var(--table-header-bg);
+}
+
+.table-container th {
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border-color);
+    white-space: nowrap;
+}
+
+.table-container td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.table-container tbody tr {
+    transition: var(--transition);
+}
+
+.table-container tbody tr:hover {
+    background: var(--table-row-hover);
+}
+
+.table-container tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Stat info text styling */
+.stat-value {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1;
+    display: block;
+}
+
+.stat-label {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    display: block;
+}
+
+/* Badge classes aliases (orcamentos usa badge-warning etc) */
+.badge-warning { background: var(--badge-pendente-bg); color: var(--badge-pendente-text); }
+.badge-success { background: var(--badge-aprovado-bg); color: var(--badge-aprovado-text); }
+.badge-danger { background: var(--badge-recusado-bg); color: var(--badge-recusado-text); }
+.badge-secondary { background: var(--badge-expirado-bg); color: var(--badge-expirado-text); }
