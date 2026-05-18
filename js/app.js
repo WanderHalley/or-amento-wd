@@ -1,29 +1,20 @@
 /**
- * app.js — Módulo global do frontend
- * WD Máquinas — Sistema de Orçamentos (SPA por Abas)
+ * app.js — Módulo global do frontend (SPA)
+ * WD Máquinas — Sistema de Orçamentos
  *
- * Provê:
- *   - API_BASE_URL e wrappers fetch
- *   - Formatação: moeda, data, telefone, CEP, CPF, CNPJ, CPF/CNPJ
- *   - Máscaras de input
- *   - unmaskValue (e alias unmask)
- *   - readFileAsBase64 (e alias readImageAsBase64)
- *   - Toast notifications
- *   - Sidebar toggle
- *   - Theme dark/light toggle
- *   - getConfig / saveConfig (localStorage)
- *   - debounce, escapeHtml, getToday, getDatePlusDays, formatFileName
- *   - 🧭 SISTEMA DE NAVEGAÇÃO ENTRE ABAS
+ * Provê: API wrappers, formatação, máscaras, toast, sidebar, tema,
+ *        localStorage config, debounce, escapeHtml, e
+ *        NAVEGAÇÃO ENTRE ABAS (SPA).
  */
 
-// ═══════════════════════════════════════════
-// ⚙️ API BASE URL
-// ═══════════════════════════════════════════
+// =============================================
+// API BASE URL
+// =============================================
 const API_BASE_URL = 'https://wanderhalleylee-orcamento-wd.hf.space';
 
-// ═══════════════════════════════════════════
-// ⚙️ CONFIGURAÇÕES PADRÃO DA EMPRESA
-// ═══════════════════════════════════════════
+// =============================================
+// CONFIGURAÇÕES PADRÃO DA EMPRESA (localStorage)
+// =============================================
 const DEFAULT_CONFIG = {
     logo: '',
     nomeEmpresa: 'WD Máquinas',
@@ -53,14 +44,17 @@ function saveConfig(config) {
     } catch (e) { console.error('[Config] Erro ao salvar:', e); }
 }
 
-// ═══════════════════════════════════════════
-// ⚙️ API WRAPPERS
-// ═══════════════════════════════════════════
+// =============================================
+// API WRAPPERS
+// =============================================
 async function apiGet(path) {
     const url = API_BASE_URL + path;
     console.log('[API GET]', url);
     const response = await fetch(url, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
-    if (!response.ok) { const e = await response.text().catch(() => response.statusText); throw new Error(`GET ${path} failed (${response.status}): ${e}`); }
+    if (!response.ok) {
+        const errorText = await response.text().catch(() => response.statusText);
+        throw new Error(`GET ${path} failed (${response.status}): ${errorText}`);
+    }
     return await response.json();
 }
 
@@ -68,7 +62,10 @@ async function apiPost(path, body) {
     const url = API_BASE_URL + path;
     console.log('[API POST]', url, body);
     const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    if (!response.ok) { const e = await response.text().catch(() => response.statusText); throw new Error(`POST ${path} failed (${response.status}): ${e}`); }
+    if (!response.ok) {
+        const errorText = await response.text().catch(() => response.statusText);
+        throw new Error(`POST ${path} failed (${response.status}): ${errorText}`);
+    }
     return await response.json();
 }
 
@@ -76,7 +73,10 @@ async function apiPut(path, body) {
     const url = API_BASE_URL + path;
     console.log('[API PUT]', url, body);
     const response = await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    if (!response.ok) { const e = await response.text().catch(() => response.statusText); throw new Error(`PUT ${path} failed (${response.status}): ${e}`); }
+    if (!response.ok) {
+        const errorText = await response.text().catch(() => response.statusText);
+        throw new Error(`PUT ${path} failed (${response.status}): ${errorText}`);
+    }
     return await response.json();
 }
 
@@ -84,21 +84,26 @@ async function apiDelete(path) {
     const url = API_BASE_URL + path;
     console.log('[API DELETE]', url);
     const response = await fetch(url, { method: 'DELETE', headers: { 'Content-Type': 'application/json' } });
-    if (!response.ok) { const e = await response.text().catch(() => response.statusText); throw new Error(`DELETE ${path} failed (${response.status}): ${e}`); }
+    if (!response.ok) {
+        const errorText = await response.text().catch(() => response.statusText);
+        throw new Error(`DELETE ${path} failed (${response.status}): ${errorText}`);
+    }
     return await response.json();
 }
 
-// ═══════════════════════════════════════════
-// ⚙️ FORMATAÇÃO
-// ═══════════════════════════════════════════
+// =============================================
+// FORMATAÇÃO
+// =============================================
 function formatCurrency(value) {
-    return (Number(value) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const num = Number(value) || 0;
+    return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
 function formatDate(dateStr) {
     if (!dateStr) return '-';
     if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) return dateStr;
-    const parts = dateStr.split('T')[0].split('-');
+    const datePart = dateStr.split('T')[0];
+    const parts = datePart.split('-');
     if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
     return dateStr;
 }
@@ -123,47 +128,53 @@ function escapeHtml(text) {
 function formatFileName(name, dateStr) {
     const cleanName = (name || 'Orcamento').replace(/[^a-zA-Z0-9À-ú\s\-#]/g, '').trim();
     let dateFormatted = '';
-    if (dateStr) { const p = dateStr.split('T')[0].split('-'); if (p.length === 3) dateFormatted = `${p[2]}-${p[1]}-${p[0]}`; }
-    if (!dateFormatted) { const n = new Date(); dateFormatted = `${String(n.getDate()).padStart(2,'0')}-${String(n.getMonth()+1).padStart(2,'0')}-${n.getFullYear()}`; }
+    if (dateStr) {
+        const parts = dateStr.split('T')[0].split('-');
+        if (parts.length === 3) dateFormatted = `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+    if (!dateFormatted) {
+        const now = new Date();
+        dateFormatted = `${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}`;
+    }
     return `${cleanName} - ${dateFormatted}`;
 }
 
-// ═══════════════════════════════════════════
-// ⚙️ MÁSCARAS DE FORMATAÇÃO
-// ═══════════════════════════════════════════
+// =============================================
+// MÁSCARAS
+// =============================================
 function formatPhone(value) {
     if (!value) return '';
     const d = String(value).replace(/\D/g, '');
     if (d.length <= 2) return `(${d}`;
-    if (d.length <= 6) return `(${d.slice(0,2)}) ${d.slice(2)}`;
-    if (d.length <= 10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6,10)}`;
-    return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7,11)}`;
+    if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+    if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6, 10)}`;
+    return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7, 11)}`;
 }
 
 function formatCEP(value) {
     if (!value) return '';
     const d = String(value).replace(/\D/g, '');
     if (d.length <= 5) return d;
-    return `${d.slice(0,5)}-${d.slice(5,8)}`;
+    return `${d.slice(0, 5)}-${d.slice(5, 8)}`;
 }
 
 function formatCPF(value) {
     if (!value) return '';
     const d = String(value).replace(/\D/g, '');
     if (d.length <= 3) return d;
-    if (d.length <= 6) return `${d.slice(0,3)}.${d.slice(3)}`;
-    if (d.length <= 9) return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6)}`;
-    return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6,9)}-${d.slice(9,11)}`;
+    if (d.length <= 6) return `${d.slice(0, 3)}.${d.slice(3)}`;
+    if (d.length <= 9) return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6)}`;
+    return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9, 11)}`;
 }
 
 function formatCNPJ(value) {
     if (!value) return '';
     const d = String(value).replace(/\D/g, '');
     if (d.length <= 2) return d;
-    if (d.length <= 5) return `${d.slice(0,2)}.${d.slice(2)}`;
-    if (d.length <= 8) return `${d.slice(0,2)}.${d.slice(2,5)}.${d.slice(5)}`;
-    if (d.length <= 12) return `${d.slice(0,2)}.${d.slice(2,5)}.${d.slice(5,8)}/${d.slice(8)}`;
-    return `${d.slice(0,2)}.${d.slice(2,5)}.${d.slice(5,8)}/${d.slice(8,12)}-${d.slice(12,14)}`;
+    if (d.length <= 5) return `${d.slice(0, 2)}.${d.slice(2)}`;
+    if (d.length <= 8) return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5)}`;
+    if (d.length <= 12) return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8)}`;
+    return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12, 14)}`;
 }
 
 function formatCPFCNPJ(value) {
@@ -179,77 +190,84 @@ window.unmaskValue = unmaskValue;
 function maskInput(input, formatFn) {
     if (!input || !formatFn) return;
     input.addEventListener('input', function () {
-        const pos = this.selectionStart;
-        const oldLen = this.value.length;
+        const cursorPos = this.selectionStart;
+        const oldLength = this.value.length;
         this.value = formatFn(this.value);
-        const newPos = pos + (this.value.length - oldLen);
+        const newLength = this.value.length;
+        const newPos = cursorPos + (newLength - oldLength);
         this.setSelectionRange(newPos, newPos);
     });
 }
 
-// ═══════════════════════════════════════════
-// ⚙️ LEITURA DE ARQUIVO COMO BASE64
-// ═══════════════════════════════════════════
+// =============================================
+// LEITURA DE ARQUIVO COMO BASE64
+// =============================================
 function readFileAsBase64(file, maxBytes, allowedTypes) {
     return new Promise((resolve, reject) => {
         if (!file) { reject(new Error('Nenhum arquivo selecionado')); return; }
-        if (maxBytes && file.size > maxBytes) { reject(new Error(`Arquivo muito grande. Máximo: ${(maxBytes/(1024*1024)).toFixed(1)} MB`)); return; }
-        if (allowedTypes && Array.isArray(allowedTypes) && allowedTypes.length > 0 && !allowedTypes.includes(file.type)) { reject(new Error(`Tipo não permitido: ${file.type}. Aceitos: ${allowedTypes.join(', ')}`)); return; }
+        if (maxBytes && file.size > maxBytes) {
+            const maxMB = (maxBytes / (1024 * 1024)).toFixed(1);
+            reject(new Error(`Arquivo muito grande. Máximo: ${maxMB} MB`)); return;
+        }
+        if (allowedTypes && Array.isArray(allowedTypes) && allowedTypes.length > 0) {
+            if (!allowedTypes.includes(file.type)) {
+                reject(new Error(`Tipo não permitido: ${file.type}. Aceitos: ${allowedTypes.join(', ')}`)); return;
+            }
+        }
         const reader = new FileReader();
-        reader.onload = e => resolve(e.target.result);
+        reader.onload = (e) => resolve(e.target.result);
         reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
         reader.readAsDataURL(file);
     });
 }
 
 function readImageAsBase64(file, maxSizeMB) {
-    return readFileAsBase64(file, (maxSizeMB || 2) * 1024 * 1024, ['image/jpeg','image/png','image/webp']);
+    const maxBytes = (maxSizeMB || 2) * 1024 * 1024;
+    return readFileAsBase64(file, maxBytes, ['image/jpeg', 'image/png', 'image/webp']);
 }
 
 window.readFileAsBase64 = readFileAsBase64;
 window.readImageAsBase64 = readImageAsBase64;
 
-// ═══════════════════════════════════════════
-// ⚙️ TOAST NOTIFICATIONS
-// ═══════════════════════════════════════════
+// =============================================
+// TOAST
+// =============================================
 function showToast(message, type = 'info', duration = 4000) {
     const container = document.getElementById('toastContainer');
     if (!container) { console.warn('[Toast] Container não encontrado:', message); return; }
     const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
-    toast.innerHTML = `<span class="toast-icon">${icons[type]||icons.info}</span><span class="toast-message">${escapeHtml(message)}</span><button class="toast-close" onclick="this.parentElement.remove()">&times;</button>`;
+    toast.innerHTML = `
+        <span class="toast-icon">${icons[type] || icons.info}</span>
+        <span class="toast-message">${escapeHtml(message)}</span>
+        <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>`;
     container.appendChild(toast);
     requestAnimationFrame(() => toast.classList.add('toast-show'));
-    setTimeout(() => { toast.classList.remove('toast-show'); toast.classList.add('toast-hide'); setTimeout(() => { if (toast.parentElement) toast.remove(); }, 300); }, duration);
+    setTimeout(() => {
+        toast.classList.remove('toast-show');
+        toast.classList.add('toast-hide');
+        setTimeout(() => { if (toast.parentElement) toast.remove(); }, 300);
+    }, duration);
 }
 
-// ═══════════════════════════════════════════
-// ⚙️ DEBOUNCE
-// ═══════════════════════════════════════════
+// =============================================
+// DEBOUNCE
+// =============================================
 function debounce(fn, delay = 300) {
     let timer;
-    return function (...args) { clearTimeout(timer); timer = setTimeout(() => fn.apply(this, args), delay); };
+    return function (...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn.apply(this, args), delay);
+    };
 }
 
-// ═══════════════════════════════════════════
-// ⚙️ HELPER: extrair array da resposta da API
-// ═══════════════════════════════════════════
-function extrairArray(data, chave) {
-    if (!data) return [];
-    if (Array.isArray(data)) return data;
-    if (chave && data[chave] && Array.isArray(data[chave])) return data[chave];
-    if (data.data && Array.isArray(data.data)) return data.data;
-    return [];
-}
-
-// ═══════════════════════════════════════════
-// 🎨 THEME (Dark / Light)
-// ═══════════════════════════════════════════
+// =============================================
+// THEME
+// =============================================
 function initTheme() {
     const saved = localStorage.getItem('wd_theme') || 'dark';
     document.documentElement.setAttribute('data-theme', saved);
-    updateThemeIcon();
 }
 
 function toggleTheme() {
@@ -257,18 +275,14 @@ function toggleTheme() {
     const next = current === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', next);
     localStorage.setItem('wd_theme', next);
-    updateThemeIcon();
     console.log('[Theme] Alternado para:', next);
 }
 
-function updateThemeIcon() {
-    const iconEl = document.getElementById('themeIcon');
-    if (iconEl) iconEl.textContent = (document.documentElement.getAttribute('data-theme') || 'dark') === 'dark' ? '🌙' : '☀️';
-}
+function updateThemeIcon() { /* SVG no HTML já é adequado para ambos */ }
 
-// ═══════════════════════════════════════════
-// 📂 SIDEBAR
-// ═══════════════════════════════════════════
+// =============================================
+// SIDEBAR
+// =============================================
 function initSidebar() {
     const sidebar = document.getElementById('sidebar');
     if (!sidebar) return;
@@ -286,135 +300,173 @@ function initSidebar() {
 
     const menuToggle = document.getElementById('menuToggle');
     if (menuToggle) {
-        menuToggle.addEventListener('click', () => sidebar.classList.toggle('mobile-open'));
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('mobile-open');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (overlay) overlay.classList.toggle('active', sidebar.classList.contains('mobile-open'));
+        });
     }
 
     const overlay = document.getElementById('sidebarOverlay');
     if (overlay) {
-        overlay.addEventListener('click', () => sidebar.classList.remove('mobile-open'));
-    }
-
-    // Fechar sidebar mobile ao clicar em link
-    sidebar.querySelectorAll('.sidebar-link').forEach(link => {
-        link.addEventListener('click', () => {
-            if (window.innerWidth <= 768) sidebar.classList.remove('mobile-open');
+        overlay.addEventListener('click', () => {
+            sidebar.classList.remove('mobile-open');
+            overlay.classList.remove('active');
         });
-    });
+    }
 }
 
-// ═══════════════════════════════════════════
-// 🧭 SISTEMA DE NAVEGAÇÃO ENTRE ABAS
-// ═══════════════════════════════════════════
+// =============================================
+// HELPER: extrair array da resposta da API
+// =============================================
+function extrairArray(data, chave) {
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    if (chave && data[chave] && Array.isArray(data[chave])) return data[chave];
+    if (data.data && Array.isArray(data.data)) return data.data;
+    return [];
+}
+
+// =============================================
+// 🗂️ SISTEMA DE NAVEGAÇÃO POR ABAS (SPA)
+// =============================================
 
 /**
- * Configuração por aba: título do header e botão de ação
+ * Configuração de cada aba: título do header, botão de ação, e função init
  */
 const ABA_CONFIG = {
-    dashboard:     { titulo: 'Dashboard',     btnTexto: '+ Novo Orçamento', btnAction: () => { navegarAba('orcamentos'); setTimeout(mostrarFormulario, 100); } },
-    orcamentos:    { titulo: 'Orçamentos',    btnTexto: '+ Novo Orçamento', btnAction: () => mostrarFormulario() },
-    clientes:      { titulo: 'Clientes',      btnTexto: '+ Novo Cliente',   btnAction: () => abrirModalCliente() },
-    produtos:      { titulo: 'Produtos',      btnTexto: '+ Novo Produto',   btnAction: () => abrirModalProduto() },
-    configuracoes: { titulo: 'Configurações',  btnTexto: '',                  btnAction: null },
+    dashboard: {
+        titulo: 'Dashboard',
+        botaoHtml: '<a href="#aba-orcamentos" class="btn btn-primary btn-sm" data-aba="orcamentos">+ Novo Orçamento</a>',
+        init: 'init_dashboard'
+    },
+    orcamentos: {
+        titulo: 'Orçamentos',
+        botaoHtml: '<button class="btn btn-primary btn-sm" onclick="mostrarFormulario()" id="btnNovoOrcamento">+ Novo Orçamento</button>',
+        init: 'init_orcamentos'
+    },
+    clientes: {
+        titulo: 'Clientes',
+        botaoHtml: '<button class="btn btn-primary btn-sm" onclick="abrirModalCliente()">+ Novo Cliente</button>',
+        init: 'init_clientes'
+    },
+    produtos: {
+        titulo: 'Produtos',
+        botaoHtml: '<button class="btn btn-primary btn-sm" onclick="abrirModalProduto()">+ Novo Produto</button>',
+        init: 'init_produtos'
+    },
+    configuracoes: {
+        titulo: 'Configurações',
+        botaoHtml: '',
+        init: 'init_configuracoes'
+    }
 };
 
-/** Aba ativa atual */
 let abaAtual = 'dashboard';
 
 /**
  * Navega para uma aba específica
- * @param {string} nomeAba — dashboard | orcamentos | clientes | produtos | configuracoes
  */
 function navegarAba(nomeAba) {
-    // Esconder todas as abas
-    document.querySelectorAll('.aba-content').forEach(aba => aba.classList.remove('aba-ativa'));
+    const config = ABA_CONFIG[nomeAba];
+    if (!config) {
+        console.warn('[Nav] Aba desconhecida:', nomeAba);
+        return;
+    }
 
-    // Mostrar a aba selecionada
+    // Desativar aba atual
+    document.querySelectorAll('.aba-content').forEach(el => el.classList.remove('aba-ativa'));
+    document.querySelectorAll('.sidebar-link[data-aba]').forEach(el => el.classList.remove('active'));
+
+    // Ativar nova aba
     const secao = document.getElementById('aba-' + nomeAba);
     if (secao) secao.classList.add('aba-ativa');
 
-    // Atualizar sidebar link ativo
-    document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));
-    const linkAtivo = document.querySelector(`.sidebar-link[data-aba="${nomeAba}"]`);
-    if (linkAtivo) linkAtivo.classList.add('active');
+    const link = document.querySelector(`.sidebar-link[data-aba="${nomeAba}"]`);
+    if (link) link.classList.add('active');
 
     // Atualizar header
-    const config = ABA_CONFIG[nomeAba] || {};
     const headerTitle = document.getElementById('headerTitle');
-    if (headerTitle) headerTitle.textContent = config.titulo || nomeAba;
+    if (headerTitle) headerTitle.textContent = config.titulo;
 
-    // Atualizar botão de ação do header
     const btnAction = document.getElementById('btnHeaderAction');
-    if (btnAction) {
-        if (config.btnTexto) {
-            btnAction.textContent = config.btnTexto;
-            btnAction.style.display = '';
-            btnAction.onclick = (e) => { e.preventDefault(); config.btnAction(); };
-            // Remover href para não navegar
-            btnAction.removeAttribute('href');
-            btnAction.setAttribute('href', '#');
-        } else {
-            btnAction.style.display = 'none';
-        }
-    }
+    if (btnAction) btnAction.innerHTML = config.botaoHtml;
 
-    // Salvar aba atual
+    // Atualizar hash
     abaAtual = nomeAba;
-    history.replaceState(null, '', `#${nomeAba}`);
-
-    // Chamar init da aba se existir
-    if (typeof window['init_' + nomeAba] === 'function') {
-        window['init_' + nomeAba]();
+    if (window.location.hash !== '#aba-' + nomeAba) {
+        history.pushState(null, '', '#aba-' + nomeAba);
     }
 
-    console.log('[Nav] Aba:', nomeAba);
+    // Fechar sidebar mobile
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar && window.innerWidth <= 768) {
+        sidebar.classList.remove('mobile-open');
+        const overlay = document.getElementById('sidebarOverlay');
+        if (overlay) overlay.classList.remove('active');
+    }
+
+    // Chamar init da aba
+    if (config.init && typeof window[config.init] === 'function') {
+        console.log('[Nav] Inicializando aba:', nomeAba);
+        window[config.init]();
+    }
+
+    console.log('[Nav] Navegou para:', nomeAba);
 }
 
 /**
- * Inicializa os listeners de navegação da sidebar
+ * Inicializa a navegação por abas
  */
 function initNavegacao() {
+    // Cliques nos links do sidebar
     document.querySelectorAll('.sidebar-link[data-aba]').forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
-            const aba = link.dataset.aba;
+            const aba = link.getAttribute('data-aba');
             if (aba) navegarAba(aba);
         });
     });
+
+    // Cliques em links com data-aba dentro do conteúdo (ex: "Ver todos" no dashboard)
+    document.addEventListener('click', (e) => {
+        const link = e.target.closest('[data-aba]');
+        if (link && !link.classList.contains('sidebar-link')) {
+            e.preventDefault();
+            const aba = link.getAttribute('data-aba');
+            if (aba) navegarAba(aba);
+        }
+    });
+
+    // Navegação por hash (browser back/forward)
+    window.addEventListener('hashchange', () => {
+        const hash = window.location.hash.replace('#aba-', '');
+        if (hash && ABA_CONFIG[hash] && hash !== abaAtual) {
+            navegarAba(hash);
+        }
+    });
+
+    // Determinar aba inicial
+    const hash = window.location.hash.replace('#aba-', '');
+    const abaInicial = (hash && ABA_CONFIG[hash]) ? hash : 'dashboard';
+    navegarAba(abaInicial);
 }
 
-// ═══════════════════════════════════════════
-// 🚀 INICIALIZAÇÃO GLOBAL
-// ═══════════════════════════════════════════
+// =============================================
+// INICIALIZAÇÃO GLOBAL
+// =============================================
 document.addEventListener('DOMContentLoaded', () => {
     console.log('[App] Inicializando SPA...');
     console.log('[App] API_BASE_URL:', API_BASE_URL);
 
-    // Tema
     initTheme();
-
-    // Sidebar
     initSidebar();
 
-    // Theme toggle button
     const themeBtn = document.getElementById('themeToggle') || document.getElementById('themeToggleBtn');
     if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
 
-    // Navegação por abas
+    // Iniciar sistema de abas
     initNavegacao();
-
-    // Determinar aba inicial: hash da URL ou parâmetro ?novo=1
-    const params = new URLSearchParams(window.location.search);
-    const hash = window.location.hash.replace('#', '');
-    const abasValidas = Object.keys(ABA_CONFIG);
-
-    if (hash && abasValidas.includes(hash)) {
-        navegarAba(hash);
-    } else if (params.get('novo') === '1') {
-        navegarAba('orcamentos');
-        setTimeout(mostrarFormulario, 200);
-    } else {
-        navegarAba('dashboard');
-    }
 
     console.log('[App] SPA inicializado com sucesso');
 });
