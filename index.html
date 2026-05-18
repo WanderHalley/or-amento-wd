@@ -9,11 +9,10 @@
 <body>
     <div class="app-layout">
 
-        <!-- ═══════════════════════════════════════ -->
-        <!-- 🔧 ESTRUTURA FIXA: OVERLAY + SIDEBAR   -->
-        <!-- ═══════════════════════════════════════ -->
+        <!-- Sidebar Overlay (mobile) -->
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
+        <!-- ========== SIDEBAR ========== -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-logo">
@@ -31,14 +30,14 @@
             </div>
             <nav class="sidebar-nav">
                 <div class="sidebar-nav-label">Menu</div>
-                <a href="#" class="sidebar-link active" data-aba="dashboard" title="Dashboard">
+                <a href="#aba-dashboard" class="sidebar-link active" data-aba="dashboard" title="Dashboard">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
                         <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
                     </svg>
                     <span class="sidebar-link-text">Dashboard</span>
                 </a>
-                <a href="#" class="sidebar-link" data-aba="orcamentos" title="Orçamentos">
+                <a href="#aba-orcamentos" class="sidebar-link" data-aba="orcamentos" title="Orçamentos">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                         <polyline points="14 2 14 8 20 8"/>
@@ -48,7 +47,7 @@
                     </svg>
                     <span class="sidebar-link-text">Orçamentos</span>
                 </a>
-                <a href="#" class="sidebar-link" data-aba="clientes" title="Clientes">
+                <a href="#aba-clientes" class="sidebar-link" data-aba="clientes" title="Clientes">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                         <circle cx="9" cy="7" r="4"/>
@@ -57,7 +56,7 @@
                     </svg>
                     <span class="sidebar-link-text">Clientes</span>
                 </a>
-                <a href="#" class="sidebar-link" data-aba="produtos" title="Produtos">
+                <a href="#aba-produtos" class="sidebar-link" data-aba="produtos" title="Produtos">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
                         <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
@@ -65,7 +64,7 @@
                     </svg>
                     <span class="sidebar-link-text">Produtos</span>
                 </a>
-                <a href="#" class="sidebar-link" data-aba="configuracoes" title="Configurações">
+                <a href="#aba-configuracoes" class="sidebar-link" data-aba="configuracoes" title="Configurações">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="3"/>
                         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
@@ -75,10 +74,9 @@
             </nav>
         </aside>
 
-        <!-- ═══════════════════════════════════════ -->
-        <!-- 🔧 ESTRUTURA FIXA: MAIN + HEADER       -->
-        <!-- ═══════════════════════════════════════ -->
+        <!-- ========== MAIN ========== -->
         <main class="main-content">
+            <!-- Header dinâmico -->
             <header class="main-header">
                 <div class="header-left">
                     <button class="menu-toggle" id="menuToggle">
@@ -90,8 +88,8 @@
                     </button>
                     <h2 id="headerTitle">Dashboard</h2>
                 </div>
-                <div class="header-right" id="headerActions">
-                    <a href="?novo=1" class="btn btn-primary btn-sm" id="btnHeaderAction" style="display:none;"></a>
+                <div class="header-right">
+                    <span id="btnHeaderAction"></span>
                     <button class="theme-toggle" id="themeToggle" title="Alternar tema">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/>
@@ -104,18 +102,11 @@
                 </div>
             </header>
 
-            <!-- ═══════════════════════════════════ -->
-            <!-- 📑 CONTAINER PRINCIPAL DAS ABAS     -->
-            <!-- ═══════════════════════════════════ -->
-            <div class="content-area">
-
-                <!-- ══════════════════════════════ -->
-                <!-- 📌 ABA: DASHBOARD              -->
-                <!-- ID: aba-dashboard              -->
-                <!-- ══════════════════════════════ -->
-                <section id="aba-dashboard" class="aba-content aba-ativa">
-
-                    <!-- Stat Cards -->
+            <!-- ================================================== -->
+            <!-- === 📌 ABA: DASHBOARD === -->
+            <!-- ================================================== -->
+            <section id="aba-dashboard" class="aba-content aba-ativa">
+                <div class="content-area">
                     <div class="stats-grid">
                         <div class="stat-card">
                             <div class="stat-icon">
@@ -164,12 +155,10 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Últimos Orçamentos -->
                     <div class="card">
                         <div class="card-header">
                             <h3>Últimos Orçamentos</h3>
-                            <button class="btn btn-secondary btn-sm" onclick="navegarAba('orcamentos')">Ver todos</button>
+                            <a href="#aba-orcamentos" class="btn btn-secondary btn-sm" data-aba="orcamentos">Ver todos</a>
                         </div>
                         <div class="card-body">
                             <div class="table-container">
@@ -185,34 +174,29 @@
                                         </tr>
                                     </thead>
                                     <tbody id="tabelaUltimosOrcamentos">
-                                        <tr>
-                                            <td colspan="6" style="text-align:center; padding:40px;">
-                                                <div class="spinner"></div>
-                                                <p>Carregando...</p>
-                                            </td>
-                                        </tr>
+                                        <tr><td colspan="6" style="text-align:center; padding:40px;"><div class="spinner"></div><p>Carregando...</p></td></tr>
                                     </tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
+                </div>
+            </section>
+            <!-- === FIM ABA: DASHBOARD === -->
 
-                </section>
-
-                <!-- ══════════════════════════════ -->
-                <!-- 📌 ABA: ORÇAMENTOS             -->
-                <!-- ID: aba-orcamentos             -->
-                <!-- ══════════════════════════════ -->
-                <section id="aba-orcamentos" class="aba-content">
-
-                    <!-- SEÇÃO: LISTA DE ORÇAMENTOS -->
+            <!-- ================================================== -->
+            <!-- === 📌 ABA: ORCAMENTOS === -->
+            <!-- ================================================== -->
+            <section id="aba-orcamentos" class="aba-content">
+                <div class="content-area">
+                    <!-- Lista de orçamentos -->
                     <div id="secaoLista">
-                        <!-- Filtros -->
-                        <div class="card" style="margin-bottom: 20px;">
-                            <div class="card-body" style="padding: 15px;">
-                                <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-                                    <input type="text" id="buscaOrcamento" class="form-input" placeholder="Buscar por cliente..." style="flex:1; min-width:200px;" oninput="buscarOrcamentosDebounced()">
-                                    <select id="filtroStatus" class="form-input" style="width:auto; min-width:150px;" onchange="carregarOrcamentos()">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Lista de Orçamentos</h3>
+                                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                                    <input type="text" id="buscaOrcamento" placeholder="Buscar orçamento..." class="form-input" style="max-width:250px;" oninput="buscarOrcamentosDebounced()">
+                                    <select id="filtroStatus" class="form-input" style="max-width:160px;" onchange="carregarOrcamentos()">
                                         <option value="">Todos os status</option>
                                         <option value="pendente">Pendente</option>
                                         <option value="aprovado">Aprovado</option>
@@ -221,10 +205,7 @@
                                     </select>
                                 </div>
                             </div>
-                        </div>
-                        <!-- Tabela de orçamentos -->
-                        <div class="card">
-                            <div class="card-body">
+                            <div class="card-body card-body-no-pad">
                                 <div class="table-container">
                                     <table>
                                         <thead>
@@ -239,113 +220,92 @@
                                             </tr>
                                         </thead>
                                         <tbody id="tabelaOrcamentos">
-                                            <tr>
-                                                <td colspan="7" style="text-align:center; padding:40px;">
-                                                    <div class="spinner"></div>
-                                                    <p>Carregando orçamentos...</p>
-                                                </td>
-                                            </tr>
+                                            <tr><td colspan="7" style="text-align:center; padding:40px;"><div class="spinner"></div><p>Carregando orçamentos...</p></td></tr>
                                         </tbody>
                                     </table>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- SEÇÃO: FORMULÁRIO NOVO ORÇAMENTO -->
+                    <!-- Formulário de novo orçamento -->
                     <div id="secaoFormulario" style="display:none;">
                         <div class="card">
                             <div class="card-header">
                                 <h3>Novo Orçamento</h3>
-                                <button class="btn btn-secondary btn-sm" onclick="mostrarLista()">← Voltar à lista</button>
+                                <button class="btn btn-secondary btn-sm" onclick="mostrarLista()">← Voltar para lista</button>
                             </div>
                             <div class="card-body">
                                 <form id="formOrcamento" onsubmit="salvarOrcamento(event)">
                                     <div class="form-grid">
-                                        <div class="form-group full-width">
-                                            <label for="orcCliente">Cliente *</label>
+                                        <div class="form-group">
+                                            <label>Cliente <span class="required">*</span></label>
                                             <select id="orcCliente" class="form-input" required>
                                                 <option value="">Selecione um cliente...</option>
                                             </select>
                                         </div>
                                         <div class="form-group">
-                                            <label for="orcDataEmissao">Data de Emissão</label>
+                                            <label>Data de Emissão</label>
                                             <input type="date" id="orcDataEmissao" class="form-input">
                                         </div>
                                         <div class="form-group">
-                                            <label for="orcDataValidade">Data de Validade</label>
+                                            <label>Data de Validade</label>
                                             <input type="date" id="orcDataValidade" class="form-input">
                                         </div>
-                                        <div class="form-group">
-                                            <label for="orcFormaPagamento">Forma de Pagamento</label>
-                                            <input type="text" id="orcFormaPagamento" class="form-input" placeholder="Ex: 10x cartão ou 10% à vista">
+                                        <div class="form-group full-width">
+                                            <label>Forma de Pagamento</label>
+                                            <textarea id="orcFormaPagamento" class="form-input" rows="2"></textarea>
                                         </div>
                                         <div class="form-group">
-                                            <label for="orcPrazoEntrega">Prazo de Entrega/Despacho</label>
+                                            <label>Prazo de Entrega</label>
                                             <input type="text" id="orcPrazoEntrega" class="form-input" placeholder="Ex: 5 dias úteis">
                                         </div>
                                         <div class="form-group full-width">
-                                            <label for="orcObservacoes">Observações</label>
-                                            <textarea id="orcObservacoes" class="form-input" rows="2" placeholder="Observações adicionais..."></textarea>
+                                            <label>Observações</label>
+                                            <textarea id="orcObservacoes" class="form-input" rows="2"></textarea>
                                         </div>
                                     </div>
-
-                                    <!-- Itens do Orçamento -->
-                                    <div style="margin-top:25px;">
-                                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                                            <h3 style="margin:0;">Itens do Orçamento</h3>
-                                            <button type="button" class="btn btn-success btn-sm" onclick="adicionarItem()">+ Adicionar Item</button>
-                                        </div>
-                                        <div class="table-container">
-                                            <table>
-                                                <thead>
-                                                    <tr>
-                                                        <th style="width:40%;">Produto</th>
-                                                        <th style="width:12%;">Qtd</th>
-                                                        <th style="width:18%;">Valor Unit.</th>
-                                                        <th style="width:18%;">Subtotal</th>
-                                                        <th style="width:12%;">Ações</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody id="tabelaItensOrcamento"></tbody>
-                                                <tfoot>
-                                                    <tr>
-                                                        <td colspan="3" style="text-align:right;"><strong>TOTAL:</strong></td>
-                                                        <td><strong id="orcTotalDisplay">R$ 0,00</strong></td>
-                                                        <td></td>
-                                                    </tr>
-                                                </tfoot>
-                                            </table>
-                                        </div>
+                                    <h4 style="margin:24px 0 12px;">Itens do Orçamento</h4>
+                                    <div class="table-container">
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>Produto</th>
+                                                    <th style="width:100px;">Qtd</th>
+                                                    <th style="width:140px;">Valor Unit.</th>
+                                                    <th style="width:140px;">Subtotal</th>
+                                                    <th style="width:60px;"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="tabelaItensOrcamento"></tbody>
+                                        </table>
                                     </div>
-
-                                    <div style="margin-top:20px; text-align:right; display:flex; gap:10px; justify-content:flex-end;">
+                                    <button type="button" class="add-item-btn" onclick="adicionarItem()">+ Adicionar Item</button>
+                                    <div style="text-align:right; margin:16px 0; font-size:1.2em;">
+                                        Total: <strong id="orcTotalDisplay">R$ 0,00</strong>
+                                    </div>
+                                    <div class="form-actions">
                                         <button type="button" class="btn btn-secondary" onclick="mostrarLista()">Cancelar</button>
-                                        <button type="submit" class="btn btn-primary">Salvar e Visualizar</button>
+                                        <button type="submit" class="btn btn-primary">Salvar Orçamento</button>
                                     </div>
                                 </form>
                             </div>
                         </div>
                     </div>
+                </div>
+            </section>
+            <!-- === FIM ABA: ORCAMENTOS === -->
 
-                </section>
-
-                <!-- ══════════════════════════════ -->
-                <!-- 📌 ABA: CLIENTES               -->
-                <!-- ID: aba-clientes               -->
-                <!-- ══════════════════════════════ -->
-                <section id="aba-clientes" class="aba-content">
-
-                    <!-- Busca -->
-                    <div class="card" style="margin-bottom: 20px;">
-                        <div class="card-body" style="padding: 15px;">
-                            <input type="text" id="buscaCliente" class="form-input" placeholder="Buscar por nome, empresa, email ou telefone..." oninput="buscarClientesDebounced()">
-                        </div>
-                    </div>
-
-                    <!-- Tabela de clientes -->
+            <!-- ================================================== -->
+            <!-- === 📌 ABA: CLIENTES === -->
+            <!-- ================================================== -->
+            <section id="aba-clientes" class="aba-content">
+                <div class="content-area">
                     <div class="card">
-                        <div class="card-body">
+                        <div class="card-header">
+                            <h3>Clientes</h3>
+                            <input type="text" id="buscaCliente" placeholder="Buscar cliente..." class="form-input" style="max-width:300px;" oninput="buscarClientesDebounced()">
+                        </div>
+                        <div class="card-body card-body-no-pad">
                             <div class="table-container">
                                 <table>
                                     <thead>
@@ -359,36 +319,27 @@
                                         </tr>
                                     </thead>
                                     <tbody id="tabelaClientes">
-                                        <tr>
-                                            <td colspan="6" style="text-align:center; padding:40px;">
-                                                <div class="spinner"></div>
-                                                <p>Carregando clientes...</p>
-                                            </td>
-                                        </tr>
+                                        <tr><td colspan="6" style="text-align:center; padding:40px;"><div class="spinner"></div><p>Carregando clientes...</p></td></tr>
                                     </tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
+                </div>
+            </section>
+            <!-- === FIM ABA: CLIENTES === -->
 
-                </section>
-
-                <!-- ══════════════════════════════ -->
-                <!-- 📌 ABA: PRODUTOS               -->
-                <!-- ID: aba-produtos               -->
-                <!-- ══════════════════════════════ -->
-                <section id="aba-produtos" class="aba-content">
-
-                    <!-- Busca -->
-                    <div class="card" style="margin-bottom: 20px;">
-                        <div class="card-body" style="padding: 15px;">
-                            <input type="text" id="buscaProduto" class="form-input" placeholder="Buscar por nome ou descrição..." oninput="buscarProdutosDebounced()">
-                        </div>
-                    </div>
-
-                    <!-- Tabela de produtos -->
+            <!-- ================================================== -->
+            <!-- === 📌 ABA: PRODUTOS === -->
+            <!-- ================================================== -->
+            <section id="aba-produtos" class="aba-content">
+                <div class="content-area">
                     <div class="card">
-                        <div class="card-body">
+                        <div class="card-header">
+                            <h3>Produtos</h3>
+                            <input type="text" id="buscaProduto" placeholder="Buscar produto..." class="form-input" style="max-width:300px;" oninput="buscarProdutosDebounced()">
+                        </div>
+                        <div class="card-body card-body-no-pad">
                             <div class="table-container">
                                 <table>
                                     <thead>
@@ -403,215 +354,190 @@
                                         </tr>
                                     </thead>
                                     <tbody id="tabelaProdutos">
-                                        <tr>
-                                            <td colspan="7" style="text-align:center; padding:40px;">
-                                                <div class="spinner"></div>
-                                                <p>Carregando produtos...</p>
-                                            </td>
-                                        </tr>
+                                        <tr><td colspan="7" style="text-align:center; padding:40px;"><div class="spinner"></div><p>Carregando produtos...</p></td></tr>
                                     </tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
+                </div>
+            </section>
+            <!-- === FIM ABA: PRODUTOS === -->
 
-                </section>
-
-                <!-- ══════════════════════════════ -->
-                <!-- 📌 ABA: CONFIGURAÇÕES          -->
-                <!-- ID: aba-configuracoes          -->
-                <!-- ══════════════════════════════ -->
-                <section id="aba-configuracoes" class="aba-content">
-
-                    <!-- Dados da Empresa -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h3>Dados da Empresa</h3>
-                        </div>
+            <!-- ================================================== -->
+            <!-- === 📌 ABA: CONFIGURACOES === -->
+            <!-- ================================================== -->
+            <section id="aba-configuracoes" class="aba-content">
+                <div class="content-area">
+                    <div class="card" style="margin-bottom:24px;">
+                        <div class="card-header"><h3>Dados da Empresa</h3></div>
                         <div class="card-body">
                             <form id="formConfigEmpresa" onsubmit="salvarConfiguracoes(event)">
-
-                                <!-- Logo Upload -->
-                                <div class="form-group" style="margin-bottom:20px;">
-                                    <label for="cfgLogo">Logo da Empresa</label>
-                                    <div style="margin-top:8px;">
-                                        <div id="cfgLogoPreview" style="margin-bottom:10px;">
-                                            <img id="cfgLogoImg" src="" alt="Logo" style="max-width:200px; max-height:100px; border-radius:8px; border:1px solid var(--border-color); display:none;">
+                                <div class="config-section">
+                                    <h4>Logo da Empresa</h4>
+                                    <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                                        <div class="logo-preview">
+                                            <img id="cfgLogoImg" src="" alt="Logo" style="display:none;">
+                                            <input type="file" id="cfgLogo" accept="image/jpeg,image/png,image/webp" onchange="previewLogoConfig(event)">
                                         </div>
-                                        <input type="file" id="cfgLogo" class="form-input" accept="image/jpeg,image/png,image/webp" onchange="previewLogoConfig(event)">
-                                        <small style="color:var(--text-muted); display:block; margin-top:4px;">JPG, PNG ou WEBP. Máximo 500 KB. Recomendado: 400×120 px.</small>
-                                        <button type="button" class="btn btn-danger btn-sm" id="btnRemoverLogo" onclick="removerLogoConfig()" style="margin-top:8px; display:none;">Remover logo</button>
+                                        <div>
+                                            <p style="font-size:13px; color:var(--text-muted); margin-bottom:8px;">JPEG, PNG ou WebP. Máx: 500 KB</p>
+                                            <button type="button" id="btnRemoverLogo" class="btn btn-danger btn-sm" onclick="removerLogoConfig()" style="display:none;">Remover Logo</button>
+                                        </div>
                                     </div>
                                 </div>
-
-                                <div class="form-grid">
-                                    <div class="form-group full-width">
-                                        <label for="cfgNomeEmpresa">Nome da Empresa *</label>
-                                        <input type="text" id="cfgNomeEmpresa" class="form-input" required placeholder="WD Máquinas">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="cfgCnpj">CNPJ</label>
-                                        <input type="text" id="cfgCnpj" class="form-input" placeholder="00.000.000/0000-00" maxlength="18">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="cfgTelefone">Telefone</label>
-                                        <input type="text" id="cfgTelefone" class="form-input" placeholder="(00) 00000-0000" maxlength="15">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="cfgEmail">E-mail</label>
-                                        <input type="email" id="cfgEmail" class="form-input" placeholder="contato@empresa.com">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="cfgSite">Site / Instagram</label>
-                                        <input type="text" id="cfgSite" class="form-input" placeholder="www.empresa.com ou @empresa">
-                                    </div>
-                                    <div class="form-group full-width">
-                                        <label for="cfgEndereco">Endereço Completo</label>
-                                        <input type="text" id="cfgEndereco" class="form-input" placeholder="Rua, número, bairro, cidade - UF, CEP">
-                                    </div>
-                                </div>
-
-                                <hr style="margin: 25px 0; border-color: var(--border-color);">
-
-                                <h3 style="margin-bottom:15px;">Padrões do Orçamento</h3>
-                                <div class="form-grid">
-                                    <div class="form-group full-width">
-                                        <label for="cfgCondicoesPadrao">Condições de Pagamento Padrão</label>
-                                        <textarea id="cfgCondicoesPadrao" class="form-input" rows="3" placeholder="Ex: 50% de entrada e 50% na entrega do equipamento."></textarea>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="cfgValidadeDias">Validade Padrão (dias)</label>
-                                        <input type="number" id="cfgValidadeDias" class="form-input" min="1" max="365" placeholder="15">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="cfgPrazoEntregaPadrao">Prazo de Entrega Padrão</label>
-                                        <input type="text" id="cfgPrazoEntregaPadrao" class="form-input" placeholder="Ex: 15 a 20 dias úteis">
-                                    </div>
-                                    <div class="form-group full-width">
-                                        <label for="cfgObservacoesPadrao">Observações Padrão</label>
-                                        <textarea id="cfgObservacoesPadrao" class="form-input" rows="3" placeholder="Texto padrão que aparece em todos os orçamentos..."></textarea>
+                                <div class="config-section">
+                                    <h4>Informações da Empresa</h4>
+                                    <div class="form-grid">
+                                        <div class="form-group">
+                                            <label>Nome da Empresa <span class="required">*</span></label>
+                                            <input type="text" id="cfgNomeEmpresa" class="form-input" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>CNPJ</label>
+                                            <input type="text" id="cfgCnpj" class="form-input" placeholder="00.000.000/0000-00" maxlength="18">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Telefone</label>
+                                            <input type="text" id="cfgTelefone" class="form-input" placeholder="(00) 00000-0000" maxlength="15">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Email</label>
+                                            <input type="email" id="cfgEmail" class="form-input">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Site / Instagram</label>
+                                            <input type="text" id="cfgSite" class="form-input">
+                                        </div>
+                                        <div class="form-group full-width">
+                                            <label>Endereço Completo</label>
+                                            <input type="text" id="cfgEndereco" class="form-input">
+                                        </div>
                                     </div>
                                 </div>
-
-                                <div style="margin-top:20px; text-align:right; display:flex; gap:10px; justify-content:flex-end;">
+                                <div class="config-section">
+                                    <h4>Padrões para Orçamentos</h4>
+                                    <div class="form-grid">
+                                        <div class="form-group full-width">
+                                            <label>Condições de Pagamento Padrão</label>
+                                            <textarea id="cfgCondicoesPadrao" class="form-input" rows="2"></textarea>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Validade (dias)</label>
+                                            <input type="number" id="cfgValidadeDias" class="form-input" min="1" max="365">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Prazo de Entrega Padrão</label>
+                                            <input type="text" id="cfgPrazoEntregaPadrao" class="form-input">
+                                        </div>
+                                        <div class="form-group full-width">
+                                            <label>Observações Padrão</label>
+                                            <textarea id="cfgObservacoesPadrao" class="form-input" rows="2"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-actions">
                                     <button type="button" class="btn btn-secondary" onclick="resetarConfiguracoes()">Restaurar Padrões</button>
                                     <button type="submit" class="btn btn-primary">Salvar Configurações</button>
                                 </div>
                             </form>
                         </div>
                     </div>
-
-                    <!-- Sobre o Sistema -->
-                    <div class="card" style="margin-top:20px;">
-                        <div class="card-header">
-                            <h3>Sobre o Sistema</h3>
-                        </div>
+                    <div class="card">
+                        <div class="card-header"><h3>Sobre o Sistema</h3></div>
                         <div class="card-body">
                             <p><strong>Orçamento WD</strong> — Sistema de Orçamentos</p>
                             <p>Versão: 2.0.0</p>
                             <p>Desenvolvido para WD Máquinas</p>
-                            <p style="margin-top:10px;">
-                                <small>
-                                    Backend:
-                                    <a href="https://wanderhalleylee-orcamento-wd.hf.space/docs" target="_blank" rel="noopener">API Docs</a>
-                                    | Status: <span id="cfgApiStatus">Verificando...</span>
-                                </small>
-                            </p>
+                            <p style="margin-top:12px;">Backend: <a href="https://wanderhalleylee-orcamento-wd.hf.space/docs" target="_blank" class="btn btn-outline btn-sm">API Docs</a> | Status: <span id="cfgApiStatus">Verificando...</span></p>
                         </div>
                     </div>
+                </div>
+            </section>
+            <!-- === FIM ABA: CONFIGURACOES === -->
 
-                </section>
-
-            </div><!-- .content-area -->
         </main>
-    </div><!-- .app-layout -->
+    </div>
 
-    <!-- ═══════════════════════════════════════ -->
-    <!-- 🔧 MODAIS GLOBAIS                      -->
-    <!-- ═══════════════════════════════════════ -->
+    <!-- ========== MODAIS GLOBAIS ========== -->
 
-    <!-- Modal: Criar/Editar Cliente -->
+    <!-- Modal: Cliente (criar/editar) -->
     <div class="modal-overlay" id="modalCliente">
         <div class="modal">
             <div class="modal-header">
                 <h3 id="modalClienteTitulo">Novo Cliente</h3>
-                <button class="modal-close" onclick="fecharModalCliente()">&times;</button>
+                <button class="modal-close" onclick="fecharModalCliente()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
             </div>
-            <form id="formCliente" onsubmit="salvarCliente(event)">
-                <div class="modal-body">
+            <div class="modal-body">
+                <form id="formCliente" onsubmit="salvarCliente(event)">
                     <input type="hidden" id="clienteId">
                     <div class="form-grid">
+                        <div class="form-group">
+                            <label>Nome <span class="required">*</span></label>
+                            <input type="text" id="clienteNome" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Empresa</label>
+                            <input type="text" id="clienteEmpresa" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label>CPF/CNPJ</label>
+                            <input type="text" id="clienteCpfCnpj" class="form-input" maxlength="18">
+                        </div>
+                        <div class="form-group">
+                            <label>Telefone</label>
+                            <input type="text" id="clienteTelefone" class="form-input" maxlength="15">
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="clienteEmail" class="form-input">
+                        </div>
                         <div class="form-group full-width">
-                            <label for="clienteNome">Nome *</label>
-                            <input type="text" id="clienteNome" class="form-input" required placeholder="Nome completo do cliente">
+                            <label>Endereço</label>
+                            <input type="text" id="clienteEndereco" class="form-input">
                         </div>
                         <div class="form-group">
-                            <label for="clienteEmpresa">Empresa</label>
-                            <input type="text" id="clienteEmpresa" class="form-input" placeholder="Nome da empresa">
+                            <label>Cidade</label>
+                            <input type="text" id="clienteCidade" class="form-input">
                         </div>
                         <div class="form-group">
-                            <label for="clienteCpfCnpj">CPF/CNPJ</label>
-                            <input type="text" id="clienteCpfCnpj" class="form-input" placeholder="CPF ou CNPJ" maxlength="18">
-                        </div>
-                        <div class="form-group">
-                            <label for="clienteTelefone">Telefone</label>
-                            <input type="text" id="clienteTelefone" class="form-input" placeholder="(00) 00000-0000" maxlength="15">
-                        </div>
-                        <div class="form-group">
-                            <label for="clienteEmail">E-mail</label>
-                            <input type="email" id="clienteEmail" class="form-input" placeholder="email@exemplo.com">
-                        </div>
-                        <div class="form-group full-width">
-                            <label for="clienteEndereco">Endereço</label>
-                            <input type="text" id="clienteEndereco" class="form-input" placeholder="Rua, número, bairro">
-                        </div>
-                        <div class="form-group">
-                            <label for="clienteCidade">Cidade</label>
-                            <input type="text" id="clienteCidade" class="form-input" placeholder="Cidade">
-                        </div>
-                        <div class="form-group">
-                            <label for="clienteEstado">Estado</label>
+                            <label>Estado</label>
                             <select id="clienteEstado" class="form-input">
                                 <option value="">Selecione...</option>
-                                <option value="AC">AC</option><option value="AL">AL</option>
-                                <option value="AP">AP</option><option value="AM">AM</option>
-                                <option value="BA">BA</option><option value="CE">CE</option>
-                                <option value="DF">DF</option><option value="ES">ES</option>
-                                <option value="GO">GO</option><option value="MA">MA</option>
-                                <option value="MT">MT</option><option value="MS">MS</option>
-                                <option value="MG">MG</option><option value="PA">PA</option>
-                                <option value="PB">PB</option><option value="PR">PR</option>
-                                <option value="PE">PE</option><option value="PI">PI</option>
-                                <option value="RJ">RJ</option><option value="RN">RN</option>
-                                <option value="RS">RS</option><option value="RO">RO</option>
-                                <option value="RR">RR</option><option value="SC">SC</option>
-                                <option value="SP">SP</option><option value="SE">SE</option>
-                                <option value="TO">TO</option>
+                                <option value="AC">AC</option><option value="AL">AL</option><option value="AP">AP</option>
+                                <option value="AM">AM</option><option value="BA">BA</option><option value="CE">CE</option>
+                                <option value="DF">DF</option><option value="ES">ES</option><option value="GO">GO</option>
+                                <option value="MA">MA</option><option value="MT">MT</option><option value="MS">MS</option>
+                                <option value="MG">MG</option><option value="PA">PA</option><option value="PB">PB</option>
+                                <option value="PR">PR</option><option value="PE">PE</option><option value="PI">PI</option>
+                                <option value="RJ">RJ</option><option value="RN">RN</option><option value="RS">RS</option>
+                                <option value="RO">RO</option><option value="RR">RR</option><option value="SC">SC</option>
+                                <option value="SP">SP</option><option value="SE">SE</option><option value="TO">TO</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="clienteCep">CEP</label>
-                            <input type="text" id="clienteCep" class="form-input" placeholder="00000-000" maxlength="9">
+                            <label>CEP</label>
+                            <input type="text" id="clienteCep" class="form-input" maxlength="9">
                         </div>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="fecharModalCliente()">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar Cliente</button>
-                </div>
-            </form>
+                    <div class="modal-footer" style="border:none; padding:20px 0 0;">
+                        <button type="button" class="btn btn-secondary" onclick="fecharModalCliente()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
-    <!-- Modal: Confirmar exclusão cliente -->
+    <!-- Modal: Confirmar exclusão de cliente -->
     <div class="modal-overlay" id="confirmDeleteCliente">
-        <div class="modal">
-            <div class="modal-header">
-                <h3>Confirmar Exclusão</h3>
-                <button class="modal-close" onclick="fecharConfirmDeleteCliente()">&times;</button>
-            </div>
+        <div class="modal" style="max-width:420px;">
             <div class="modal-body">
-                <p>Tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita.</p>
+                <div class="confirm-dialog">
+                    <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                    <h4>Excluir Cliente?</h4>
+                    <p>Esta ação não pode ser desfeita.</p>
+                </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="fecharConfirmDeleteCliente()">Cancelar</button>
@@ -620,91 +546,89 @@
         </div>
     </div>
 
-    <!-- Modal: Criar/Editar Produto -->
+    <!-- Modal: Produto (criar/editar) -->
     <div class="modal-overlay" id="modalProduto">
-        <div class="modal modal-lg">
+        <div class="modal" style="max-width:700px;">
             <div class="modal-header">
                 <h3 id="modalProdutoTitulo">Novo Produto</h3>
-                <button class="modal-close" onclick="fecharModalProduto()">&times;</button>
+                <button class="modal-close" onclick="fecharModalProduto()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
             </div>
-            <form id="formProduto" onsubmit="salvarProduto(event)">
-                <div class="modal-body">
+            <div class="modal-body">
+                <form id="formProduto" onsubmit="salvarProduto(event)">
                     <input type="hidden" id="produtoId">
                     <input type="hidden" id="produtoImagemBase64">
                     <div class="form-grid">
                         <div class="form-group full-width">
-                            <label for="produtoNome">Nome do Produto *</label>
-                            <input type="text" id="produtoNome" class="form-input" required placeholder="Ex: Marmiteiro Elétrico 50 Marmitas">
+                            <label>Nome do Produto <span class="required">*</span></label>
+                            <input type="text" id="produtoNome" class="form-input" required>
                         </div>
                         <div class="form-group full-width">
-                            <label for="produtoDescricao">Descrição</label>
-                            <textarea id="produtoDescricao" class="form-input" rows="3" placeholder="Descrição detalhada do produto..."></textarea>
+                            <label>Descrição</label>
+                            <textarea id="produtoDescricao" class="form-input" rows="2"></textarea>
                         </div>
                         <div class="form-group full-width">
-                            <label for="produtoEspecificacoes">Especificações Técnicas</label>
-                            <textarea id="produtoEspecificacoes" class="form-input" rows="3" placeholder="Especificações técnicas, materiais, etc."></textarea>
+                            <label>Especificações</label>
+                            <textarea id="produtoEspecificacoes" class="form-input" rows="2"></textarea>
                         </div>
                         <div class="form-group">
-                            <label for="produtoValor">Preço (R$) *</label>
-                            <input type="number" id="produtoValor" class="form-input" required min="0.01" step="0.01" placeholder="0,00">
+                            <label>Preço (R$) <span class="required">*</span></label>
+                            <input type="number" id="produtoValor" class="form-input" step="0.01" min="0" required>
                         </div>
                         <div class="form-group">
-                            <label for="produtoPeso">Peso (kg)</label>
-                            <input type="number" id="produtoPeso" class="form-input" min="0" step="0.1" placeholder="0,0">
+                            <label>Peso (kg)</label>
+                            <input type="number" id="produtoPeso" class="form-input" step="0.01" min="0">
                         </div>
                         <div class="form-group">
-                            <label for="produtoAltura">Altura (cm)</label>
-                            <input type="number" id="produtoAltura" class="form-input" min="0" step="0.1" placeholder="0">
+                            <label>Altura (cm)</label>
+                            <input type="number" id="produtoAltura" class="form-input" step="0.1" min="0">
                         </div>
                         <div class="form-group">
-                            <label for="produtoLargura">Largura (cm)</label>
-                            <input type="number" id="produtoLargura" class="form-input" min="0" step="0.1" placeholder="0">
+                            <label>Largura (cm)</label>
+                            <input type="number" id="produtoLargura" class="form-input" step="0.1" min="0">
                         </div>
                         <div class="form-group">
-                            <label for="produtoProfundidade">Profundidade (cm)</label>
-                            <input type="number" id="produtoProfundidade" class="form-input" min="0" step="0.1" placeholder="0">
+                            <label>Profundidade (cm)</label>
+                            <input type="number" id="produtoProfundidade" class="form-input" step="0.1" min="0">
                         </div>
                         <div class="form-group">
-                            <label for="produtoAtivo">Status</label>
+                            <label>Status</label>
                             <select id="produtoAtivo" class="form-input">
                                 <option value="true">Ativo</option>
                                 <option value="false">Inativo</option>
                             </select>
                         </div>
                         <div class="form-group full-width">
-                            <label for="produtoImagem">Imagem do Produto</label>
+                            <label>Imagem do Produto</label>
                             <input type="file" id="produtoImagem" class="form-input" accept="image/jpeg,image/png,image/webp" onchange="previewImagemProduto(event)">
-                            <small style="color: var(--text-muted); display:block; margin-top:4px;">JPG, PNG ou WEBP. Máximo 2 MB.</small>
-                            <div id="produtoImagemPreview" style="display:none; margin-top:10px;">
-                                <img id="produtoImagemTag" src="" alt="Preview" style="max-width:200px; max-height:200px; border-radius:8px; border:1px solid var(--border-color);">
+                            <div id="produtoImagemPreview" style="display:none; margin-top:8px;">
+                                <img id="produtoImagemTag" src="" alt="Preview" style="max-width:200px; max-height:150px; border-radius:8px; border:1px solid var(--border-color);">
                                 <br>
-                                <button type="button" class="btn btn-danger btn-sm" onclick="removerImagemProduto()" style="margin-top:8px;">Remover imagem</button>
+                                <button type="button" class="btn btn-danger btn-sm" onclick="removerImagemProduto()" style="margin-top:8px;">Remover Imagem</button>
                             </div>
                         </div>
                         <div class="form-group full-width">
-                            <label for="produtoImagemUrl">URL da Imagem (alternativa)</label>
-                            <input type="url" id="produtoImagemUrl" class="form-input" placeholder="https://exemplo.com/imagem.jpg">
-                            <small style="color: var(--text-muted); display:block; margin-top:4px;">Se não fizer upload, pode colar uma URL de imagem externa.</small>
+                            <label>URL da Imagem (alternativa)</label>
+                            <input type="url" id="produtoImagemUrl" class="form-input" placeholder="https://...">
                         </div>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="fecharModalProduto()">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar Produto</button>
-                </div>
-            </form>
+                    <div class="modal-footer" style="border:none; padding:20px 0 0;">
+                        <button type="button" class="btn btn-secondary" onclick="fecharModalProduto()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
-    <!-- Modal: Confirmar exclusão produto -->
+    <!-- Modal: Confirmar exclusão de produto -->
     <div class="modal-overlay" id="confirmDeleteProduto">
-        <div class="modal">
-            <div class="modal-header">
-                <h3>Confirmar Exclusão</h3>
-                <button class="modal-close" onclick="fecharConfirmDeleteProduto()">&times;</button>
-            </div>
+        <div class="modal" style="max-width:420px;">
             <div class="modal-body">
-                <p>Tem certeza que deseja excluir este produto? Esta ação não pode ser desfeita.</p>
+                <div class="confirm-dialog">
+                    <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                    <h4>Excluir Produto?</h4>
+                    <p>Esta ação não pode ser desfeita.</p>
+                </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="fecharConfirmDeleteProduto()">Cancelar</button>
@@ -713,17 +637,17 @@
         </div>
     </div>
 
-    <!-- Modal: Mudar Status Orçamento -->
+    <!-- Modal: Mudar status do orçamento -->
     <div class="modal-overlay" id="modalStatus">
-        <div class="modal">
+        <div class="modal" style="max-width:420px;">
             <div class="modal-header">
                 <h3>Alterar Status</h3>
-                <button class="modal-close" onclick="fecharModalStatus()">&times;</button>
+                <button class="modal-close" onclick="fecharModalStatus()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="statusOrcamentoId">
                 <div class="form-group">
-                    <label for="novoStatus">Novo Status</label>
+                    <label>Novo Status</label>
                     <select id="novoStatus" class="form-input">
                         <option value="pendente">Pendente</option>
                         <option value="aprovado">Aprovado</option>
@@ -739,15 +663,15 @@
         </div>
     </div>
 
-    <!-- Modal: Confirmar exclusão orçamento -->
+    <!-- Modal: Confirmar exclusão de orçamento -->
     <div class="modal-overlay" id="confirmDeleteOrcamento">
-        <div class="modal">
-            <div class="modal-header">
-                <h3>Confirmar Exclusão</h3>
-                <button class="modal-close" onclick="fecharConfirmDeleteOrcamento()">&times;</button>
-            </div>
+        <div class="modal" style="max-width:420px;">
             <div class="modal-body">
-                <p>Tem certeza que deseja excluir este orçamento? Esta ação não pode ser desfeita.</p>
+                <div class="confirm-dialog">
+                    <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                    <h4>Excluir Orçamento?</h4>
+                    <p>Esta ação não pode ser desfeita.</p>
+                </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="fecharConfirmDeleteOrcamento()">Cancelar</button>
@@ -759,9 +683,7 @@
     <!-- Toast Container -->
     <div id="toastContainer" class="toast-container"></div>
 
-    <!-- ═══════════════════════════════════════ -->
-    <!-- 🔧 SCRIPTS                             -->
-    <!-- ═══════════════════════════════════════ -->
+    <!-- Scripts -->
     <script src="js/app.js"></script>
     <script src="js/dashboard.js"></script>
     <script src="js/orcamentos.js"></script>
